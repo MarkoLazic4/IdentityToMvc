@@ -1,0 +1,55 @@
+# Build
+bin/
+obj/
+artifacts/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Rider
+.idea/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# VS Code
+.vscode/
+
+# Resharper
+_ReSharper*/
+*.DotSettings.user
+
+# dotnet
+project.lock.json
+project.fragment.lock.json
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+
+# EF Core migrations
+# Ako želiš da držis migracije pod verzionom, ukloni ili komentariši ovu liniju
+Migrations/
+
+# user secrets / local config
+secrets.json
+appsettings.*.Local.json
+
+# databases
+*.db
+*.sqlite
+*.mdf
+*.ldf
+
+# logs
+*.log
+logs/
+
+# Publish
+publish/
+publish_debug/
