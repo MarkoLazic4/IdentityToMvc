@@ -1,5 +1,4 @@
-﻿@page
-@model ResendEmailConfirmationModel
+﻿@model IdentityToMvc.Web.Areas.User.ViewModels.Account.ResendEmailConfirmationViewModel
 @{
     ViewData["Title"] = "Resend email confirmation";
 }
@@ -9,7 +8,8 @@
 <hr />
 <div class="row">
     <div class="col-md-4">
-        <form method="post">
+        <form asp-area="User" asp-controller="Account" asp-action="ResendEmailConfirmation" method="post">
+            @Html.AntiForgeryToken()
             <div asp-validation-summary="All" class="text-danger" role="alert"></div>
             <div class="form-floating mb-3">
                 <input asp-for="Input.Email" class="form-control" aria-required="true" placeholder="name@example.com" />
