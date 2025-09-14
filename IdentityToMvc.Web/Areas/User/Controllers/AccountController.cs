@@ -14,6 +14,8 @@ using System.Text;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
 using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Shared;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 namespace IdentityToMvc.Web.Areas.User.Controllers
 {
@@ -207,6 +209,360 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
 
             ModelState.AddModelError(string.Empty, "Verification email sent. Please check your email.");
             return View(model);
+        }
+
+        // ===========================================================================
+        // GET: /User/Account/Login
+        // ===========================================================================
+        [HttpGet]
+        public async Task<IActionResult> Login(string? returnUrl = null)
+        {
+            var viewModel = new LoginViewModel();
+            viewModel.ReturnUrl = SanitizeReturnUrl(returnUrl) ?? DefaultUrl();
+
+            var errorMessage = TempData["ErrorMessage"] as string;
+
+            if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                ModelState.AddModelError(string.Empty, errorMessage);
+            }
+
+            // Clear the existing external cookie to ensure a clean login process
+            await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
+
+            viewModel.ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+
+            return View(viewModel);
+        }
+
+        // ===========================================================================
+        // POST: /User/Account/Login
+        // ===========================================================================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Login(LoginViewModel model)
+        {
+            model.ReturnUrl = SanitizeReturnUrl(model.ReturnUrl) ?? DefaultUrl();
+            model.ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+
+            if (ModelState.IsValid)
+            {
+                // This doesn't count login failures towards account lockout
+                // To enable password failures to trigger account lockout, set lockoutOnFailure: true
+                var result = await _signInManager.PasswordSignInAsync(model.Input.Email, model.Input.Password, model.Input.RememberMe, lockoutOnFailure: false);
+                if (result.Succeeded)
+                {
+                    _logger.LogInformation("User logged in.");
+                    return LocalRedirect(model.ReturnUrl);
+                }
+                if (result.RequiresTwoFactor)
+                {
+                    return RedirectToPage(nameof(LoginWith2fa), "Account", new { area = "User", returnUrl = model.ReturnUrl, rememberMe = model.Input.RememberMe });
+                }
+                if (result.IsLockedOut)
+                {
+                    _logger.LogWarning("User account locked out.");
+                    return RedirectToPage(nameof(Lockout), "Account", new { area = "User" });
+                }
+                else
+                {
+                    ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                    return View(model);
+                }
+            }
+
+            return View(model);
+        }
+
+        // ===========================================================================
+        // GET: /User/Account/LoginWith2fa
+        // ===========================================================================
+        [HttpGet]
+        public async Task<IActionResult> LoginWith2fa(bool rememberMe, string? returnUrl = null)
+        {
+            // Ensure the user has gone through the username & password screen first
+            var user = await _signInManager.GetTwoFactorAuthenticationUserAsync();
+
+            if (user == null)
+            {
+                throw new InvalidOperationException($"Unable to load two-factor authentication user.");
+            }
+
+            var viewModel = new LoginWith2faViewModel();
+            viewModel.ReturnUrl = SanitizeReturnUrl(returnUrl);
+            viewModel.RememberMe = rememberMe;
+
+            return View(viewModel);
+        }
+
+        // ===========================================================================
+        // POST: /User/Account/LoginWith2fa
+        // ===========================================================================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> LoginWith2fa(LoginWith2faViewModel model)
+        {
+            model.ReturnUrl = SanitizeReturnUrl(model.ReturnUrl) ?? DefaultUrl();
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+
+            var user = await _signInManager.GetTwoFactorAuthenticationUserAsync();
+            if (user == null)
+            {
+                throw new InvalidOperationException($"Unable to load two-factor authentication user.");
+            }
+
+            var authenticatorCode = model.Input.TwoFactorCode.Replace(" ", string.Empty).Replace("-", string.Empty);
+
+            var result = await _signInManager.TwoFactorAuthenticatorSignInAsync(authenticatorCode, model.RememberMe, model.Input.RememberMachine);
+
+            var userId = await _userManager.GetUserIdAsync(user);
+
+            if (result.Succeeded)
+            {
+                _logger.LogInformation("User with ID '{UserId}' logged in with 2fa.", user.Id);
+                return LocalRedirect(model.ReturnUrl);
+            }
+            else if (result.IsLockedOut)
+            {
+                _logger.LogWarning("User with ID '{UserId}' account locked out.", user.Id);
+                return RedirectToAction(nameof(Lockout), "Account", new { area = "User" });
+            }
+            else
+            {
+                _logger.LogWarning("Invalid authenticator code entered for user with ID '{UserId}'.", user.Id);
+                ModelState.AddModelError(string.Empty, "Invalid authenticator code.");
+                return View(model);
+            }
+        }
+
+        // ===========================================================================
+        // GET: /User/Account/LoginWithRecoveryCode
+        // ===========================================================================
+        [AllowAnonymous]
+        [HttpGet]
+        public async Task<IActionResult> LoginWithRecoveryCode(string? returnUrl = null)
+        {
+            // Ensure the user has gone through the username & password screen first
+            var user = await _signInManager.GetTwoFactorAuthenticationUserAsync();
+            if (user == null)
+            {
+                throw new InvalidOperationException($"Unable to load two-factor authentication user.");
+            }
+
+            var viewModel = new LoginWithRecoveryCodeViewModel();
+            viewModel.ReturnUrl = SanitizeReturnUrl(returnUrl);
+
+            return View(viewModel);
+        }
+
+        // ===========================================================================
+        // POST: /User/Account/LoginWithRecoveryCode
+        // ===========================================================================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> LoginWithRecoveryCode(LoginWithRecoveryCodeViewModel model)
+        {
+            // Normalizuj i sanitize-uj returnUrl
+            model.ReturnUrl = SanitizeReturnUrl(model.ReturnUrl);
+
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var user = await _signInManager.GetTwoFactorAuthenticationUserAsync();
+            if (user == null)
+            {
+                throw new InvalidOperationException($"Unable to load two-factor authentication user.");
+            }
+
+            var recoveryCode = model.Input.RecoveryCode.Replace(" ", string.Empty);
+
+            var result = await _signInManager.TwoFactorRecoveryCodeSignInAsync(recoveryCode);
+
+            var userId = await _userManager.GetUserIdAsync(user);
+
+            if (result.Succeeded)
+            {
+                _logger.LogInformation("User with ID '{UserId}' logged in with a recovery code.", user.Id);
+                return LocalRedirect(model.ReturnUrl ?? DefaultUrl());
+            }
+            if (result.IsLockedOut)
+            {
+                _logger.LogWarning("User account locked out.");
+                return RedirectToAction(nameof(Lockout), "Account", new { area = "User" });
+            }
+            else
+            {
+                _logger.LogWarning("Invalid recovery code entered for user with ID '{UserId}' ", user.Id);
+                ModelState.AddModelError(string.Empty, "Invalid recovery code entered.");
+                return View(model);
+            }
+        }
+
+        // ===========================================================================
+        // POST: /User/Account/ExternalLogin
+        // ===========================================================================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult ExternalLogin(string provider, string? returnUrl = null)
+        {
+            returnUrl = SanitizeReturnUrl(returnUrl);
+            // Request a redirect to the external login provider.
+            var redirectUrl = Url.Action(nameof(ExternalLoginCallback), "Account", new { area = "User", returnUrl });
+            var properties = _signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl);
+            return Challenge(properties, provider);
+        }
+
+        // ===========================================================================
+        // GET: /User/Account/ExternalLoginCallback
+        // ===========================================================================
+        [HttpGet]
+        public async Task<IActionResult> ExternalLoginCallback(string? returnUrl = null, string? remoteError = null)
+        {
+            returnUrl = SanitizeReturnUrl(returnUrl) ?? DefaultUrl();
+
+            if (remoteError != null)
+            {
+                TempData["ErrorMessage"] = $"Error from external provider: {remoteError}";
+                return RedirectToPage(nameof(Login), "Account", new { area = "User", returnUrl });
+            }
+            var info = await _signInManager.GetExternalLoginInfoAsync();
+            if (info == null)
+            {
+                TempData["ErrorMessage"] = "Error loading external login information.";
+                return RedirectToPage(nameof(Login), "Account", new { area = "User", returnUrl });
+            }
+
+            // Sign in the user with this external login provider if the user already has a login.
+            var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: false, bypassTwoFactor: true);
+            if (result.Succeeded)
+            {
+                _logger.LogInformation("{Name} logged in with {LoginProvider} provider.", info.Principal.Identity.Name, info.LoginProvider);
+                return LocalRedirect(returnUrl);
+            }
+            if (result.IsLockedOut)
+            {
+                return RedirectToPage(nameof(Lockout), "Account", new { area = "User" });
+            }
+            else
+            {
+                // If the user does not have an account, then ask the user to create an account.
+                var viewModel = new ExternalLoginViewModel();
+                viewModel.ReturnUrl = returnUrl;
+                viewModel.ProviderDisplayName = info.ProviderDisplayName;
+                if (info.Principal.HasClaim(c => c.Type == ClaimTypes.Email))
+                {
+                    viewModel.Input = new ExternalLoginViewModel.InputModel
+                    {
+                        Email = info.Principal.FindFirstValue(ClaimTypes.Email)
+                    };
+                }
+                return View("ExternalLogin", viewModel);
+            }
+        }
+
+        // ===========================================================================
+        // POST: /User/Account/ExternalLoginConfirmation
+        // ===========================================================================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ExternalLoginConfirmation([FromServices] IEmailService emailService, ExternalLoginViewModel model)
+        {
+            model.ReturnUrl = SanitizeReturnUrl(model.ReturnUrl) ?? DefaultUrl();
+            // Get the information about the user from the external login provider
+            var info = await _signInManager.GetExternalLoginInfoAsync();
+            if (info == null)
+            {
+                TempData["ErrorMessage"] = "Error loading external login information during confirmation.";
+                return RedirectToPage(nameof(Login), "Account", new { area = "User", returnUrl = model.ReturnUrl });
+            }
+
+            if (ModelState.IsValid)
+            {
+                var user = new IdentityUser
+                {
+                    UserName = model.Input.Email,
+                    Email = model.Input.Email
+                };
+
+                var result = await _userManager.CreateAsync(user);
+                if (result.Succeeded)
+                {
+                    result = await _userManager.AddLoginAsync(user, info);
+                    if (result.Succeeded)
+                    {
+                        _logger.LogInformation("User created an account using {Name} provider.", info.LoginProvider);
+
+                        var userId = await _userManager.GetUserIdAsync(user);
+                        var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                        code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+                        var callbackUrl = Url.Action(
+                            nameof(ConfirmEmail), "Account", 
+                            new { area = "User", userId = userId, code = code },
+                            protocol: Request.Scheme) ?? string.Empty;
+
+                        await emailService.SendEmailAsync("identitytomvc@gmail.com", model.Input.Email, "Confirm your email",
+                            $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+
+                        // If account confirmation is required, we need to show the link if we don't have a real email sender
+                        if (_userManager.Options.SignIn.RequireConfirmedAccount)
+                        {
+                            return RedirectToPage(nameof(RegisterConfirmation), "Account", new { area = "User", email = model.Input.Email });
+                        }
+
+                        await _signInManager.SignInAsync(user, isPersistent: false, info.LoginProvider);
+                        return LocalRedirect(model.ReturnUrl);
+                    }
+                }
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+            }
+
+            model.ProviderDisplayName = info.ProviderDisplayName ?? string.Empty;
+            return View("ExternalLogin", model);
+        }
+
+
+        // ===========================================================================
+        // GET: /User/Account/Logout
+        // ===========================================================================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Logout(string? returnUrl = null)
+        {
+            await _signInManager.SignOutAsync();
+            _logger.LogInformation("User logged out.");
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
+                return LocalRedirect(returnUrl);
+            }
+            else
+            {
+                return RedirectToAction("Index", "Home", new { area = "User" });
+            }
+        }
+
+        // ===========================================================================
+        // GET: /User/Account/Lockout
+        // ===========================================================================
+        [HttpGet]
+        public IActionResult Lockout()
+        {
+            return View();
+        }
+
+        // ===========================================================================
+        // GET: /User/Account/AccessDenied
+        // ===========================================================================
+        [HttpGet]
+        public IActionResult AccessDenied()
+        {
+            return View();
         }
 
 

@@ -1,5 +1,4 @@
-﻿@page
-@model LoginWithRecoveryCodeModel
+﻿@model IdentityToMvc.Web.Areas.User.ViewModels.Account.LoginWithRecoveryCodeViewModel
 @{
     ViewData["Title"] = "Recovery code verification";
 }
@@ -12,7 +11,8 @@
 </p>
 <div class="row">
     <div class="col-md-4">
-        <form method="post">
+        <form method="post" asp-area="User" asp-controller="Account" asp-action="LoginWithRecoveryCode">
+            @Html.AntiForgeryToken()
             <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
             <div class="form-floating mb-3">
                 <input asp-for="Input.RecoveryCode" class="form-control" autocomplete="off" placeholder="RecoveryCode" />

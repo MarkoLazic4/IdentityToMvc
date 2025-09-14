@@ -49,6 +49,7 @@
                 else
                 {
                     <form id="external-account" asp-area="User" asp-controller="Account" asp-action="ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="form-horizontal">
+                        @Html.AntiForgeryToken()
                         <div>
                             <p>
                                 @foreach (var provider in Model.ExternalLogins!)
