@@ -1,8 +1,6 @@
-﻿@page
-@model DeletePersonalDataModel
+﻿@model IdentityToMvc.Web.Areas.User.ViewModels.Manage.DeletePersonalDataViewModel
 @{
     ViewData["Title"] = "Delete Personal Data";
-    ViewData["ActivePage"] = ManageNavPages.PersonalData;
 }
 
 <h3>@ViewData["Title"]</h3>
@@ -14,7 +12,8 @@
 </div>
 
 <div>
-    <form id="delete-user" method="post">
+    <form id="delete-user" asp-area="User" asp-controller="Manage" asp-action="DeletePersonalData" method="post">
+        @Html.AntiForgeryToken()
         <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
         @if (Model.RequirePassword)
         {

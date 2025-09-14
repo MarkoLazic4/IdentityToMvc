@@ -1,8 +1,6 @@
-﻿@page
-@model ExternalLoginsModel
+﻿@model IdentityToMvc.Web.Areas.User.ViewModels.Manage.ExternalLoginsViewModel
 @{
     ViewData["Title"] = "Manage your external logins";
-    ViewData["ActivePage"] = ManageNavPages.ExternalLogins;
 }
 
 <partial name="_StatusMessage" for="StatusMessage" />
@@ -18,7 +16,8 @@
                     <td>
                         @if (Model.ShowRemoveButton)
                         {
-                            <form id="@($"remove-login-{login.LoginProvider}")" asp-page-handler="RemoveLogin" method="post">
+                            <form id="@($"remove-login-{login.LoginProvider}")" asp-area="User" asp-controller="Manage" asp-action="RemoveExternalLogin" method="post">
+                                @Html.AntiForgeryToken()
                                 <div>
                                     <input asp-for="@login.LoginProvider" name="LoginProvider" type="hidden" />
                                     <input asp-for="@login.ProviderKey" name="ProviderKey" type="hidden" />
@@ -40,7 +39,8 @@
 {
     <h4>Add another service to log in.</h4>
     <hr />
-    <form id="link-login-form" asp-page-handler="LinkLogin" method="post" class="form-horizontal">
+    <form id="link-login-form" asp-area="User" asp-controller="Manage" asp-action="LinkLogin" method="post" class="form-horizontal">
+        @Html.AntiForgeryToken()
         <div id="socialLoginList">
             <p>
                 @foreach (var provider in Model.OtherLogins)
