@@ -16,6 +16,7 @@ using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pag
 using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Shared;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using IdentityToMvc.Web.Models;
 
 namespace IdentityToMvc.Web.Areas.User.Controllers
 {
@@ -565,6 +566,121 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             return View();
         }
 
+
+        // ===========================================================================
+        // GET: /User/Account/ForgotPassword
+        // ===========================================================================
+        [HttpGet]
+        public IActionResult ForgotPassword()
+        {
+            var viewModel = new ForgotPasswordViewModel();
+
+            return View(viewModel);
+        }
+
+        // ===========================================================================
+        // POST: /User/Account/ForgotPassword
+        // ===========================================================================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ForgotPassword([FromServices] IEmailService emailService, ForgotPasswordViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var user = await _userManager.FindByEmailAsync(model.Input.Email);
+                if (user == null || !(await _userManager.IsEmailConfirmedAsync(user)))
+                {
+                    // Don't reveal that the user does not exist or is not confirmed
+                    return RedirectToAction(nameof(ForgotPasswordConfirmation), "Account", new { area = "User" });
+                }
+
+                // For more information on how to enable account confirmation and password reset please
+                // visit https://go.microsoft.com/fwlink/?LinkID=532713
+                var code = await _userManager.GeneratePasswordResetTokenAsync(user);
+                code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+                var callbackUrl = Url.Action(
+                    nameof(ResetPassword), "Account",
+                    new { area = "User", code },
+                    protocol: Request.Scheme) ?? string.Empty;
+
+                await emailService.SendEmailAsync("identitytomvc@gmail.com", model.Input.Email,"Reset Password",
+                    $"Please reset your password by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+
+                return RedirectToAction(nameof(ForgotPasswordConfirmation), "Account", new { area = "User" });
+            }
+
+            return View(model);
+        }
+
+        // ===========================================================================
+        // GET: /User/Account/ForgotPasswordConfirmation
+        // ===========================================================================
+        [HttpGet]
+        public IActionResult ForgotPasswordConfirmation()
+        {
+            return View();
+        }
+
+        // ===========================================================================
+        // GET: /User/Account/ResetPassword 
+        // ===========================================================================
+        [HttpGet]
+        public IActionResult ResetPassword(string? code = null)
+        {
+            if (string.IsNullOrWhiteSpace(code))
+            {
+                return BadRequest("A code must be supplied for password reset.");
+            }
+
+            var viewModel = new ResetPasswordViewModel
+            {
+                Input = new ResetPasswordViewModel.InputModel
+                {
+                    Code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(code))
+                }
+            };
+
+            return View(viewModel);
+        }
+
+        // ===========================================================================
+        // POST: /User/Account/ResetPassword
+        // ===========================================================================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetPassword([FromServices] IHostEnvironment env, ResetPasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var user = await _userManager.FindByEmailAsync(model.Input.Email);
+            if (user == null)
+            {
+                // Don't reveal that the user does not exist
+                return RedirectToAction(nameof(ResetPasswordConfirmation), "Account", new { area = "User" });
+            }
+
+            var result = await _userManager.ResetPasswordAsync(user, model.Input.Code, model.Input.Password);
+            if (result.Succeeded)
+            {
+                return RedirectToPage(nameof(ResetPasswordConfirmation), "Account", new { area = "User" });
+            }
+
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+            return View(model);
+        }
+
+        // ===========================================================================
+        // GET: /User/Account/ResetPasswordConfirmation
+        // ===========================================================================
+        [HttpGet]
+        public IActionResult ResetPasswordConfirmation()
+        {
+            return View();
+        }
 
         private string? SanitizeReturnUrl(string? returnUrl)
         {
