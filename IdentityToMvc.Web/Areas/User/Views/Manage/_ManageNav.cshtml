@@ -1,0 +1,54 @@
+﻿@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@{
+    var hasExternalLogins = (await SignInManager.GetExternalAuthenticationSchemesAsync()).Any();
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    var currentArea = ViewContext.RouteData.Values["area"]?.ToString() ?? "";
+
+    // Lokalna funkcija koja capture-uje currentAction/controller/area
+    Func<string, string, string, string> NavActive = (area, controller, action) =>
+    {
+        if (!string.IsNullOrEmpty(area) && !string.Equals(area.ToLowerInvariant(), currentArea, StringComparison.OrdinalIgnoreCase))
+            return "";
+        if (!string.IsNullOrEmpty(controller) && !string.Equals(controller.ToLowerInvariant(), currentController, StringComparison.OrdinalIgnoreCase))
+            return "";
+        return string.Equals((action ?? "").ToLowerInvariant(), currentAction, StringComparison.OrdinalIgnoreCase) ? "active" : "";
+    };
+}
+
+<ul class="nav nav-pills flex-column">
+    <li class="nav-item">
+        <a asp-area="User" asp-controller="Manage" asp-action="Index" class="nav-link @NavActive("User", "Manage", "Index")" id="profile">
+            Profile
+        </a>
+    </li>
+    <li class="nav-item">
+        <a asp-area="User" asp-controller="Manage" asp-action="Email" class="nav-link @NavActive("User", "Manage", "Email")" id="email">
+            Email
+        </a>
+    </li>
+    <li class="nav-item">
+        <a asp-area="User" asp-controller="Manage" asp-action="ChangePassword" class="nav-link @NavActive("User", "Manage", "ChangePassword")" id="change-password">
+            Password
+        </a>
+    </li>
+    @if (hasExternalLogins)
+    {
+        <li id="external-logins" class="nav-item">
+            <a asp-area="User" asp-controller="Manage" asp-action="ExternalLogins" id="external-login" class="nav-link @NavActive("User", "Manage", "ExternalLogins")">
+                External logins
+            </a>
+        </li>
+    }
+    <li class="nav-item">
+        <a asp-area="User" asp-controller="Manage" asp-action="TwoFactorAuthentication" class="nav-link @NavActive("User", "Manage", "TwoFactorAuthentication")" id="two-factor">
+            Two-factor authentication
+        </a>
+    </li>
+    <li class="nav-item">
+        <a asp-area="User" asp-controller="Manage" asp-action="PersonalData" class="nav-link @NavActive("User", "Manage", "PersonalData")" id="personal-data">
+            Personal data
+        </a>
+    </li>
+</ul>

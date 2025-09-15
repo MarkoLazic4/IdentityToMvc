@@ -1,4 +1,6 @@
 using IdentityToMvc.Web.Data;
+using IdentityToMvc.Web.Services;
+using IdentityToMvc.Web.Settings;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -31,8 +33,7 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
     options.SignIn.RequireConfirmedEmail = true;
 })
 .AddEntityFrameworkStores<ApplicationDbContext>()
-.AddDefaultTokenProviders()
-.AddDefaultUI();
+.AddDefaultTokenProviders();
 
 builder.Services.Configure<SecurityStampValidatorOptions>(opts =>
 {
@@ -41,14 +42,27 @@ builder.Services.Configure<SecurityStampValidatorOptions>(opts =>
 
 builder.Services.ConfigureApplicationCookie(options =>
 {
-    options.LoginPath = "/Account/Login";
-    options.AccessDeniedPath = "/Account/AccessDenied";
+    options.LoginPath = "/User/Account/Login";
+    options.LogoutPath = "User//Account/Logout";
+    options.AccessDeniedPath = "/User/Account/AccessDenied";
     options.ExpireTimeSpan = TimeSpan.FromHours(1);
 });
 
+builder.Services.AddAuthentication().AddFacebook(options =>
+{
+    options.AppId = builder.Configuration["FacebookAppId"] ?? "xxxx";
+    options.AppSecret = builder.Configuration["FacebookAppSecret"] ?? "xxxx";
+}).AddGoogle(options =>
+{
+    options.ClientId = builder.Configuration["GoogleClientId"] ?? "xxxx";
+    options.ClientSecret = builder.Configuration["GoogleClientSecret"] ?? "xxxx";
+});
+
+builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SMTP"));
+builder.Services.AddSingleton<IEmailService, EmailService>();
+
 // Add services to the container.
 builder.Services.AddControllersWithViews();
-builder.Services.AddRazorPages();
 
 var app = builder.Build();
 
@@ -67,6 +81,10 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.MapControllerRoute(
+    name: "areas",
+    pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
 
 app.MapControllerRoute(
     name: "default",
