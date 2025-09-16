@@ -1,18 +1,11 @@
-﻿using IdentityToMvc.Web.Areas.User.ViewModels.Account;
-using IdentityToMvc.Web.Areas.User.ViewModels.Manage;
+﻿using IdentityToMvc.Web.Areas.User.ViewModels.Manage;
 using IdentityToMvc.Web.Helpers;
 using IdentityToMvc.Web.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages;
-using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
-using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Shared;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
@@ -148,7 +141,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
 
             _logger.LogInformation("User with ID '{UserId}' has disabled 2fa.", _userManager.GetUserId(User));
             TempData["StatusMessage"] = "2fa has been disabled. You can reenable 2fa when you setup an authenticator app";
-            return RedirectToPage(nameof(TwoFactorAuthentication), "Manage", new { area = "User" });
+            return RedirectToAction(nameof(TwoFactorAuthentication), "Manage", new { area = "User" });
         }
 
         // ===========================================================================

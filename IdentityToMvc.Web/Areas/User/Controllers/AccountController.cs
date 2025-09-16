@@ -2,21 +2,12 @@
 using IdentityToMvc.Web.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Builder.Extensions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
-using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages;
 using System.Text.Encodings.Web;
 using System.Text;
-using Microsoft.AspNetCore.Identity.UI.Services;
-using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
-using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Shared;
 using System.Security.Claims;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using IdentityToMvc.Web.Models;
 
 namespace IdentityToMvc.Web.Areas.User.Controllers
 {
@@ -89,7 +80,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
 
                 if (_userManager.Options.SignIn.RequireConfirmedAccount)
                 {
-                    return RedirectToPage(nameof(RegisterConfirmation), new { email = model.Input.Email, returnUrl = model.ReturnUrl });
+                    return RedirectToAction(nameof(RegisterConfirmation), "Account", new { area = "User", email = model.Input.Email, returnUrl = model.ReturnUrl });
                 }
                 else
                 {
@@ -165,7 +156,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
 
             code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(code));
             var result = await _userManager.ConfirmEmailAsync(user, code);
-            TempData["StatusType"] = result.Succeeded ? "Thank you for confirming your email." : "Error confirming your email.";
+            TempData["StatusMessage"] = result.Succeeded ? "Thank you for confirming your email." : "Error confirming your email.";
             return View();
         }
 
@@ -258,12 +249,12 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
                 }
                 if (result.RequiresTwoFactor)
                 {
-                    return RedirectToPage(nameof(LoginWith2fa), "Account", new { area = "User", returnUrl = model.ReturnUrl, rememberMe = model.Input.RememberMe });
+                    return RedirectToAction(nameof(LoginWith2fa), "Account", new { area = "User", returnUrl = model.ReturnUrl, rememberMe = model.Input.RememberMe });
                 }
                 if (result.IsLockedOut)
                 {
                     _logger.LogWarning("User account locked out.");
-                    return RedirectToPage(nameof(Lockout), "Account", new { area = "User" });
+                    return RedirectToAction(nameof(Lockout), "Account", new { area = "User" });
                 }
                 else
                 {
@@ -428,13 +419,13 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             if (remoteError != null)
             {
                 TempData["ErrorMessage"] = $"Error from external provider: {remoteError}";
-                return RedirectToPage(nameof(Login), "Account", new { area = "User", returnUrl });
+                return RedirectToAction(nameof(Login), "Account", new { area = "User", returnUrl });
             }
             var info = await _signInManager.GetExternalLoginInfoAsync();
             if (info == null)
             {
                 TempData["ErrorMessage"] = "Error loading external login information.";
-                return RedirectToPage(nameof(Login), "Account", new { area = "User", returnUrl });
+                return RedirectToAction(nameof(Login), "Account", new { area = "User", returnUrl });
             }
 
             // Sign in the user with this external login provider if the user already has a login.
@@ -446,7 +437,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             }
             if (result.IsLockedOut)
             {
-                return RedirectToPage(nameof(Lockout), "Account", new { area = "User" });
+                return RedirectToAction(nameof(Lockout), "Account", new { area = "User" });
             }
             else
             {
@@ -478,7 +469,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             if (info == null)
             {
                 TempData["ErrorMessage"] = "Error loading external login information during confirmation.";
-                return RedirectToPage(nameof(Login), "Account", new { area = "User", returnUrl = model.ReturnUrl });
+                return RedirectToAction(nameof(Login), "Account", new { area = "User", returnUrl = model.ReturnUrl });
             }
 
             if (ModelState.IsValid)
@@ -511,7 +502,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
                         // If account confirmation is required, we need to show the link if we don't have a real email sender
                         if (_userManager.Options.SignIn.RequireConfirmedAccount)
                         {
-                            return RedirectToPage(nameof(RegisterConfirmation), "Account", new { area = "User", email = model.Input.Email });
+                            return RedirectToAction(nameof(RegisterConfirmation), "Account", new { area = "User", email = model.Input.Email });
                         }
 
                         await _signInManager.SignInAsync(user, isPersistent: false, info.LoginProvider);
@@ -663,7 +654,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             var result = await _userManager.ResetPasswordAsync(user, model.Input.Code, model.Input.Password);
             if (result.Succeeded)
             {
-                return RedirectToPage(nameof(ResetPasswordConfirmation), "Account", new { area = "User" });
+                return RedirectToAction(nameof(ResetPasswordConfirmation), "Account", new { area = "User" });
             }
 
             foreach (var error in result.Errors)
