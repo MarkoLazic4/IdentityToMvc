@@ -535,7 +535,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             }
             else
             {
-                return RedirectToAction("Index", "Home", new { area = "User" });
+                return RedirectToAction("Index", "Home", new { area = ""});
             }
         }
 
