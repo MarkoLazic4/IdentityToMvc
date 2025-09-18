@@ -24,7 +24,7 @@ This project demonstrates how to translate the standard Identity RCL Pages into 
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/<tvoj-username>/IdentityToMvc.git
+git clone https://github.com/MarkoLa0000/IdentityToMvc.git
 cd IdentityToMvc
 
 ````

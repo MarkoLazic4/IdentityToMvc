@@ -39,6 +39,7 @@ Migrations/
 # user secrets / local config
 secrets.json
 appsettings.*.Local.json
+appsettings.Local.json
 
 # databases
 *.db

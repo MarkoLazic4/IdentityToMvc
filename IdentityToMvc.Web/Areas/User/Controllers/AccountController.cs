@@ -334,7 +334,6 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         // ===========================================================================
         // GET: /User/Account/LoginWithRecoveryCode
         // ===========================================================================
-        [AllowAnonymous]
         [HttpGet]
         public async Task<IActionResult> LoginWithRecoveryCode(string? returnUrl = null)
         {

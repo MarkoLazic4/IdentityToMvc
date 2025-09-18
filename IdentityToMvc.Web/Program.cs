@@ -42,10 +42,16 @@ builder.Services.Configure<SecurityStampValidatorOptions>(opts =>
 
 builder.Services.ConfigureApplicationCookie(options =>
 {
+    options.Cookie.Name = "IdentityToMvc.Auth";
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    options.Cookie.Path = "/";
+    options.ExpireTimeSpan = TimeSpan.FromHours(1);
+
     options.LoginPath = "/User/Account/Login";
     options.LogoutPath = "User//Account/Logout";
     options.AccessDeniedPath = "/User/Account/AccessDenied";
-    options.ExpireTimeSpan = TimeSpan.FromHours(1);
 });
 
 builder.Services.AddAuthentication().AddFacebook(options =>
