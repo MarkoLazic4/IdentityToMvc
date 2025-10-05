@@ -24,7 +24,7 @@ Projekat prikazuje kako prevesti standardne Identity RCL stranice u MVC controll
 
 1. **Kloniraj repozitorijum**
 ```bash
-git clone https://github.com/MarkoLa0000/IdentityToMvc.git
+git clone https://github.com/MarkoLazic4/IdentityToMvc.git
 cd IdentityToMvc
 
 ````
@@ -52,4 +52,4 @@ Update-Database
 # Licenca & Kontakt
 
 * **Licenca:** MIT
-* **GitHub:** [@MarkoLa0000](https://github.com/MarkoLa0000)
+* **GitHub:** [@MarkoLazic](https://github.com/MarkoLazic4)
