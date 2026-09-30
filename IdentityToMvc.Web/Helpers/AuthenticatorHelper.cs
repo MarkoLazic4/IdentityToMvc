@@ -58,7 +58,7 @@ namespace IdentityToMvc.Web.Helpers
             return string.Format(
                 CultureInfo.InvariantCulture,
                 AuthenticatorUriFormat,
-                urlEncoder.Encode("Microsoft.AspNetCore.Identity.UI"),
+                urlEncoder.Encode("IdentityToMvc"),
                 urlEncoder.Encode(email ?? string.Empty),
                 unformattedKey);
         }

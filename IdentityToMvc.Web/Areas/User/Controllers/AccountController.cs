@@ -1,12 +1,10 @@
 ﻿using IdentityToMvc.Web.Areas.User.ViewModels.Account;
+using IdentityToMvc.Web.Helpers;
 using IdentityToMvc.Web.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.WebUtilities;
-using System.Text.Encodings.Web;
-using System.Text;
 using System.Security.Claims;
 
 namespace IdentityToMvc.Web.Areas.User.Controllers
@@ -69,14 +67,13 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
 
                 var userId = await _userManager.GetUserIdAsync(user);
                 var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+                code = TokenEncoder.Encode(code);
                 var callbackUrl = Url.Action(
                     nameof(ConfirmEmail), "Account", 
                     new { area = "User", userId = userId, code = code, returnUrl = model.ReturnUrl },
                     protocol: Request.Scheme) ?? string.Empty;
 
-                await emailService.SendEmailAsync("identitytomvc@gmail.com", model.Input.Email, "Confirm your email",
-                    $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+                await emailService.SendEmailAsync(model.Input.Email, "Confirm your email", EmailTemplates.ConfirmAccount(callbackUrl));
 
                 if (_userManager.Options.SignIn.RequireConfirmedAccount)
                 {
@@ -110,24 +107,24 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             returnUrl = SanitizeReturnUrl(returnUrl);
 
             var user = await _userManager.FindByEmailAsync(email);
-            if (user == null)
-            {
-                return NotFound($"Unable to load user with email '{email}'.");
-            }
 
             var viewModel = new RegisterConfirmationViewModel
             {
                 Email = email,
-                // Once you add a real email sender, you should remove this code that lets you confirm the account
-                //DisplayConfirmAccountLink = true;
-                DisplayConfirmAccountLink = env.IsDevelopment(),
+                // Development only: show the confirmation link on the page so the flow can be
+                // tested without an SMTP server. Never enable this in production.
+                DisplayConfirmAccountLink = env.IsDevelopment()
+                    && user != null
+                    && !await _userManager.IsEmailConfirmedAsync(user),
             };
 
-            if (viewModel.DisplayConfirmAccountLink)
+            // Unknown emails get the same page as known ones so the page can't be used
+            // to find out which addresses have an account.
+            if (viewModel.DisplayConfirmAccountLink && user != null)
             {
                 var userId = await _userManager.GetUserIdAsync(user);
                 var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+                code = TokenEncoder.Encode(code);
                 viewModel.EmailConfirmationUrl = Url.Action(
                     nameof(ConfirmEmail), "Account",
                     new { area = "User", userId = userId, code = code, returnUrl = returnUrl },
@@ -154,9 +151,16 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
                 return NotFound($"Unable to load user with ID '{userId}'.");
             }
 
-            code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(code));
-            var result = await _userManager.ConfirmEmailAsync(user, code);
-            TempData["StatusMessage"] = result.Succeeded ? "Thank you for confirming your email." : "Error confirming your email.";
+            if (!TokenEncoder.TryDecode(code, out var token))
+            {
+                TempData["StatusMessage"] = "Error: the confirmation link is invalid or has expired.";
+                return View();
+            }
+
+            var result = await _userManager.ConfirmEmailAsync(user, token);
+            TempData["StatusMessage"] = result.Succeeded
+                ? "Thank you for confirming your email. You can now log in."
+                : "Error: the confirmation link is invalid or has expired.";
             return View();
         }
 
@@ -181,26 +185,28 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
+            const string sentMessage = "If an unconfirmed account exists for that address, a verification email has been sent.";
+
             var user = await _userManager.FindByEmailAsync(model.Input.Email);
-            if (user == null)
+            if (user == null || await _userManager.IsEmailConfirmedAsync(user))
             {
-                ModelState.AddModelError(string.Empty, "Verification email sent. Please check your email.");
-                return View(model);
+                // Don't reveal whether the user exists or is already confirmed
+                TempData["StatusMessage"] = sentMessage;
+                return RedirectToAction(nameof(ResendEmailConfirmation), "Account", new { area = "User" });
             }
 
             var userId = await _userManager.GetUserIdAsync(user);
             var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+            code = TokenEncoder.Encode(code);
             var callbackUrl = Url.Action(
                 nameof(ConfirmEmail), "Account",
                 new { area = "User", userId = userId, code = code },
                 protocol: Request.Scheme) ?? string.Empty;
 
-            await emailService.SendEmailAsync("identitytomvc@gmail.com", model.Input.Email, "Confirm your email",
-                $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+            await emailService.SendEmailAsync(model.Input.Email, "Confirm your email", EmailTemplates.ConfirmAccount(callbackUrl));
 
-            ModelState.AddModelError(string.Empty, "Verification email sent. Please check your email.");
-            return View(model);
+            TempData["StatusMessage"] = sentMessage;
+            return RedirectToAction(nameof(ResendEmailConfirmation), "Account", new { area = "User" });
         }
 
         // ===========================================================================
@@ -239,9 +245,8 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
 
             if (ModelState.IsValid)
             {
-                // This doesn't count login failures towards account lockout
-                // To enable password failures to trigger account lockout, set lockoutOnFailure: true
-                var result = await _signInManager.PasswordSignInAsync(model.Input.Email, model.Input.Password, model.Input.RememberMe, lockoutOnFailure: false);
+                // Failed attempts count towards lockout (see Lockout options in Program.cs)
+                var result = await _signInManager.PasswordSignInAsync(model.Input.Email, model.Input.Password, model.Input.RememberMe, lockoutOnFailure: true);
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User logged in.");
@@ -258,7 +263,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
                 }
                 else
                 {
-                    ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                    ModelState.AddModelError(string.Empty, "Invalid login attempt. If you just registered, make sure you have confirmed your email.");
                     return View(model);
                 }
             }
@@ -277,7 +282,8 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
 
             if (user == null)
             {
-                throw new InvalidOperationException($"Unable to load two-factor authentication user.");
+                // The 2FA cookie is missing or expired - start the login over
+                return RedirectToAction(nameof(Login), "Account", new { area = "User", returnUrl });
             }
 
             var viewModel = new LoginWith2faViewModel();
@@ -304,14 +310,13 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             var user = await _signInManager.GetTwoFactorAuthenticationUserAsync();
             if (user == null)
             {
-                throw new InvalidOperationException($"Unable to load two-factor authentication user.");
+                // The 2FA cookie is missing or expired - start the login over
+                return RedirectToAction(nameof(Login), "Account", new { area = "User", returnUrl = model.ReturnUrl });
             }
 
             var authenticatorCode = model.Input.TwoFactorCode.Replace(" ", string.Empty).Replace("-", string.Empty);
 
             var result = await _signInManager.TwoFactorAuthenticatorSignInAsync(authenticatorCode, model.RememberMe, model.Input.RememberMachine);
-
-            var userId = await _userManager.GetUserIdAsync(user);
 
             if (result.Succeeded)
             {
@@ -341,7 +346,8 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             var user = await _signInManager.GetTwoFactorAuthenticationUserAsync();
             if (user == null)
             {
-                throw new InvalidOperationException($"Unable to load two-factor authentication user.");
+                // The 2FA cookie is missing or expired - start the login over
+                return RedirectToAction(nameof(Login), "Account", new { area = "User", returnUrl });
             }
 
             var viewModel = new LoginWithRecoveryCodeViewModel();
@@ -357,7 +363,6 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> LoginWithRecoveryCode(LoginWithRecoveryCodeViewModel model)
         {
-            // Normalizuj i sanitize-uj returnUrl
             model.ReturnUrl = SanitizeReturnUrl(model.ReturnUrl);
 
             if (!ModelState.IsValid)
@@ -366,14 +371,13 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             var user = await _signInManager.GetTwoFactorAuthenticationUserAsync();
             if (user == null)
             {
-                throw new InvalidOperationException($"Unable to load two-factor authentication user.");
+                // The 2FA cookie is missing or expired - start the login over
+                return RedirectToAction(nameof(Login), "Account", new { area = "User", returnUrl = model.ReturnUrl });
             }
 
             var recoveryCode = model.Input.RecoveryCode.Replace(" ", string.Empty);
 
             var result = await _signInManager.TwoFactorRecoveryCodeSignInAsync(recoveryCode);
-
-            var userId = await _userManager.GetUserIdAsync(user);
 
             if (result.Succeeded)
             {
@@ -428,15 +432,25 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             }
 
             // Sign in the user with this external login provider if the user already has a login.
-            var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: false, bypassTwoFactor: true);
+            // bypassTwoFactor: false - users who enabled 2FA must still enter their code
+            var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: false, bypassTwoFactor: false);
             if (result.Succeeded)
             {
                 _logger.LogInformation("{Name} logged in with {LoginProvider} provider.", info.Principal.Identity?.Name, info.LoginProvider);
                 return LocalRedirect(returnUrl);
             }
+            if (result.RequiresTwoFactor)
+            {
+                return RedirectToAction(nameof(LoginWith2fa), "Account", new { area = "User", returnUrl, rememberMe = false });
+            }
             if (result.IsLockedOut)
             {
                 return RedirectToAction(nameof(Lockout), "Account", new { area = "User" });
+            }
+            if (result.IsNotAllowed)
+            {
+                TempData["ErrorMessage"] = "You need to confirm your email before you can log in.";
+                return RedirectToAction(nameof(Login), "Account", new { area = "User", returnUrl });
             }
             else
             {
@@ -483,20 +497,24 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
                 if (result.Succeeded)
                 {
                     result = await _userManager.AddLoginAsync(user, info);
-                    if (result.Succeeded)
+                    if (!result.Succeeded)
+                    {
+                        // Don't leave behind an account without any way to log in
+                        await _userManager.DeleteAsync(user);
+                    }
+                    else
                     {
                         _logger.LogInformation("User created an account using {Name} provider.", info.LoginProvider);
 
                         var userId = await _userManager.GetUserIdAsync(user);
                         var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                        code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+                        code = TokenEncoder.Encode(code);
                         var callbackUrl = Url.Action(
                             nameof(ConfirmEmail), "Account", 
                             new { area = "User", userId = userId, code = code },
                             protocol: Request.Scheme) ?? string.Empty;
 
-                        await emailService.SendEmailAsync("identitytomvc@gmail.com", model.Input.Email, "Confirm your email",
-                            $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+                        await emailService.SendEmailAsync(model.Input.Email, "Confirm your email", EmailTemplates.ConfirmAccount(callbackUrl));
 
                         // If account confirmation is required, we need to show the link if we don't have a real email sender
                         if (_userManager.Options.SignIn.RequireConfirmedAccount)
@@ -514,13 +532,13 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
                 }
             }
 
-            model.ProviderDisplayName = info.ProviderDisplayName ?? string.Empty;
+            model.ProviderDisplayName = info.ProviderDisplayName ?? info.LoginProvider;
             return View("ExternalLogin", model);
         }
 
 
         // ===========================================================================
-        // GET: /User/Account/Logout
+        // POST: /User/Account/Logout
         // ===========================================================================
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -587,14 +605,13 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
                 // For more information on how to enable account confirmation and password reset please
                 // visit https://go.microsoft.com/fwlink/?LinkID=532713
                 var code = await _userManager.GeneratePasswordResetTokenAsync(user);
-                code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+                code = TokenEncoder.Encode(code);
                 var callbackUrl = Url.Action(
                     nameof(ResetPassword), "Account",
                     new { area = "User", code },
                     protocol: Request.Scheme) ?? string.Empty;
 
-                await emailService.SendEmailAsync("identitytomvc@gmail.com", model.Input.Email,"Reset Password",
-                    $"Please reset your password by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+                await emailService.SendEmailAsync(model.Input.Email, "Reset your password", EmailTemplates.ResetPassword(callbackUrl));
 
                 return RedirectToAction(nameof(ForgotPasswordConfirmation), "Account", new { area = "User" });
             }
@@ -617,16 +634,17 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         [HttpGet]
         public IActionResult ResetPassword(string? code = null)
         {
-            if (string.IsNullOrWhiteSpace(code))
+            if (!TokenEncoder.TryDecode(code, out var token))
             {
-                return BadRequest("A code must be supplied for password reset.");
+                TempData["StatusMessage"] = "Error: the password reset link is invalid. Please request a new one.";
+                return RedirectToAction(nameof(ForgotPassword), "Account", new { area = "User" });
             }
 
             var viewModel = new ResetPasswordViewModel
             {
                 Input = new ResetPasswordViewModel.InputModel
                 {
-                    Code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(code))
+                    Code = token
                 }
             };
 
@@ -653,6 +671,9 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             var result = await _userManager.ResetPasswordAsync(user, model.Input.Code, model.Input.Password);
             if (result.Succeeded)
             {
+                // The user proved they own the mailbox, so lift any lockout from failed logins
+                await _userManager.ResetAccessFailedCountAsync(user);
+                await _userManager.SetLockoutEndDateAsync(user, null);
                 return RedirectToAction(nameof(ResetPasswordConfirmation), "Account", new { area = "User" });
             }
 

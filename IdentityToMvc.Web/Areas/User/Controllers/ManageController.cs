@@ -5,8 +5,6 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.WebUtilities;
-using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 
@@ -113,7 +111,8 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
 
             if (!await _userManager.GetTwoFactorEnabledAsync(user))
             {
-                throw new InvalidOperationException($"Cannot disable 2FA for user as it's not currently enabled.");
+                TempData["StatusMessage"] = "Error: two-factor authentication is not enabled.";
+                return RedirectToAction(nameof(TwoFactorAuthentication), "Manage", new { area = "User" });
             }
 
             return View();
@@ -136,7 +135,8 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             var disable2faResult = await _userManager.SetTwoFactorEnabledAsync(user, false);
             if (!disable2faResult.Succeeded)
             {
-                throw new InvalidOperationException($"Unexpected error occurred disabling 2FA.");
+                TempData["StatusMessage"] = "Error: unexpected error occurred disabling 2FA.";
+                return RedirectToAction(nameof(TwoFactorAuthentication), "Manage", new { area = "User" });
             }
 
             _logger.LogInformation("User with ID '{UserId}' has disabled 2fa.", _userManager.GetUserId(User));
@@ -199,7 +199,8 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             var isTwoFactorEnabled = await _userManager.GetTwoFactorEnabledAsync(user);
             if (!isTwoFactorEnabled)
             {
-                throw new InvalidOperationException($"Cannot generate recovery codes for user because they do not have 2FA enabled.");
+                TempData["StatusMessage"] = "Error: enable two-factor authentication before generating recovery codes.";
+                return RedirectToAction(nameof(TwoFactorAuthentication), "Manage", new { area = "User" });
             }
 
             return View();
@@ -223,7 +224,8 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             var userId = await _userManager.GetUserIdAsync(user);
             if (!isTwoFactorEnabled)
             {
-                throw new InvalidOperationException($"Cannot generate recovery codes for user as they do not have 2FA enabled.");
+                TempData["StatusMessage"] = "Error: enable two-factor authentication before generating recovery codes.";
+                return RedirectToAction(nameof(TwoFactorAuthentication), "Manage", new { area = "User" });
             }
 
             var recoveryCodes = await _userManager.GenerateNewTwoFactorRecoveryCodesAsync(user, 10);
@@ -388,10 +390,20 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
                 return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
             }
 
+            // The Remove button is hidden in the UI in this case, but the endpoint must enforce it too:
+            // a user without a password must keep at least one external login.
+            var hasPassword = await _userManager.HasPasswordAsync(user);
+            var logins = await _userManager.GetLoginsAsync(user);
+            if (!hasPassword && logins.Count <= 1)
+            {
+                TempData["StatusMessage"] = "Error: you can't remove your only login. Set a password first.";
+                return RedirectToAction(nameof(ExternalLogins), "Manage", new { area = "User" });
+            }
+
             var result = await _userManager.RemoveLoginAsync(user, loginProvider, providerKey);
             if (!result.Succeeded)
             {
-                TempData["StatusMessage"] = "The external login was not removed.";
+                TempData["StatusMessage"] = "Error: the external login was not removed.";
                 return RedirectToAction(nameof(ExternalLogins), "Manage", new { area = "User" });
             }
 
@@ -417,7 +429,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         }
 
         // ===========================================================================
-        // GET: /User/Profile/LinkLoginCallback
+        // GET: /User/Account/Manage/LinkLoginCallback
         // ===========================================================================
         [HttpGet]
         public async Task<IActionResult> LinkLoginCallback()
@@ -432,13 +444,14 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             var info = await _signInManager.GetExternalLoginInfoAsync(userId);
             if (info == null)
             {
-                throw new InvalidOperationException($"Unexpected error occurred loading external login info.");
+                TempData["StatusMessage"] = "Error: unexpected error occurred loading external login info.";
+                return RedirectToAction(nameof(ExternalLogins), "Manage", new { area = "User" });
             }
 
             var result = await _userManager.AddLoginAsync(user, info);
             if (!result.Succeeded)
             {
-                TempData["StatusMessage"] = "The external login was not added. External logins can only be associated with one account.";
+                TempData["StatusMessage"] = "Error: the external login was not added. External logins can only be associated with one account.";
                 return RedirectToAction(nameof(ExternalLogins), "Manage", new { area = "User" });
             }
 
@@ -496,12 +509,12 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
 
             personalData.Add($"Authenticator Key", await _userManager.GetAuthenticatorKeyAsync(user) ?? string.Empty);
 
-            Response.Headers.TryAdd("Content-Disposition", "attachment; filename=PersonalData.json");
-            return new FileContentResult(JsonSerializer.SerializeToUtf8Bytes(personalData), "application/json");
+            return File(JsonSerializer.SerializeToUtf8Bytes(personalData, new JsonSerializerOptions { WriteIndented = true }),
+                "application/json", "PersonalData.json");
         }
 
         // ===========================================================================
-        // GET: /User/Manage/Account/DeletePersonalData
+        // GET: /User/Account/Manage/DeletePersonalData
         // ===========================================================================
         [HttpGet]
         public async Task<IActionResult> DeletePersonalData()
@@ -519,7 +532,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         }
 
         // ===========================================================================
-        // POST: /User/Manage/Account/DeletePersonalData
+        // POST: /User/Account/Manage/DeletePersonalData
         // ===========================================================================
         [HttpPost]
         [AutoValidateAntiforgeryToken]
@@ -534,18 +547,26 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             model.RequirePassword = await _userManager.HasPasswordAsync(user);
             if (model.RequirePassword)
             {
-                if (!await _userManager.CheckPasswordAsync(user, model.Input.Password))
+                // Count wrong passwords towards lockout so a stolen session can't be used to guess the password
+                var check = await _signInManager.CheckPasswordSignInAsync(user, model.Input.Password, lockoutOnFailure: true);
+                if (check.IsLockedOut)
+                {
+                    await _signInManager.SignOutAsync();
+                    return RedirectToAction("Lockout", "Account", new { area = "User" });
+                }
+                if (!check.Succeeded)
                 {
                     ModelState.AddModelError(string.Empty, "Incorrect password.");
                     return View(model);
                 }
             }
 
-            var result = await _userManager.DeleteAsync(user);
             var userId = await _userManager.GetUserIdAsync(user);
+            var result = await _userManager.DeleteAsync(user);
             if (!result.Succeeded)
             {
-                throw new InvalidOperationException($"Unexpected error occurred deleting user.");
+                ModelState.AddModelError(string.Empty, "Unexpected error occurred deleting your account.");
+                return View(model);
             }
 
             await _signInManager.SignOutAsync();
@@ -720,18 +741,19 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
                 return View(nameof(Email), model);
             }
 
-            if (model.Input.NewEmail != email)
+            if (!string.Equals(model.Input.NewEmail, email, StringComparison.OrdinalIgnoreCase))
             {
                 var userId = await _userManager.GetUserIdAsync(user);
                 var code = await _userManager.GenerateChangeEmailTokenAsync(user, model.Input.NewEmail);
-                code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+                code = TokenEncoder.Encode(code);
                 var callbackUrl = Url.Action(nameof(ConfirmEmailChange), "Manage",
                     new { area = "User", userId = userId, email = model.Input.NewEmail, code = code },
                     protocol: Request.Scheme) ?? string.Empty;
-                await emailService.SendEmailAsync("identitytomvc@gmail.com", model.Input.NewEmail, "Confirm your email",
-                    $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+                var sent = await emailService.SendEmailAsync(model.Input.NewEmail, "Confirm your new email", EmailTemplates.ConfirmEmailChange(callbackUrl));
 
-                TempData["StatusMessage"] = "Confirmation link to change email sent. Please check your email.";
+                TempData["StatusMessage"] = sent
+                    ? "Confirmation link to change email sent. Please check your email."
+                    : "Error: the confirmation email could not be sent. Please try again later.";
                 return RedirectToAction(nameof(Email), "Manage", new { area = "User" });
             }
 
@@ -744,7 +766,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         // ===========================================================================
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SendVerificationEmail([FromServices] IEmailService emailService, ChangeEmailViewModel model)
+        public async Task<IActionResult> SendVerificationEmail([FromServices] IEmailService emailService)
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
@@ -752,15 +774,8 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
                 return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
             }
 
+            // The "new email" field posted with this form is irrelevant here, so ModelState is not checked
             var email = await _userManager.GetEmailAsync(user);
-
-            if (!ModelState.IsValid)
-            {
-                model.Email = email;
-                model.IsEmailConfirmed = await _userManager.IsEmailConfirmedAsync(user);
-                model.Input.NewEmail = email ?? string.Empty;
-                return View(nameof(Email), model);
-            }
 
             if (string.IsNullOrEmpty(email))
             {
@@ -771,14 +786,15 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             var userId = await _userManager.GetUserIdAsync(user);
 
             var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+            code = TokenEncoder.Encode(code);
             var callbackUrl = Url.Action("ConfirmEmail", "Account",
                 new { area = "User", userId = userId, code = code },
                 protocol: Request.Scheme) ?? string.Empty;
-            await emailService.SendEmailAsync("identitytomvc@gmail.com" , email, "Confirm your email",
-                $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+            var sent = await emailService.SendEmailAsync(email, "Confirm your email", EmailTemplates.ConfirmAccount(callbackUrl));
 
-            TempData["StatusMessage"] = "Verification email sent. Please check your email.";
+            TempData["StatusMessage"] = sent
+                ? "Verification email sent. Please check your email."
+                : "Error: the verification email could not be sent. Please try again later.";
             return RedirectToAction(nameof(Email), "Manage", new { area = "User" });
         }
 
@@ -799,11 +815,23 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
                 return NotFound($"Unable to load user with ID '{userId}'.");
             }
 
-            code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(code));
-            var result = await _userManager.ChangeEmailAsync(user, email, code);
+            // The link is only valid for the account it was sent from
+            if (!string.Equals(_userManager.GetUserId(User), userId, StringComparison.Ordinal))
+            {
+                TempData["StatusMessage"] = "Error: log in with the account that requested the email change and open the link again.";
+                return View();
+            }
+
+            if (!TokenEncoder.TryDecode(code, out var token))
+            {
+                TempData["StatusMessage"] = "Error: the confirmation link is invalid or has expired.";
+                return View();
+            }
+
+            var result = await _userManager.ChangeEmailAsync(user, email, token);
             if (!result.Succeeded)
             {
-                TempData["StatusMessage"] = "Error changing email.";
+                TempData["StatusMessage"] = "Error changing email. The link may have expired or the address is already in use.";
                 return View();
             }
 
