@@ -34,17 +34,21 @@ namespace IdentityToMvc.Web.Services
                 _t["Choose a password to confirm your email address and activate your account. If you didn't create an account, you can ignore this email."],
                 _t["Choose password"], callbackUrl);
 
+#if (UnlockLink)
         public string UnlockAccountSubject => _t["Your account was locked"];
         public string UnlockAccount(string callbackUrl) =>
             Build(_t["Unlock your account"],
                 _t["Your account was locked after several failed login attempts. If that was you, you can unlock it right away. If it wasn't, someone may be guessing your password - consider changing it."],
                 _t["Unlock account"], callbackUrl);
+#endif
 
+#if (EmailChange)
         public string ConfirmEmailChangeSubject => _t["Confirm your new email"];
         public string ConfirmEmailChange(string callbackUrl) =>
             Build(_t["Confirm your new email"],
                 _t["You asked to change the email address on your account. Confirm the new address to finish the change."],
                 _t["Confirm new email"], callbackUrl);
+#endif
 
         public string ResetPasswordSubject => _t["Reset your password"];
         public string ResetPassword(string callbackUrl) =>
@@ -52,6 +56,7 @@ namespace IdentityToMvc.Web.Services
                 _t["We received a request to reset your password. If you didn't ask for this, you can ignore this email."],
                 _t["Reset password"], callbackUrl);
 
+#if (Notifications)
         public string SecurityNotification(string title, string text, DateTime whenUtc, string ip, string device)
         {
             var encoder = HtmlEncoder.Default;
@@ -70,6 +75,7 @@ namespace IdentityToMvc.Web.Services
                 </div>
                 """;
         }
+#endif
 
         private string Build(string title, string text, string buttonText, string url, string? extra = null)
         {

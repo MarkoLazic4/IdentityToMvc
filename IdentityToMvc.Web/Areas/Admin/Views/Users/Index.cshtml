@@ -42,10 +42,12 @@
                             {
                                 <span class="badge text-bg-warning">@L["Unconfirmed"]</span>
                             }
+                            @*#if (TwoFactor)*@
                             @if (user.TwoFactorEnabled)
                             {
                                 <span class="badge text-bg-success">2FA</span>
                             }
+                            @*#endif*@
                         </div>
                     </td>
                     <td>@string.Join(", ", user.Roles)</td>

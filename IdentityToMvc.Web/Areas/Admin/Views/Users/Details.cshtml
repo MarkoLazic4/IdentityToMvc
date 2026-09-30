@@ -28,10 +28,18 @@
 <div class="detail-grid">
     <div><span>@L["Email confirmed"]</span><strong>@(Model.EmailConfirmed ? L["Yes"] : L["No"])</strong></div>
     <div><span>@L["Password"]</span><strong>@(Model.HasPassword ? L["Yes"] : L["No"])</strong></div>
+    @*#if (TwoFactor)*@
     <div><span>@L["Two-factor"]</span><strong>@(Model.TwoFactorEnabled ? L["On"] : L["Off"])</strong></div>
+    @*#endif*@
+    @*#if (Passkeys)*@
     <div><span>@L["Passkeys"]</span><strong>@Model.PasskeyCount</strong></div>
+    @*#endif*@
+    @*#if (ExternalLogins)*@
     <div><span>@L["External logins"]</span><strong>@(Model.ExternalLogins.Count == 0 ? "-" : string.Join(", ", Model.ExternalLogins))</strong></div>
+    @*#endif*@
+    @*#if (Profile)*@
     <div><span>@L["Phone number"]</span><strong>@(Model.PhoneNumber ?? "-")</strong></div>
+    @*#endif*@
     <div><span>@L["Failed attempts"]</span><strong>@Model.AccessFailedCount</strong></div>
     <div><span>@L["Active devices"]</span><strong>@Model.Sessions.Count</strong></div>
 </div>
@@ -75,12 +83,14 @@
         <form asp-area="Admin" asp-controller="Users" asp-action="SignOutUser" asp-route-id="@Model.Id" method="post">
             <button type="submit" class="btn btn-soft" id="signout-user">@L["Sign out everywhere"]</button>
         </form>
+        @*#if (TwoFactor)*@
         @if (Model.TwoFactorEnabled)
         {
             <form asp-area="Admin" asp-controller="Users" asp-action="ResetTwoFactor" asp-route-id="@Model.Id" method="post" data-confirm="@L["Turn off two-factor authentication for this user?"]">
                 <button type="submit" class="btn btn-outline-danger">@L["Reset 2FA"]</button>
             </form>
         }
+        @*#endif*@
     }
     else
     {

@@ -21,6 +21,13 @@
     </PackageReference>
   </ItemGroup>
 
+  <!--#if (TemplateSourceOnly) -->
+  <!-- Same feature switches as the web project (see IdentityToMvc.Web.csproj) -->
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);Profile;EmailChange;PersonalData;UnlockLink;BreachedPasswords;TwoFactor;Sudo;Passkeys;ExternalLogins;Google;Facebook;Notifications;Devices;Activity;Admin;AdminRequiresMfa;LangSr;LangEn;LangBoth;DbSqlServer</DefineConstants>
+  </PropertyGroup>
+  <!--#endif -->
+
   <ItemGroup>
     <ProjectReference Include="..\IdentityToMvc.Web\IdentityToMvc.Web.csproj" />
   </ItemGroup>

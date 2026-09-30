@@ -46,6 +46,14 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             _logger = logger;
         }
 
+#if (!Profile)
+        // ===========================================================================
+        // GET: /User/Account/Manage/Index  (without the profile page, "Manage account" opens Password)
+        // ===========================================================================
+        [HttpGet]
+        public IActionResult Index() => RedirectToAction(nameof(ChangePassword));
+
+#endif
         // ===========================================================================
         // GET: /User/Account/Manage/ChangePassword
         // ===========================================================================

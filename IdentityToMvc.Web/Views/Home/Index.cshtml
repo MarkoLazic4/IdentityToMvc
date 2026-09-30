@@ -18,12 +18,14 @@
             <a class="btn btn-primary btn-lg px-4" asp-area="User" asp-controller="Manage" asp-action="Index">
                 <i class="bi bi-person-gear me-1"></i> @L["Manage your account"]
             </a>
+            @*#if (TwoFactor)*@
             @if (SecurityOptions.CurrentValue.EnableTwoFactor)
             {
                 <a class="btn btn-outline-primary btn-lg px-4" asp-area="User" asp-controller="Manage" asp-action="TwoFactorAuthentication">
                     <i class="bi bi-shield-check me-1"></i> @L["Security settings"]
                 </a>
             }
+            @*#endif*@
         }
         else
         {
@@ -57,6 +59,7 @@
             <p>@L["Local and external logins, \"remember me\" and lockout after repeated failed attempts."]</p>
         </div>
     </div>
+    @*#if (TwoFactor)*@
     <div class="col-md-6 col-lg-4">
         <div class="card feature-card">
             <span class="icon-badge"><i class="bi bi-shield-lock"></i></span>
@@ -64,6 +67,8 @@
             <p>@L["Authenticator apps with QR code setup, remembered browsers and one-time recovery codes."]</p>
         </div>
     </div>
+    @*#endif*@
+    @*#if (Passkeys)*@
     <div class="col-md-6 col-lg-4">
         <div class="card feature-card">
             <span class="icon-badge"><i class="bi bi-fingerprint"></i></span>
@@ -71,6 +76,8 @@
             <p>@L["Passwordless, phishing-resistant login with a fingerprint, face or device PIN."]</p>
         </div>
     </div>
+    @*#endif*@
+    @*#if (Devices || Activity)*@
     <div class="col-md-6 col-lg-4">
         <div class="card feature-card">
             <span class="icon-badge"><i class="bi bi-laptop"></i></span>
@@ -78,6 +85,8 @@
             <p>@L["See where you're signed in, sign out a single device and review your security history."]</p>
         </div>
     </div>
+    @*#endif*@
+    @*#if (Admin)*@
     <div class="col-md-6 col-lg-4">
         <div class="card feature-card">
             <span class="icon-badge"><i class="bi bi-speedometer2"></i></span>
@@ -85,8 +94,10 @@
             <p>@L["Manage users and roles, lock accounts and follow every security event in the audit log."]</p>
         </div>
     </div>
+    @*#endif*@
 </div>
 
+@*#if (TemplateSourceOnly)*@
 <div class="section-title">
     <h2>@L["How the migration works"]</h2>
     <p>@L["The same Identity services, a different presentation layer."]</p>
@@ -117,3 +128,4 @@
         </div>
     </div>
 </div>
+@*#endif*@

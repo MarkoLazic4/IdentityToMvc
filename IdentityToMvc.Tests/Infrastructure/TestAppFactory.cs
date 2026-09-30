@@ -1,4 +1,7 @@
+using System.Globalization;
+using IdentityToMvc.Web;
 using IdentityToMvc.Web.Data;
+using IdentityToMvc.Web.Localization;
 using IdentityToMvc.Web.Services;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -7,6 +10,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Localization;
 
 namespace IdentityToMvc.Tests.Infrastructure;
 
@@ -56,6 +60,27 @@ public class TestAppFactory : WebApplicationFactory<Program>
             services.RemoveAll<IEmailService>();
             services.AddSingleton<IEmailService>(Mailbox);
         });
+    }
+
+    /// <summary>
+    /// A text as the test browser sees it: English when the app offers English, otherwise the
+    /// translation (so the same tests work for Serbian-only apps).
+    /// </summary>
+    public string Text(string english)
+    {
+        var culture = LocalizationSetup.SupportedCultures.FirstOrDefault(c => c.Name == LocalizationSetup.English)
+            ?? LocalizationSetup.SupportedCultures[0];
+        var localizer = Services.GetRequiredService<IStringLocalizer<SharedResource>>();
+        var previous = CultureInfo.CurrentUICulture;
+        CultureInfo.CurrentUICulture = culture;
+        try
+        {
+            return localizer[english];
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = previous;
+        }
     }
 
     /// <summary>A browser-like client: HTTPS (needed for the __Host- cookies), cookies on, no auto-redirects.</summary>

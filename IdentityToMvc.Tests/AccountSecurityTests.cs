@@ -15,6 +15,9 @@ public class AccountSecurityTests : IClassFixture<TestAppFactory>
 
     private static string NewEmail() => $"user-{Guid.NewGuid():N}@example.test";
 
+    private string InvalidLogin =>
+        _factory.Text("Invalid login attempt. If you just registered, make sure you have confirmed your email.");
+
     [Fact]
     public async Task Register_confirm_and_login_works()
     {
@@ -23,7 +26,7 @@ public class AccountSecurityTests : IClassFixture<TestAppFactory>
 
         await browser.CreateConfirmedUserAndLoginAsync(email);
 
-        var manage = await browser.GetAsync("/User/Account/Manage/Index");
+        var manage = await browser.GetAsync("/User/Account/Manage/ChangePassword");
         Assert.Equal(HttpStatusCode.OK, manage.StatusCode);
     }
 
@@ -37,7 +40,7 @@ public class AccountSecurityTests : IClassFixture<TestAppFactory>
         var login = await browser.LoginAsync(email);
 
         Assert.Equal(HttpStatusCode.OK, login.StatusCode); // the form again, with an error
-        Assert.Contains("Invalid login attempt", await login.Content.ReadAsStringAsync());
+        Assert.Contains(InvalidLogin, await TestBrowser.ReadTextAsync(login));
     }
 
     [Fact]
@@ -56,7 +59,7 @@ public class AccountSecurityTests : IClassFixture<TestAppFactory>
         Assert.Contains("RegisterConfirmation", response.Headers.Location!.OriginalString);
 
         var warning = await _factory.Mailbox.WaitForAsync(email, received);
-        Assert.Equal("You already have an account", warning.Subject);
+        Assert.Equal(_factory.Text("You already have an account"), warning.Subject);
 
         // The owner's password still works, the attacker's does not
         using var check = _factory.CreateBrowser();
@@ -80,11 +83,11 @@ public class AccountSecurityTests : IClassFixture<TestAppFactory>
         using var check = _factory.CreateBrowser();
         var attackerLogin = await check.LoginAsync(email, "Attacker-Pass-77!");
         Assert.Equal(HttpStatusCode.OK, attackerLogin.StatusCode);
-        Assert.Contains("Invalid login attempt", await attackerLogin.Content.ReadAsStringAsync());
+        Assert.Contains(InvalidLogin, await TestBrowser.ReadTextAsync(attackerLogin));
     }
 
     [Fact]
-    public async Task Three_wrong_passwords_lock_the_account_and_email_an_unlock_link()
+    public async Task Three_wrong_passwords_lock_the_account()
     {
         using var browser = _factory.CreateBrowser();
         var email = NewEmail();
@@ -102,19 +105,21 @@ public class AccountSecurityTests : IClassFixture<TestAppFactory>
         // Even the right password is refused now
         var locked = await attacker.LoginAsync(email);
         Assert.Contains("/Lockout", locked.Headers.Location!.OriginalString);
+#if (UnlockLink)
 
         // The owner gets a link that lifts the lock
-        var unlockEmail = await _factory.Mailbox.WaitForAsync(email, received, e => e.Subject == "Your account was locked");
+        var unlockEmail = await _factory.Mailbox.WaitForAsync(email, received, e => e.Subject == _factory.Text("Your account was locked"));
         using var owner = _factory.CreateBrowser();
         await owner.GetAsync(unlockEmail.Link("/Unlock"));
 
         var login = await owner.LoginAsync(email);
         Assert.Equal(HttpStatusCode.Redirect, login.StatusCode);
         Assert.DoesNotContain("/Lockout", login.Headers.Location!.OriginalString);
+#endif
     }
 
     [Fact]
-    public async Task Login_attempts_are_recorded_in_the_security_activity()
+    public async Task Login_attempts_are_recorded_in_the_audit_log()
     {
         using var browser = _factory.CreateBrowser();
         var email = NewEmail();
@@ -131,11 +136,14 @@ public class AccountSecurityTests : IClassFixture<TestAppFactory>
 
         Assert.Contains("SignedIn", events);
         Assert.Contains("LoginFailed", events);
+#if (Activity)
 
         var activity = await browser.GetPageAsync("/User/Account/Manage/Activity");
-        Assert.Contains("Failed login attempt", activity);
+        Assert.Contains(_factory.Text("Failed login attempt"), activity);
+#endif
     }
 
+#if (Devices)
     [Fact]
     public async Task Signing_out_everywhere_ends_the_other_sessions()
     {
@@ -145,7 +153,7 @@ public class AccountSecurityTests : IClassFixture<TestAppFactory>
 
         using var phone = _factory.CreateBrowser();
         Assert.Equal(HttpStatusCode.Redirect, (await phone.LoginAsync(email)).StatusCode);
-        Assert.Equal(HttpStatusCode.OK, (await phone.GetAsync("/User/Account/Manage/Index")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await phone.GetAsync("/User/Account/Manage/ChangePassword")).StatusCode);
 
         var devices = await laptop.GetPageAsync("/User/Account/Manage/Devices");
         var result = await laptop.PostAsync("/User/Account/Manage/SignOutEverywhere", new Dictionary<string, string>(),
@@ -153,11 +161,12 @@ public class AccountSecurityTests : IClassFixture<TestAppFactory>
         Assert.Equal(HttpStatusCode.Redirect, result.StatusCode);
 
         // The phone is sent back to the login page, the laptop stays signed in
-        var phoneAfter = await phone.GetAsync("/User/Account/Manage/Index");
+        var phoneAfter = await phone.GetAsync("/User/Account/Manage/ChangePassword");
         Assert.Equal(HttpStatusCode.Redirect, phoneAfter.StatusCode);
         Assert.Contains("/User/Account/Login", phoneAfter.Headers.Location!.OriginalString);
-        Assert.Equal(HttpStatusCode.OK, (await laptop.GetAsync("/User/Account/Manage/Index")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await laptop.GetAsync("/User/Account/Manage/ChangePassword")).StatusCode);
     }
+#endif
 
     [Fact]
     public async Task Forms_without_an_antiforgery_token_are_rejected()

@@ -30,7 +30,14 @@ builder.Services.Configure<SecurityOptions>(builder.Configuration.GetSection("Se
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
-    options.UseSqlServer(builder.Configuration.GetConnectionString("Default"));
+    var connectionString = builder.Configuration.GetConnectionString("Default");
+#if (DbSqlServer)
+    options.UseSqlServer(connectionString);
+#elif (DbPostgres)
+    options.UseNpgsql(connectionString);
+#else
+    options.UseSqlite(connectionString);
+#endif
 });
 
 // ---------------------------------------------------------------------------
@@ -55,7 +62,7 @@ if (!string.IsNullOrWhiteSpace(keyCertificatePath))
 // ---------------------------------------------------------------------------
 // Identity
 // ---------------------------------------------------------------------------
-builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
+var identity = builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
 {
     options.Password.RequiredLength = 8;
     options.Password.RequireDigit = true;
@@ -76,13 +83,19 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
     options.Stores.SchemaVersion = IdentitySchemaVersions.Version3;
 })
 .AddEntityFrameworkStores<ApplicationDbContext>()
-// Encrypts the authenticator key and hashes recovery codes (see ProtectedUserStore)
-.AddUserStore<ProtectedUserStore>()
 .AddErrorDescriber<LocalizedIdentityErrorDescriber>()
 .AddDefaultTokenProviders()
-.AddPasswordValidator<UserInfoPasswordValidator>()
-.AddPasswordValidator<BreachedPasswordValidator>();
+.AddPasswordValidator<UserInfoPasswordValidator>();
 
+#if (TwoFactor)
+// Encrypts the authenticator key and hashes recovery codes (see ProtectedUserStore)
+identity.AddUserStore<ProtectedUserStore>();
+#endif
+#if (BreachedPasswords)
+identity.AddPasswordValidator<BreachedPasswordValidator>();
+#endif
+
+#if (Passkeys)
 // Passkeys: require user verification (biometrics / device PIN) so a passkey is a real
 // second factor on its own and can replace password + 2FA.
 builder.Services.Configure<IdentityPasskeyOptions>(options =>
@@ -96,6 +109,7 @@ builder.Services.Configure<IdentityPasskeyOptions>(options =>
         options.ServerDomain = serverDomain;
     }
 });
+#endif
 
 // OWASP 2023 recommendation for PBKDF2-HMAC-SHA512 is 210,000 iterations; PBKDF2-HMAC-SHA256
 // 600,000. Identity's V3 format uses HMAC-SHA512 - use 600,000 for extra margin. Existing hashes
@@ -139,10 +153,13 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.SlidingExpiration = true;
 
     // Start "sudo mode" when the user actually authenticates (see RecentAuthenticationService)
+    // and start a device session
     options.Events.OnSigningIn = async context =>
     {
         var services = context.HttpContext.RequestServices;
+#if (Sudo)
         services.GetRequiredService<RecentAuthenticationService>().OnSigningIn(context.HttpContext, context.Principal);
+#endif
 
         // Device sessions: a real sign-in starts a new session, a refresh keeps the current one
         if (context.Principal?.Identity is System.Security.Claims.ClaimsIdentity identity
@@ -207,9 +224,12 @@ builder.Services.Configure<CookieTempDataProviderOptions>(options =>
     options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
 });
 
+#if (ExternalLogins)
 // External login providers are only added when their keys are configured, so the
 // "Log in with ..." buttons never show up for a provider that can't work.
 var authentication = builder.Services.AddAuthentication();
+#endif
+#if (Google)
 if (!string.IsNullOrWhiteSpace(builder.Configuration["GoogleClientId"]))
 {
     authentication.AddGoogle(options =>
@@ -218,6 +238,8 @@ if (!string.IsNullOrWhiteSpace(builder.Configuration["GoogleClientId"]))
         options.ClientSecret = builder.Configuration["GoogleClientSecret"]!;
     });
 }
+#endif
+#if (Facebook)
 if (!string.IsNullOrWhiteSpace(builder.Configuration["FacebookAppId"]))
 {
     authentication.AddFacebook(options =>
@@ -226,6 +248,7 @@ if (!string.IsNullOrWhiteSpace(builder.Configuration["FacebookAppId"]))
         options.AppSecret = builder.Configuration["FacebookAppSecret"]!;
     });
 }
+#endif
 
 // ---------------------------------------------------------------------------
 // Email, notifications, breached password check, rate limiting
@@ -241,17 +264,21 @@ builder.Services.AddScoped<ISecurityNotifier, SecurityNotifier>();
 builder.Services.AddScoped<RecentAuthenticationService>();
 builder.Services.AddScoped<PasswordTimingEqualizer>();
 builder.Services.AddScoped<SessionService>();
+#if (Admin)
 builder.Services.AddScoped<AdminBootstrapper>();
+#endif
 builder.Services.AddHostedService<DataRetentionService>();
 builder.Services.AddScoped<EmailTemplates>();
 builder.Services.AddMemoryCache();
 
+#if (BreachedPasswords)
 builder.Services.AddHttpClient(BreachedPasswordValidator.HttpClientName, client =>
 {
     client.BaseAddress = new Uri("https://api.pwnedpasswords.com/");
     client.Timeout = TimeSpan.FromSeconds(3);
     client.DefaultRequestHeaders.UserAgent.ParseAdd("IdentityToMvc-PasswordCheck");
 });
+#endif
 
 builder.Services.AddAccountRateLimiting();
 
@@ -285,6 +312,16 @@ builder.Services.AddControllersWithViews()
 
 var app = builder.Build();
 
+// Create/upgrade the database from the migrations in Data/Migrations. On by default in
+// Development (appsettings.Development.json); in production run "dotnet ef database update"
+// or apply a migration script as part of the deployment instead.
+if (app.Configuration.GetValue("Database:ApplyMigrationsOnStartup", false))
+{
+    using var scope = app.Services.CreateScope();
+    scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Database.Migrate();
+}
+
+#if (Admin)
 // Create the Admin role and promote the accounts listed in "Admin:Emails"
 using (var scope = app.Services.CreateScope())
 {
@@ -297,6 +334,7 @@ using (var scope = app.Services.CreateScope())
         app.Logger.LogError(ex, "Could not initialize the Admin role. Has the database migration been applied?");
     }
 }
+#endif
 
 // Prepare the timing-equalizer hash in the background so even the first login is not measurably faster
 _ = Task.Run(() =>

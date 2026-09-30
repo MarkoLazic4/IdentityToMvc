@@ -153,6 +153,10 @@ namespace IdentityToMvc.Web.Security
 
             public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
             {
+#if (!Sudo)
+                // Sudo mode isn't included in this app: the attribute lets every request through
+                await next();
+#else
                 var httpContext = context.HttpContext;
                 var options = httpContext.RequestServices.GetRequiredService<Microsoft.Extensions.Options.IOptionsMonitor<SecurityOptions>>().CurrentValue;
                 var user = await _userManager.GetUserAsync(httpContext.User);
@@ -171,6 +175,7 @@ namespace IdentityToMvc.Web.Security
                     : LocalReferer(httpContext);
 
                 context.Result = new RedirectToActionResult("ConfirmIdentity", "Manage", new { area = "User", returnUrl });
+#endif
             }
 
             private static string? LocalReferer(HttpContext context)

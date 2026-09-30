@@ -58,10 +58,12 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
                 _logger.LogInformation("{Name} logged in with {LoginProvider} provider.", info.Principal.Identity?.Name, info.LoginProvider);
                 return LocalRedirect(returnUrl);
             }
+#if (TwoFactor)
             if (result.RequiresTwoFactor)
             {
                 return RedirectToAction(nameof(LoginWith2fa), "Account", new { area = "User", returnUrl, rememberMe = false });
             }
+#endif
             if (result.IsLockedOut)
             {
                 return RedirectToAction(nameof(Lockout), "Account", new { area = "User" });
@@ -157,7 +159,9 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
                 else
                 {
                     _logger.LogInformation("User created an account using {Name} provider.", info.LoginProvider);
+#if (Admin)
                     await _adminBootstrapper.EnsureAdminAsync(user);
+#endif
                     RecentAuthenticationService.FlagFreshSignIn(HttpContext);
                     await _signInManager.SignInAsync(user, isPersistent: false, info.LoginProvider);
                     return LocalRedirect(model.ReturnUrl);

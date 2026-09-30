@@ -34,19 +34,32 @@ public class SiteTests : IClassFixture<TestAppFactory>
         Assert.True(response.Headers.CacheControl?.NoStore);
     }
 
+#if (LangEn)
+    [Fact]
+    public async Task English_browsers_get_the_English_ui()
+    {
+        using var browser = _factory.CreateBrowser("en");
+        var page = await browser.GetPageAsync("/User/Account/Login");
+
+        Assert.Contains("Log in", page);
+    }
+
+#endif
+#if (LangSr)
     [Theory]
-    [InlineData("en", "Log in")]
-    [InlineData("sr", "Prijavi se")]
-    [InlineData("sr-Latn-RS", "Prijavi se")]
-    [InlineData("hr", "Prijavi se")]
-    public async Task The_browser_language_picks_the_translation(string language, string expected)
+    [InlineData("sr")]
+    [InlineData("sr-Latn-RS")]
+    [InlineData("hr")]
+    public async Task Serbian_speaking_browsers_get_the_Serbian_ui(string language)
     {
         using var browser = _factory.CreateBrowser(language);
         var page = await browser.GetPageAsync("/User/Account/Login");
 
-        Assert.Contains(expected, page);
+        Assert.Contains("Prijavi se", page);
     }
 
+#endif
+#if (LangBoth)
     [Fact]
     public async Task The_language_switch_is_remembered()
     {
@@ -69,6 +82,7 @@ public class SiteTests : IClassFixture<TestAppFactory>
         Assert.StartsWith("/", response.Headers.Location!.OriginalString);
     }
 
+#endif
     [Fact]
     public async Task Missing_pages_show_a_friendly_404()
     {

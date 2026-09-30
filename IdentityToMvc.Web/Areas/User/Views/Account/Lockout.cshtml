@@ -1,11 +1,20 @@
 ﻿@{
     ViewData["Title"] = L["Locked out"].Value;
+#if (UnlockLink && Passkeys)
+    var hint = L["Too many failed attempts. For your security this account has been locked - please try again in a few minutes, use a passkey, or use the unlock link we emailed you."];
+#elif (UnlockLink)
+    var hint = L["Too many failed attempts. For your security this account has been locked - please try again in a few minutes or use the unlock link we emailed you."];
+#elif (Passkeys)
+    var hint = L["Too many failed attempts. For your security this account has been locked - please try again in a few minutes or use a passkey."];
+#else
+    var hint = L["Too many failed attempts. For your security this account has been locked - please try again in a few minutes."];
+#endif
 }
 
 <div class="card status-page">
     <span class="icon-badge icon-badge-danger"><i class="bi bi-lock"></i></span>
     <h1>@L["Account temporarily locked"]</h1>
-    <p>@L["Too many failed attempts. For your security this account has been locked - please try again in a few minutes, use a passkey, or use the unlock link we emailed you."]</p>
+    <p>@hint</p>
     <div class="d-flex flex-column flex-sm-row justify-content-center gap-2">
         <a class="btn btn-primary" asp-area="User" asp-controller="Account" asp-action="ForgotPassword">@L["Reset password"]</a>
         <a class="btn btn-outline-primary" asp-area="" asp-controller="Home" asp-action="Index">@L["Back to home"]</a>

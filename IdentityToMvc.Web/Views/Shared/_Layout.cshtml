@@ -3,7 +3,9 @@
 @{
     var uiCulture = CultureInfo.CurrentUICulture;
     var isSerbian = uiCulture.Name.StartsWith("sr", StringComparison.OrdinalIgnoreCase);
+#if (LangBoth)
     var returnUrl = Context.Request.Path + Context.Request.QueryString;
+#endif
 
     // Texts used by site.js / passkeys.js, rendered as JSON data (not executed, so CSP-safe)
     var jsTexts = new Dictionary<string, string>
@@ -17,10 +19,12 @@
         ["strong"] = L["Strong"].Value,
         ["strengthHint"] = L["use 8+ characters with upper- and lowercase letters, a digit and a symbol."].Value,
         ["copied"] = L["Copied"].Value,
+#if (Passkeys)
         ["passkeyCancelled"] = L["The passkey request was cancelled or timed out."].Value,
         ["passkeyExists"] = L["This device already has a passkey for your account."].Value,
         ["passkeyFailed"] = L["Something went wrong with the passkey request."].Value,
-        ["passkeyStart"] = L["Could not start the passkey request."].Value
+        ["passkeyStart"] = L["Could not start the passkey request."].Value,
+#endif
     };
 }
 <!DOCTYPE html>
@@ -70,10 +74,12 @@
                         </li>
                     </ul>
                     <div class="d-flex flex-column flex-md-row align-items-md-center gap-2 py-2 py-md-0">
+                        @*#if (LangBoth)*@
                         <form asp-area="" asp-controller="Home" asp-action="SetLanguage" asp-route-returnUrl="@returnUrl" method="post" class="lang-switch" id="language-form">
                             <button type="submit" name="culture" value="@LocalizationSetup.Serbian" class="@(isSerbian ? "active" : "")" aria-pressed="@(isSerbian ? "true" : "false")" title="Srpski" id="lang-sr">SR</button>
                             <button type="submit" name="culture" value="@LocalizationSetup.English" class="@(isSerbian ? "" : "active")" aria-pressed="@(isSerbian ? "false" : "true")" title="English" id="lang-en">EN</button>
                         </form>
+                        @*#endif*@
                         <button type="button" class="btn btn-icon theme-toggle" id="theme-toggle" title="@L["Toggle dark mode"]" aria-label="@L["Toggle dark mode"]">
                             <i class="bi bi-moon-stars-fill theme-icon-dark"></i>
                             <i class="bi bi-sun-fill theme-icon-light"></i>
@@ -96,7 +102,9 @@
             <span>&copy; @DateTime.Now.Year IdentityToMvc &middot; @L["ASP.NET Core Identity on MVC"]</span>
             <span class="d-flex gap-3">
                 <a asp-area="" asp-controller="Home" asp-action="Privacy">@L["Privacy"]</a>
+                @*#if (TemplateSourceOnly)*@
                 <a href="https://github.com/MarkoLazic4/IdentityToMvc" target="_blank" rel="noopener"><i class="bi bi-github"></i> GitHub</a>
+                @*#endif*@
             </span>
         </div>
     </footer>

@@ -34,8 +34,17 @@ namespace IdentityToMvc.Web.Security
             public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
             {
                 var options = _options.CurrentValue;
-                var required = _configuration.GetValue("Security:RequireTwoFactorForAdmins", true)
-                    && (options.EnableTwoFactor || options.EnablePasskeys);
+#if (TwoFactor && Passkeys)
+                var available = options.EnableTwoFactor || options.EnablePasskeys;
+                var setupPage = options.EnableTwoFactor ? "TwoFactorAuthentication" : "Passkeys";
+#elif (TwoFactor)
+                var available = options.EnableTwoFactor;
+                var setupPage = "TwoFactorAuthentication";
+#else
+                var available = options.EnablePasskeys;
+                var setupPage = "Passkeys";
+#endif
+                var required = _configuration.GetValue("Security:RequireTwoFactorForAdmins", true) && available;
                 var user = await _userManager.GetUserAsync(context.HttpContext.User);
 
                 if (required && user != null
@@ -48,8 +57,7 @@ namespace IdentityToMvc.Web.Security
                             _t["Administrators must turn on two-factor authentication or add a passkey before using the admin panel."].Value;
                         controller.TempData[Localization.StatusMessageExtensions.IsErrorKey] = true;
                     }
-                    context.Result = new RedirectToActionResult(
-                        options.EnableTwoFactor ? "TwoFactorAuthentication" : "Passkeys", "Manage", new { area = "User" });
+                    context.Result = new RedirectToActionResult(setupPage, "Manage", new { area = "User" });
                     return;
                 }
 

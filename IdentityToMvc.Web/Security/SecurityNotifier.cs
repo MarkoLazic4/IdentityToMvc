@@ -109,6 +109,7 @@ namespace IdentityToMvc.Web.Security
             });
             await _db.SaveChangesAsync();
 
+#if (Notifications)
             var to = overrideEmail ?? user.Email;
             if (!sendEmail || AuditOnly.Contains(securityEvent)
                 || !_options.CurrentValue.SendSecurityNotifications || string.IsNullOrEmpty(to))
@@ -119,6 +120,7 @@ namespace IdentityToMvc.Web.Security
             var title = SecurityEventText.Title(securityEvent, _t);
             var text = SecurityEventText.Description(securityEvent, _t);
             _emailQueue.Enqueue(to, title, _templates.SecurityNotification(title, text, now, ip, device));
+#endif
         }
 
         private static string? Truncate(string? value, int length) =>

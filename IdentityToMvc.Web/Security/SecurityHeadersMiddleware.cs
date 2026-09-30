@@ -12,8 +12,16 @@ namespace IdentityToMvc.Web.Security
 
         // External login challenges redirect the browser from a form POST to the provider;
         // form-action also applies to those redirects, so the providers must be allowed.
+#if (Google && Facebook)
         private const string ExternalLoginOrigins =
-            "https://accounts.google.com https://www.facebook.com https://m.facebook.com";
+            " https://accounts.google.com https://www.facebook.com https://m.facebook.com";
+#elif (Google)
+        private const string ExternalLoginOrigins = " https://accounts.google.com";
+#elif (Facebook)
+        private const string ExternalLoginOrigins = " https://www.facebook.com https://m.facebook.com";
+#else
+        private const string ExternalLoginOrigins = "";
+#endif
 
         private readonly RequestDelegate _next;
         private readonly IHostEnvironment _environment;
@@ -45,7 +53,7 @@ namespace IdentityToMvc.Web.Security
                     "img-src 'self' data:; " +
                     "font-src 'self'; " +
                     $"connect-src 'self'{devConnect}; " +
-                    $"form-action 'self' {ExternalLoginOrigins}; " +
+                    $"form-action 'self'{ExternalLoginOrigins}; " +
                     "frame-ancestors 'none'; " +
                     "base-uri 'self'; " +
                     "object-src 'none'";

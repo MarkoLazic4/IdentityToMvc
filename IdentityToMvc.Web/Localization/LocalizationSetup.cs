@@ -11,8 +11,12 @@ namespace IdentityToMvc.Web.Localization
 
         public static readonly CultureInfo[] SupportedCultures =
         [
+#if (LangSr)
             new CultureInfo(Serbian),
-            new CultureInfo(English)
+#endif
+#if (LangEn)
+            new CultureInfo(English),
+#endif
         ];
 
         /// <summary>Language picked in the switcher, then the browser language, then the configured default.</summary>
@@ -22,7 +26,7 @@ namespace IdentityToMvc.Web.Localization
             if (string.IsNullOrWhiteSpace(defaultCulture)
                 || !SupportedCultures.Any(c => c.Name.Equals(defaultCulture, StringComparison.OrdinalIgnoreCase)))
             {
-                defaultCulture = Serbian;
+                defaultCulture = SupportedCultures[0].Name;
             }
 
             var options = new RequestLocalizationOptions

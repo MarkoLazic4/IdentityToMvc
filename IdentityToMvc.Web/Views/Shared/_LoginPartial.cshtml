@@ -18,6 +18,7 @@
                     <i class="bi bi-person-gear me-2"></i>@L["Manage account"]
                 </a>
             </li>
+            @*#if (TwoFactor)*@
             @if (SecurityOptions.CurrentValue.EnableTwoFactor)
             {
                 <li>
@@ -26,6 +27,8 @@
                     </a>
                 </li>
             }
+            @*#endif*@
+            @*#if (Admin)*@
             @if (User.IsInRole(AdminBootstrapper.AdminRole))
             {
                 <li>
@@ -34,6 +37,7 @@
                     </a>
                 </li>
             }
+            @*#endif*@
             <li><hr class="dropdown-divider"></li>
             <li>
                 <form id="logoutForm" method="post" asp-area="User" asp-controller="Account" asp-action="Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">

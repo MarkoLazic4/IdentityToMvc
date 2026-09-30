@@ -32,7 +32,9 @@
             <button id="registerSubmit" type="submit" class="w-100 btn btn-lg btn-primary">@L["Create account"]</button>
         </form>
 
+        @*#if (ExternalLogins)*@
         <partial name="_ExternalLoginButtons" model="(Model.ExternalLogins, Model.ReturnUrl, true)" />
+        @*#endif*@
     </div>
 
     <div class="auth-footer">

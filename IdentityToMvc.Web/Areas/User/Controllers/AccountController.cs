@@ -24,7 +24,9 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         private readonly ISecurityNotifier _securityNotifier;
         private readonly PasswordTimingEqualizer _timingEqualizer;
         private readonly SessionService _sessions;
+#if (Admin)
         private readonly AdminBootstrapper _adminBootstrapper;
+#endif
         private readonly EmailTemplates _templates;
         private readonly IStringLocalizer<SharedResource> _t;
         private readonly ILogger<AccountController> _logger;
@@ -32,9 +34,14 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         public AccountController(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager,
             IEmailQueue emailQueue, ISecurityNotifier securityNotifier, PasswordTimingEqualizer timingEqualizer,
             SessionService sessions, EmailTemplates templates, IStringLocalizer<SharedResource> localizer,
-            AdminBootstrapper adminBootstrapper, ILogger<AccountController> logger)
+#if (Admin)
+            AdminBootstrapper adminBootstrapper,
+#endif
+            ILogger<AccountController> logger)
         {
+#if (Admin)
             _adminBootstrapper = adminBootstrapper;
+#endif
             _sessions = sessions;
             _templates = templates;
             _t = localizer;
@@ -204,7 +211,9 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             var result = await _userManager.ConfirmEmailAsync(user, token);
             if (result.Succeeded)
             {
+#if (Admin)
                 await _adminBootstrapper.EnsureAdminAsync(user);
+#endif
                 this.StatusSuccess(_t["Thank you for confirming your email. You can now log in."]);
             }
             else
@@ -315,10 +324,12 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
                     _logger.LogInformation("User logged in.");
                     return LocalRedirect(model.ReturnUrl);
                 }
+#if (TwoFactor)
                 if (result.RequiresTwoFactor)
                 {
                     return RedirectToAction(nameof(LoginWith2fa), "Account", new { area = "User", returnUrl = model.ReturnUrl, rememberMe = model.Input.RememberMe });
                 }
+#endif
                 if (result.IsLockedOut)
                 {
                     _logger.LogWarning("User account locked out.");
@@ -483,17 +494,23 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             var result = await _userManager.ResetPasswordAsync(user, model.Input.Code, model.Input.Password);
             if (result.Succeeded)
             {
-                // The user proved they own the mailbox, so lift any lockout from failed logins.
+                // The user proved they own the mailbox, so lift any lockout from failed logins -
+                // but never a lock set by an administrator.
                 // ResetPasswordAsync also rotates the security stamp, signing out every other session.
                 await _userManager.ResetAccessFailedCountAsync(user);
-                await _userManager.SetLockoutEndDateAsync(user, null);
+                if (!IsLockedByAdministrator(await _userManager.GetLockoutEndDateAsync(user)))
+                {
+                    await _userManager.SetLockoutEndDateAsync(user, null);
+                }
 
                 // The reset link was delivered to the mailbox, which proves ownership of the address
                 if (!await _userManager.IsEmailConfirmedAsync(user))
                 {
                     var confirmToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                     await _userManager.ConfirmEmailAsync(user, confirmToken);
+#if (Admin)
                     await _adminBootstrapper.EnsureAdminAsync(user);
+#endif
                 }
                 await _securityNotifier.NotifyAsync(user, SecurityEvent.PasswordReset);
                 return RedirectToAction(nameof(ResetPasswordConfirmation), "Account", new { area = "User" });
@@ -528,11 +545,13 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             {
                 await _securityNotifier.NotifyAsync(user, SecurityEvent.AccountLockedOut, sendEmail: false);
 
+#if (UnlockLink)
                 // Give the owner a way out: an attacker who keeps locking the account can't keep them out
                 var code = await _userManager.GenerateUserTokenAsync(user, TokenOptions.DefaultProvider, UnlockTokenPurpose);
                 var callbackUrl = Url.Action(nameof(Unlock), "Account",
                     new { area = "User", userId = user.Id, code = TokenEncoder.Encode(code) }, Request.Scheme) ?? string.Empty;
                 _emailQueue.Enqueue(email, _templates.UnlockAccountSubject, _templates.UnlockAccount(callbackUrl));
+#endif
             }
         }
 

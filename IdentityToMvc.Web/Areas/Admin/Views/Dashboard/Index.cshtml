@@ -13,16 +13,20 @@
         <div class="stat-value">@Model.TotalUsers</div>
         <div class="stat-note">@L["{0}% confirmed their email", Model.Percent(Model.ConfirmedUsers)]</div>
     </div>
+    @*#if (TwoFactor)*@
     <div class="stat">
         <div class="stat-label">@L["Two-factor"]</div>
         <div class="stat-value">@Model.Percent(Model.TwoFactorUsers)%</div>
         <div class="stat-note">@L["{0} users", Model.TwoFactorUsers]</div>
     </div>
+    @*#endif*@
+    @*#if (Passkeys)*@
     <div class="stat">
         <div class="stat-label">@L["Passkeys"]</div>
         <div class="stat-value">@Model.Percent(Model.PasskeyUsers)%</div>
         <div class="stat-note">@L["{0} users", Model.PasskeyUsers]</div>
     </div>
+    @*#endif*@
     <div class="stat">
         <div class="stat-label">@L["Active now"]</div>
         <div class="stat-value">@Model.ActiveSessions</div>

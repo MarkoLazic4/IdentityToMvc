@@ -24,12 +24,16 @@ public sealed class TestBrowser : IDisposable
 
     public Task<HttpResponseMessage> GetAsync(string url) => _client.GetAsync(url);
 
+    /// <summary>Loads a page and returns its HTML with entities decoded (Razor encodes letters like č and ž).</summary>
     public async Task<string> GetPageAsync(string url)
     {
         var response = await _client.GetAsync(url);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        return await response.Content.ReadAsStringAsync();
+        return await ReadTextAsync(response);
     }
+
+    public static async Task<string> ReadTextAsync(HttpResponseMessage response) =>
+        WebUtility.HtmlDecode(await response.Content.ReadAsStringAsync());
 
     /// <summary>Loads <paramref name="pageUrl"/>, then posts <paramref name="fields"/> with its antiforgery token.</summary>
     public async Task<HttpResponseMessage> SubmitAsync(string pageUrl, IDictionary<string, string> fields, string? postUrl = null)
@@ -42,6 +46,13 @@ public sealed class TestBrowser : IDisposable
     {
         var form = new Dictionary<string, string>(fields) { ["__RequestVerificationToken"] = token };
         return _client.PostAsync(url, new FormUrlEncodedContent(form));
+    }
+
+    public static string HiddenField(string html, string name)
+    {
+        var match = Regex.Match(html, $"name=\"{Regex.Escape(name)}\" value=\"([^\"]*)\"");
+        Assert.True(match.Success, $"The page has no field {name}.");
+        return match.Groups[1].Value;
     }
 
     public static string AntiforgeryToken(string html)

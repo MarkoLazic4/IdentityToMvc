@@ -1,4 +1,4 @@
-using IdentityToMvc.Web.Localization;
+﻿using IdentityToMvc.Web.Localization;
 using IdentityToMvc.Web.Models;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
@@ -25,6 +25,7 @@ namespace IdentityToMvc.Web.Controllers
             return View();
         }
 
+#if (LangBoth)
         // POST: /Home/SetLanguage - remembers the chosen language for a year
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -49,6 +50,7 @@ namespace IdentityToMvc.Web.Controllers
                 ? LocalRedirect(returnUrl)
                 : RedirectToAction(nameof(Index));
         }
+#endif
 
         // Re-executed by UseStatusCodePagesWithReExecute for 4xx/5xx responses without a body
         [ActionName("StatusCode")]

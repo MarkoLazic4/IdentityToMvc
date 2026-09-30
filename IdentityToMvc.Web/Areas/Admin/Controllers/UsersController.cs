@@ -150,6 +150,7 @@ namespace IdentityToMvc.Web.Areas.Admin.Controllers
             return _t["The user was signed out of all devices."];
         });
 
+#if (TwoFactor)
         // POST: /Admin/Users/ResetTwoFactor/{id}
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -163,6 +164,7 @@ namespace IdentityToMvc.Web.Areas.Admin.Controllers
             await _notifier.NotifyAsync(user, SecurityEvent.AdminResetTwoFactor, actor: admin);
             return _t["Two-factor authentication was turned off and the authenticator key was reset."];
         });
+#endif
 
         // POST: /Admin/Users/ConfirmEmail/{id}
         [HttpPost]

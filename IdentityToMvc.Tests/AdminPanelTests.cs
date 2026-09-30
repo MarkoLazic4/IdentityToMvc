@@ -34,6 +34,7 @@ public class AdminPanelAccessTests : IClassFixture<TestAppFactory>
         Assert.Contains("/User/Account/AccessDenied", response.Headers.Location!.OriginalString);
     }
 
+#if (AdminRequiresMfa)
     [Fact]
     public async Task Admins_without_two_factor_must_set_it_up_first()
     {
@@ -45,6 +46,7 @@ public class AdminPanelAccessTests : IClassFixture<TestAppFactory>
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
         Assert.Contains("/User/Account/Manage/", response.Headers.Location!.OriginalString);
     }
+#endif
 }
 
 public class AdminPanelTests : IClassFixture<AdminWithoutTwoFactorFactory>
@@ -80,7 +82,7 @@ public class AdminPanelTests : IClassFixture<AdminWithoutTwoFactorFactory>
         Assert.True(await users.IsInRoleAsync(user!, AdminBootstrapper.AdminRole));
 
         var dashboard = await admin.GetPageAsync("/Admin/Dashboard");
-        Assert.Contains("Admin panel", dashboard);
+        Assert.Contains(_factory.Text("Admin panel"), dashboard);
     }
 
     [Fact]
@@ -102,11 +104,29 @@ public class AdminPanelTests : IClassFixture<AdminWithoutTwoFactorFactory>
         Assert.Equal(HttpStatusCode.Redirect, lockResult.StatusCode);
 
         // The user's existing session ends and logging in again is refused
-        var after = await user.GetAsync("/User/Account/Manage/Index");
+        var after = await user.GetAsync("/User/Account/Manage/ChangePassword");
         Assert.Equal(HttpStatusCode.Redirect, after.StatusCode);
         Assert.Contains("/User/Account/Login", after.Headers.Location!.OriginalString);
         var login = await user.LoginAsync(email);
         Assert.Contains("/Lockout", login.Headers.Location!.OriginalString);
+
+        // Resetting the password proves ownership of the mailbox, but must not lift an administrator's lock
+        var received = _factory.Mailbox.For(email).Count;
+        await user.SubmitAsync("/User/Account/ForgotPassword", new Dictionary<string, string> { ["Input.Email"] = email });
+        var resetEmail = await _factory.Mailbox.WaitForAsync(email, received, e => e.Subject == _factory.Text("Reset your password"));
+        var resetLink = resetEmail.Link("/ResetPassword");
+        var resetPage = await user.GetPageAsync(resetLink);
+        var reset = await user.PostAsync("/User/Account/ResetPassword", new Dictionary<string, string>
+        {
+            ["Input.Code"] = TestBrowser.HiddenField(resetPage, "Input.Code"),
+            ["Input.Email"] = email,
+            ["Input.Password"] = "New-Kettle-43!",
+            ["Input.ConfirmPassword"] = "New-Kettle-43!"
+        }, TestBrowser.AntiforgeryToken(resetPage));
+        Assert.Equal(HttpStatusCode.Redirect, reset.StatusCode);
+
+        var afterReset = await user.LoginAsync(email, "New-Kettle-43!");
+        Assert.Contains("/Lockout", afterReset.Headers.Location!.OriginalString);
     }
 
     [Fact]

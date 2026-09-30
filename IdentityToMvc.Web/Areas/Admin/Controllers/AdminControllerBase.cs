@@ -11,7 +11,9 @@ namespace IdentityToMvc.Web.Areas.Admin.Controllers
     /// </summary>
     [Area("Admin")]
     [Authorize(Roles = AdminBootstrapper.AdminRole)]
+#if (AdminRequiresMfa)
     [RequireAdminSecurity]
+#endif
     [EnableRateLimiting(RateLimitPolicies.Auth)]
     [TypeFilter(typeof(RefreshSessionOnSecurityStampChangeFilter))]
     public abstract class AdminControllerBase : Controller

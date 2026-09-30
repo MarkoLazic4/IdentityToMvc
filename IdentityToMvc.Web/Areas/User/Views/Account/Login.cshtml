@@ -2,7 +2,11 @@
 @inject Microsoft.Extensions.Options.IOptionsMonitor<SecurityOptions> SecurityOptions
 @{
     ViewData["Title"] = L["Log in"].Value;
+#if (Passkeys)
     var passkeysEnabled = SecurityOptions.CurrentValue.EnablePasskeys;
+#else
+    var passkeysEnabled = false;
+#endif
 }
 
 <div class="auth-wrapper">
@@ -38,6 +42,7 @@
             <button id="login-submit" type="submit" class="w-100 btn btn-lg btn-primary">@L["Log in"]</button>
         </form>
 
+        @*#if (Passkeys)*@
         @if (passkeysEnabled)
         {
             <form id="passkey-login-form" asp-area="User" asp-controller="Account" asp-action="LoginWithPasskey" method="post"
@@ -50,8 +55,11 @@
                 <div id="passkey-login-error" class="text-danger small mt-2" role="alert" hidden></div>
             </form>
         }
+        @*#endif*@
 
+        @*#if (ExternalLogins)*@
         <partial name="_ExternalLoginButtons" model="(Model.ExternalLogins, Model.ReturnUrl, false)" />
+        @*#endif*@
     </div>
 
     <div class="auth-footer">
@@ -68,8 +76,10 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    @*#if (Passkeys)*@
     @if (passkeysEnabled)
     {
         <script src="~/js/passkeys.js" asp-append-version="true"></script>
     }
+    @*#endif*@
 }
