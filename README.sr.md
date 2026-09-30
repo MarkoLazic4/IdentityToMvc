@@ -9,7 +9,11 @@ Projekat prikazuje kako prevesti standardne Identity RCL stranice u MVC controll
 - **Auth**: registracija, login/logout, eksterni provideri, potvrda email-a  
 - **Bezbednost**: reset lozinke, 2FA sa QR kodom, recovery kodovi, zaključavanje naloga posle 3 neuspešna pokušaja, 2FA važi i za eksterne prijave  
 - **Profil**: izmena lozinke/email-a/podataka, spoljašnji nalozi, brisanje podataka  
+- **Uređaji i aktivnost**: spisak svih prijavljenih uređaja sa odjavom svakog pojedinačno; vremenska linija bezbednosnih događaja (prijave, neuspeli pokušaji, izmene naloga); mejl kada se prijavi novi uređaj  
+- **Admin panel** (`/Admin`): pregled, pretraga korisnika, detalji korisnika (zaključaj/otključaj, odjavi sa svih uređaja, resetuj 2FA, potvrdi mejl, uloge, brisanje), upravljanje ulogama i kompletan audit log  
+- **Lokalizacija**: srpski (latinica) i engleski, bira se po jeziku browsera ili prekidačem SR/EN; prevedeni su i mejlovi, poruke validacije i Identity greške  
 - **UI**: Bootstrap 5.3 + Bootstrap Icons, svetla/tamna tema, indikator jačine lozinke i prikaz/sakrivanje lozinke, responsive layout  
+- **Testovi i CI**: integracioni testovi (`IdentityToMvc.Tests`) pokreću celu aplikaciju u memoriji; GitHub Actions na svaki push radi build, testove i proveru prevoda  
 
 | Početna | Prijava |
 |---------|---------|
@@ -18,6 +22,14 @@ Projekat prikazuje kako prevesti standardne Identity RCL stranice u MVC controll
 | Podešavanje authenticator-a | 2FA podešavanja (tamna tema) |
 |-----------------------------|------------------------------|
 | ![Authenticator](docs/screenshots/enable-authenticator.png) | ![2FA](docs/screenshots/two-factor-dark.png) |
+
+| Admin panel | Admin: detalji korisnika |
+|-------------|--------------------------|
+| ![Admin panel](docs/screenshots/admin-dashboard.png) | ![Detalji korisnika](docs/screenshots/admin-user.png) |
+
+| Tvoji uređaji | Bezbednosna aktivnost |
+|---------------|-----------------------|
+| ![Uređaji](docs/screenshots/devices.png) | ![Aktivnost](docs/screenshots/activity.png) |
   
 > 📘 **Detaljno uputstvo na srpskom** - kako sve radi, koji deo preneti za koju funkcionalnost i kako uključiti samo osnovno: [docs/UPUTSTVO.md](docs/UPUTSTVO.md)
 
@@ -35,9 +47,13 @@ Pored podrazumevanih Identity podešavanja, aplikacija dodaje:
 | **Rate limiting** | Ograničenja po IP adresi za forme naloga (20/min) i za rute koje šalju email (5 na 10 min), odgovor `429` sa `Retry-After`. |
 | **Politika lozinki** | 8+ karaktera sa velikim/malim slovom, cifrom i simbolom; ne sme sadržati email; provera u [Have I Been Pwned](https://haveibeenpwned.com/Passwords) bazi procurelih lozinki preko k-anonymity (samo 5 karaktera heša napušta server; ako API nije dostupan, provera se preskače). |
 | **Heširanje lozinki** | PBKDF2-HMAC-SHA512 sa 600.000 iteracija; stari heševi se automatski unapređuju pri sledećoj prijavi. |
-| **Sesije** | „Odjavi me sa svih drugih uređaja“, security stamp se proverava na 5 minuta, promena lozinke/2FA gasi ostale sesije a trenutnu zadržava. |
-| **Bezbednosna obaveštenja** | Email + strukturisani audit log (`Security audit: <Event>`) za promene lozinke/emaila/2FA/passkey-a/načina prijave, zaključavanja i brisanje naloga. |
-| **Bez otkrivanja naloga** | Potvrda registracije, ponovno slanje potvrde i reset lozinke odgovaraju isto za nepostojeće naloge; mejlovi idu kroz pozadinski red pa ni vreme odgovora ne otkriva ništa. |
+| **Sesije** | Svaka prijava je sesija na serveru: korisnik vidi svoje uređaje i može odmah da ugasi bilo koji, „odjavi me sa svih uređaja“, security stamp se proverava na 5 minuta, promena lozinke/2FA gasi ostale sesije a trenutnu zadržava. Mejl pri prijavi sa novog uređaja. |
+| **Bezbednosna obaveštenja** | Email + audit log u bazi (`SecurityEvents`) i u logu aplikacije (`Security audit: <Event>`) za prijave, neuspele pokušaje, promene lozinke/emaila/2FA/passkey-a/načina prijave, zaključavanja, radnje administratora i brisanje naloga. Stari zapisi se brišu automatski. |
+| **Bez otkrivanja naloga** | Registracija, ponovno slanje potvrde i reset lozinke odgovaraju isto za nepostojeće naloge; mejlovi idu kroz pozadinski red, a prijava traje isto bez obzira da li nalog postoji. |
+| **Preuzimanje naloga unapred** | Registracija već potvrđenog mejla samo obaveštava vlasnika; nepotvrđen nalog ne može da „rezerviše“ adresu (nova registracija ga zamenjuje); spoljne prijave se nikad same ne povezuju sa postojećim nalogom. |
+| **Zloupotreba zaključavanja** | Vlasnik zaključanog naloga dobija link za otključavanje i može da se prijavi passkey-om, pa neko drugi ne može da mu drži nalog zaključanim. Nalog koji je zaključao administrator ostaje zaključan. |
+| **Tajne u bazi** | Authenticator (TOTP) ključevi su šifrovani, recovery kodovi se čuvaju samo kao PBKDF2 heševi; Data Protection ključevi se mogu šifrovati sertifikatom. |
+| **Admin panel** | Samo za ulogu `Admin`, i tek kada administrator uključi 2FA ili passkey. Administrator ne može da zaključa ili ukloni sebi ulogu, niti da obriše poslednjeg administratora; svaka radnja se upisuje u audit log. |
 | **Kolačići** | `__Host-` prefiks, `Secure`, `HttpOnly`; antiforgery kolačić `SameSite=Strict`. |
 | **Zaglavlja** | Content-Security-Policy sa nonce-om po zahtevu (bez inline skripti), HSTS (1 godina), `X-Frame-Options`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, COOP/CORP, bez `Server` zaglavlja, `no-store` na stranicama naloga. |
 | **Tokeni i ključevi** | Linkovi za potvrdu/reset ističu posle 3 sata; Data Protection ključevi se čuvaju u bazi pa tokeni i kolačići preživljavaju restart i rade na više instanci. |
@@ -54,12 +70,23 @@ Podešavanja (`Security` sekcija u `appsettings.json`):
   "SendSecurityNotifications": true,
   "MaxPasskeysPerUser": 10,
   "PasskeyServerDomain": "",      // npr. "example.com" - podrazumevano host iz zahteva
-  "KnownProxies": []              // IP adrese reverse proxy-ja kojima se veruje za X-Forwarded-*
+  "KnownProxies": [],             // IP adrese reverse proxy-ja kojima se veruje za X-Forwarded-*
+  "RequireTwoFactorForAdmins": true,
+  "AuditRetentionDays": 365,
+  "SessionRetentionDays": 30,
+  "DataProtectionCertificatePath": "",     // .pfx koji šifruje Data Protection ključeve (preporuka za produkciju)
+  "DataProtectionCertificatePassword": ""
+},
+"Admin": {
+  "Emails": [ "ti@example.com" ]   // postaju administratori čim potvrde mejl
+},
+"Localization": {
+  "DefaultCulture": "sr-Latn-RS"  // ili "en"; koristi se kada browser ne traži nijedan od ta dva jezika
 }
 ```
 
 > Passkeys zahtevaju HTTPS (ili `localhost`). Posle ovih izmena napravi novu migraciju - šema sada
-> sadrži tabele za passkeys i Data Protection ključeve.
+> sadrži tabele za passkeys, Data Protection ključeve, `SecurityEvents` i `UserSessions`.
 
 ![Passkeys](docs/screenshots/passkeys.png)
 
@@ -130,6 +157,32 @@ dotnet run
 ```
 
 U `Development` okruženju stranica za potvrdu registracije direktno prikazuje link za potvrdu email-a, pa možeš da testiraš i bez SMTP servera.
+
+6. **Postani administrator** - upiši svoj mejl u `Admin:Emails`, registruj se (ili restartuj aplikaciju ako nalog već
+   postoji) i potvrdi mejl. Uključi dvofaktorsku prijavu ili passkey, pa iz korisničkog menija otvori *Admin panel*.
+
+---
+
+## Testovi
+
+```bash
+dotnet test --project IdentityToMvc.Tests
+```
+
+Testovi pokreću pravu aplikaciju u memoriji sa SQLite bazom i lažnim poštanskim sandučetom - nisu potrebni SQL
+Server ni SMTP. Pokrivaju registraciju, zaštitu od preuzimanja naloga, zaključavanje i link za otključavanje, tajne u
+bazi, sesije uređaja, admin panel, sigurnosna zaglavlja i lokalizaciju.
+
+## Prevodi
+
+Tekstovi su u kodu napisani na engleskom (`L["..."]` u view-ovima, `_t["..."]` u kontrolerima), a prevodi su u
+`IdentityToMvc.Web/Resources/SharedResource.sr-Latn.resx`. Posle dodavanja ili izmene teksta pokreni
+
+```bash
+python3 tools/extract_keys.py
+```
+
+Skripta ispisuje svaki tekst koji još nema srpski prevod (CI ne prolazi dok neki nedostaje).
 
 # Licenca & Kontakt
 
