@@ -1,17 +1,17 @@
 ﻿@model string[]
 @{
-    ViewData["Title"] = "Recovery codes";
+    ViewData["Title"] = L["Recovery codes"].Value;
 }
 
 <partial name="_StatusMessage" model="@TempData["StatusMessage"] as string" />
-<h2 class="page-title">Your recovery codes</h2>
-<p class="page-subtitle">Each code can be used once to log in if you lose access to your authenticator app.</p>
+<h2 class="page-title">@L["Your recovery codes"]</h2>
+<p class="page-subtitle">@L["Each code can be used once to log in if you lose access to your authenticator app."]</p>
 
 <div class="alert alert-warning" role="alert">
     <i class="bi bi-exclamation-triangle"></i>
     <div>
-        <strong>Save these codes now - they won't be shown again.</strong>
-        <p>If you lose your device and don't have the recovery codes you will lose access to your account.</p>
+        <strong>@L["Save these codes now - they won't be shown again."]</strong>
+        <p>@L["If you lose your device and don't have the recovery codes you will lose access to your account."]</p>
     </div>
 </div>
 
@@ -23,7 +23,7 @@
 </div>
 
 <div class="d-flex flex-wrap gap-2">
-    <button type="button" class="btn btn-soft" data-copy-target="#recovery-codes"><i class="bi bi-clipboard"></i> Copy</button>
-    <button type="button" class="btn btn-soft" data-download-target="#recovery-codes" data-filename="recovery-codes.txt"><i class="bi bi-download"></i> Download</button>
-    <a class="btn btn-primary ms-auto" asp-area="User" asp-controller="Manage" asp-action="TwoFactorAuthentication">I've saved them</a>
+    <button type="button" class="btn btn-soft" data-copy-target="#recovery-codes"><i class="bi bi-clipboard"></i> @L["Copy"]</button>
+    <button type="button" class="btn btn-soft" data-download-target="#recovery-codes" data-filename="recovery-codes.txt"><i class="bi bi-download"></i> @L["Download"]</button>
+    <a class="btn btn-primary ms-auto" asp-area="User" asp-controller="Manage" asp-action="TwoFactorAuthentication">@L["I've saved them"]</a>
 </div>

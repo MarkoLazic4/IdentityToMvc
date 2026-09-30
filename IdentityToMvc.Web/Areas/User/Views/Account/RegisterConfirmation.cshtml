@@ -1,29 +1,26 @@
 ﻿@model IdentityToMvc.Web.Areas.User.ViewModels.Account.RegisterConfirmationViewModel
 @{
-    ViewData["Title"] = "Check your email";
+    ViewData["Title"] = L["Check your email"].Value;
 }
 
 <div class="card status-page">
     <span class="icon-badge"><i class="bi bi-envelope-check"></i></span>
-    <h1>Check your email</h1>
-    <p>
-        We sent a confirmation link to <strong>@Model.Email</strong>.
-        Open it to activate your account, then log in.
-    </p>
+    <h1>@L["Check your email"]</h1>
+    <p>@L["We sent an email to {0}. Open it to activate your account, then log in.", Model.Email]</p>
 
     @if (Model.DisplayConfirmAccountLink)
     {
         <div class="alert alert-warning text-start my-4" role="alert">
             <i class="bi bi-cone-striped"></i>
             <div>
-                <strong>Development mode.</strong> Emails may not be delivered locally, so here is the link that was sent:
-                <a id="confirm-link" class="d-block mt-2 fw-semibold" href="@Model.EmailConfirmationUrl">Confirm my account</a>
+                <strong>@L["Development mode."]</strong> @L["Emails may not be delivered locally, so here is the link that was sent:"]
+                <a id="confirm-link" class="d-block mt-2 fw-semibold" href="@Model.EmailConfirmationUrl">@L["Confirm my account"]</a>
             </div>
         </div>
     }
 
     <div class="d-flex flex-column flex-sm-row justify-content-center gap-2 mt-3">
-        <a class="btn btn-primary" asp-area="User" asp-controller="Account" asp-action="Login">Go to log in</a>
-        <a class="btn btn-outline-primary" asp-area="User" asp-controller="Account" asp-action="ResendEmailConfirmation">Resend email</a>
+        <a class="btn btn-primary" asp-area="User" asp-controller="Account" asp-action="Login">@L["Go to log in"]</a>
+        <a class="btn btn-outline-primary" asp-area="User" asp-controller="Account" asp-action="ResendEmailConfirmation">@L["Resend email"]</a>
     </div>
 </div>

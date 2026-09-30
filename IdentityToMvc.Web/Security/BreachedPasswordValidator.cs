@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
 using System.Security.Cryptography;
 using System.Text;
@@ -19,10 +20,12 @@ namespace IdentityToMvc.Web.Security
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IOptionsMonitor<SecurityOptions> _options;
         private readonly ILogger<BreachedPasswordValidator> _logger;
+        private readonly IStringLocalizer<SharedResource> _t;
 
         public BreachedPasswordValidator(IHttpClientFactory httpClientFactory, IOptionsMonitor<SecurityOptions> options,
-            ILogger<BreachedPasswordValidator> logger)
+            ILogger<BreachedPasswordValidator> logger, IStringLocalizer<SharedResource> localizer)
         {
+            _t = localizer;
             _httpClientFactory = httpClientFactory;
             _options = options;
             _logger = logger;
@@ -56,7 +59,7 @@ namespace IdentityToMvc.Web.Security
                         return IdentityResult.Failed(new IdentityError
                         {
                             Code = "PasswordBreached",
-                            Description = "This password has appeared in a data breach and can't be used. Please choose a different one."
+                            Description = _t["This password has appeared in a data breach and can't be used. Please choose a different one."]
                         });
                     }
                 }
@@ -75,6 +78,13 @@ namespace IdentityToMvc.Web.Security
     /// </summary>
     public sealed class UserInfoPasswordValidator : IPasswordValidator<IdentityUser>
     {
+        private readonly IStringLocalizer<SharedResource> _t;
+
+        public UserInfoPasswordValidator(IStringLocalizer<SharedResource> localizer)
+        {
+            _t = localizer;
+        }
+
         public Task<IdentityResult> ValidateAsync(UserManager<IdentityUser> manager, IdentityUser user, string? password)
         {
             if (string.IsNullOrEmpty(password))
@@ -89,7 +99,7 @@ namespace IdentityToMvc.Web.Security
                     return Task.FromResult(IdentityResult.Failed(new IdentityError
                     {
                         Code = "PasswordContainsUserInfo",
-                        Description = "Your password must not contain your email address or user name."
+                        Description = _t["Your password must not contain your email address or user name."]
                     }));
                 }
             }

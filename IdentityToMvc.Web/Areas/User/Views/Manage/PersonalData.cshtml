@@ -1,29 +1,29 @@
 ﻿@{
-    ViewData["Title"] = "Personal Data";
+    ViewData["Title"] = L["Personal data"].Value;
 }
 
-<h2 class="page-title">Personal data</h2>
-<p class="page-subtitle">Your account contains personal data that you have given us. You can download or delete it here.</p>
+<h2 class="page-title">@L["Personal data"]</h2>
+<p class="page-subtitle">@L["Your account contains personal data that you have given us. You can download or delete it here."]</p>
 
 <div class="setting-row">
     <div class="d-flex gap-3 align-items-center">
         <span class="icon-badge"><i class="bi bi-download"></i></span>
         <div>
-            <h3>Download your data</h3>
-            <p>Get a JSON file with everything stored about your account.</p>
+            <h3>@L["Download your data"]</h3>
+            <p>@L["Get a JSON file with everything stored about your account."]</p>
         </div>
     </div>
     <form id="download-data" asp-area="User" asp-controller="Manage" asp-action="DownloadPersonalData" method="post">
-        <button class="btn btn-soft" type="submit"><i class="bi bi-filetype-json me-1"></i> Download</button>
+        <button class="btn btn-soft" type="submit"><i class="bi bi-filetype-json me-1"></i> @L["Download"]</button>
     </form>
 </div>
 
 <div class="danger-zone mt-4">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
         <div>
-            <h3 class="h6 text-danger mb-1">Delete account</h3>
-            <p class="small text-muted mb-0">Permanently removes your account and all of its data. This cannot be undone.</p>
+            <h3 class="h6 text-danger mb-1">@L["Delete account"]</h3>
+            <p class="small text-muted mb-0">@L["Permanently removes your account and all of its data. This cannot be undone."]</p>
         </div>
-        <a id="delete" asp-area="User" asp-controller="Manage" asp-action="DeletePersonalData" class="btn btn-danger">Delete account</a>
+        <a id="delete" asp-area="User" asp-controller="Manage" asp-action="DeletePersonalData" class="btn btn-danger">@L["Delete account"]</a>
     </div>
 </div>

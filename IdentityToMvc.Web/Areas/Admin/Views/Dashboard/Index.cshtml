@@ -1,0 +1,62 @@
+﻿@model DashboardViewModel
+@{
+    ViewData["Title"] = L["Admin panel"].Value;
+}
+
+<h2 class="page-title">@L["Overview"]</h2>
+<p class="page-subtitle">@L["The state of your users' accounts at a glance."]</p>
+<partial name="_StatusMessage" model="@TempData["StatusMessage"] as string" />
+
+<div class="stat-grid">
+    <div class="stat">
+        <div class="stat-label">@L["Users"]</div>
+        <div class="stat-value">@Model.TotalUsers</div>
+        <div class="stat-note">@L["{0}% confirmed their email", Model.Percent(Model.ConfirmedUsers)]</div>
+    </div>
+    <div class="stat">
+        <div class="stat-label">@L["Two-factor"]</div>
+        <div class="stat-value">@Model.Percent(Model.TwoFactorUsers)%</div>
+        <div class="stat-note">@L["{0} users", Model.TwoFactorUsers]</div>
+    </div>
+    <div class="stat">
+        <div class="stat-label">@L["Passkeys"]</div>
+        <div class="stat-value">@Model.Percent(Model.PasskeyUsers)%</div>
+        <div class="stat-note">@L["{0} users", Model.PasskeyUsers]</div>
+    </div>
+    <div class="stat">
+        <div class="stat-label">@L["Active now"]</div>
+        <div class="stat-value">@Model.ActiveSessions</div>
+        <div class="stat-note">@L["sessions in the last hour"]</div>
+    </div>
+</div>
+
+<h3 class="h6 text-muted text-uppercase small mt-4 mb-2">@L["Last 24 hours"]</h3>
+<div class="stat-grid">
+    <div class="stat">
+        <div class="stat-label">@L["Sign-ins"]</div>
+        <div class="stat-value">@Model.SignIns24h</div>
+    </div>
+    <div class="stat @(Model.FailedLogins24h > 20 ? "stat-warning" : "")">
+        <div class="stat-label">@L["Failed logins"]</div>
+        <div class="stat-value">@Model.FailedLogins24h</div>
+    </div>
+    <div class="stat @(Model.Lockouts24h > 0 ? "stat-danger" : "")">
+        <div class="stat-label">@L["Lockouts"]</div>
+        <div class="stat-value">@Model.Lockouts24h</div>
+    </div>
+    <div class="stat @(Model.LockedUsers > 0 ? "stat-danger" : "")">
+        <div class="stat-label">@L["Locked now"]</div>
+        <div class="stat-value">@Model.LockedUsers</div>
+    </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mt-4 mb-2">
+    <h3 class="h6 text-muted text-uppercase small mb-0">@L["Recent security events"]</h3>
+    <a asp-area="Admin" asp-controller="Audit" asp-action="Index" class="small">@L["Open audit log"]</a>
+</div>
+<ol class="timeline">
+    @foreach (var item in Model.RecentEvents)
+    {
+        <partial name="_EventText" model="item" />
+    }
+</ol>

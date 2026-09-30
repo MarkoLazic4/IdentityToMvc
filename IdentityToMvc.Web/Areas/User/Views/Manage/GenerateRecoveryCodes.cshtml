@@ -1,24 +1,24 @@
 ﻿@{
-    ViewData["Title"] = "Generate recovery codes";
+    ViewData["Title"] = L["Generate recovery codes"].Value;
 }
 
 <partial name="_StatusMessage" model="@TempData["StatusMessage"] as string" />
-<h2 class="page-title">Generate new recovery codes</h2>
-<p class="page-subtitle">Your old codes will stop working as soon as new ones are generated.</p>
+<h2 class="page-title">@L["Generate new recovery codes"]</h2>
+<p class="page-subtitle">@L["Your old codes will stop working as soon as new ones are generated."]</p>
 
 <div class="alert alert-warning" role="alert">
     <i class="bi bi-exclamation-triangle"></i>
     <div>
-        <strong>Put these codes in a safe place.</strong>
+        <strong>@L["Put these codes in a safe place."]</strong>
         <p>
-            If you lose your device and don't have the recovery codes you will lose access to your account.
-            Generating new recovery codes does not change the key used in your authenticator app - to change it,
-            <a asp-area="User" asp-controller="Manage" asp-action="ResetAuthenticator">reset your authenticator key</a>.
+            @L["If you lose your device and don't have the recovery codes you will lose access to your account."]
+            @L["Generating new recovery codes does not change the key used in your authenticator app."]
+            <a asp-area="User" asp-controller="Manage" asp-action="ResetAuthenticator">@L["Reset your authenticator key"]</a>
         </p>
     </div>
 </div>
 
 <form asp-area="User" asp-controller="Manage" asp-action="GenerateRecoveryCodes" method="post">
-    <button class="btn btn-danger" type="submit"><i class="bi bi-arrow-repeat me-1"></i> Generate recovery codes</button>
-    <a class="btn btn-link" asp-area="User" asp-controller="Manage" asp-action="TwoFactorAuthentication">Cancel</a>
+    <button class="btn btn-danger" type="submit"><i class="bi bi-arrow-repeat me-1"></i> @L["Generate recovery codes"]</button>
+    <a class="btn btn-link" asp-area="User" asp-controller="Manage" asp-action="TwoFactorAuthentication">@L["Cancel"]</a>
 </form>

@@ -1,16 +1,15 @@
 ﻿@model IdentityToMvc.Web.Areas.User.ViewModels.Account.ExternalLoginViewModel
 @{
-    ViewData["Title"] = "Finish signing up";
+    ViewData["Title"] = L["Finish signing up"].Value;
 }
 
 <div class="auth-wrapper">
     <div class="card auth-card">
         <div class="auth-header">
             <span class="icon-badge"><i class="bi bi-link-45deg"></i></span>
-            <h1 id="external-login-title">Associate your @Model.ProviderDisplayName account</h1>
+            <h1 id="external-login-title">@L["Associate your {0} account", Model.ProviderDisplayName]</h1>
             <p id="external-login-description">
-                You've successfully authenticated with <strong>@Model.ProviderDisplayName</strong>.
-                Your account will use the email address your provider has verified.
+                @L["You've successfully authenticated with {0}. Your account will use the email address your provider has verified.", Model.ProviderDisplayName]
             </p>
         </div>
 
@@ -19,10 +18,9 @@
             <div asp-validation-summary="ModelOnly" role="alert"></div>
             <div class="form-floating mb-4">
                 <input asp-for="Input.Email" class="form-control" readonly />
-                <label asp-for="Input.Email">Email</label>
-                <span asp-validation-for="Input.Email" class="text-danger"></span>
+                <label asp-for="Input.Email"></label>
             </div>
-            <button type="submit" class="w-100 btn btn-lg btn-primary">Finish sign up</button>
+            <button type="submit" class="w-100 btn btn-lg btn-primary">@L["Finish sign up"]</button>
         </form>
     </div>
 </div>

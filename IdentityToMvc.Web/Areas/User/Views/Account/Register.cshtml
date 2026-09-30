@@ -1,14 +1,14 @@
 ﻿@model IdentityToMvc.Web.Areas.User.ViewModels.Account.RegisterViewModel
 @{
-    ViewData["Title"] = "Sign up";
+    ViewData["Title"] = L["Sign up"].Value;
 }
 
 <div class="auth-wrapper">
     <div class="card auth-card">
         <div class="auth-header">
             <span class="icon-badge"><i class="bi bi-person-plus"></i></span>
-            <h1>Create your account</h1>
-            <p>It only takes a minute.</p>
+            <h1>@L["Create your account"]</h1>
+            <p>@L["It only takes a minute."]</p>
         </div>
 
         <form id="registerForm" asp-area="User" asp-controller="Account" asp-action="Register" method="post" novalidate>
@@ -16,28 +16,28 @@
             <div asp-validation-summary="ModelOnly" role="alert"></div>
             <div class="form-floating mb-3">
                 <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" autofocus />
-                <label asp-for="Input.Email">Email</label>
+                <label asp-for="Input.Email"></label>
                 <span asp-validation-for="Input.Email" class="text-danger"></span>
             </div>
             <div class="form-floating mb-3">
                 <input asp-for="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" data-strength />
-                <label asp-for="Input.Password">Password</label>
+                <label asp-for="Input.Password"></label>
                 <span asp-validation-for="Input.Password" class="text-danger"></span>
             </div>
             <div class="form-floating mb-4">
                 <input asp-for="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
-                <label asp-for="Input.ConfirmPassword">Confirm password</label>
+                <label asp-for="Input.ConfirmPassword"></label>
                 <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
             </div>
-            <button id="registerSubmit" type="submit" class="w-100 btn btn-lg btn-primary">Create account</button>
+            <button id="registerSubmit" type="submit" class="w-100 btn btn-lg btn-primary">@L["Create account"]</button>
         </form>
 
-        <partial name="_ExternalLoginButtons" model='(Model.ExternalLogins, Model.ReturnUrl, "Sign up")' />
+        <partial name="_ExternalLoginButtons" model="(Model.ExternalLogins, Model.ReturnUrl, true)" />
     </div>
 
     <div class="auth-footer">
-        Already have an account?
-        <a asp-area="User" asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Model.ReturnUrl">Log in</a>
+        @L["Already have an account?"]
+        <a asp-area="User" asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Model.ReturnUrl">@L["Log in"]</a>
     </div>
 </div>
 

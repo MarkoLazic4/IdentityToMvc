@@ -1,29 +1,29 @@
 ﻿@model IdentityToMvc.Web.Areas.User.ViewModels.Manage.DeletePersonalDataViewModel
 @{
-    ViewData["Title"] = "Delete Personal Data";
+    ViewData["Title"] = L["Delete account"].Value;
 }
 
-<h2 class="page-title text-danger">Delete account</h2>
-<p class="page-subtitle">This permanently removes your account and all of its data.</p>
+<h2 class="page-title text-danger">@L["Delete account"]</h2>
+<p class="page-subtitle">@L["This permanently removes your account and all of its data."]</p>
 
 <div class="alert alert-danger" role="alert">
     <i class="bi bi-exclamation-octagon"></i>
-    <div><strong>Deleting this data will permanently remove your account, and this cannot be recovered.</strong></div>
+    <div><strong>@L["Deleting this data will permanently remove your account, and this cannot be recovered."]</strong></div>
 </div>
 
 <form id="delete-user" asp-area="User" asp-controller="Manage" asp-action="DeletePersonalData" method="post" class="col-xl-8" novalidate
-      data-confirm="Are you sure you want to permanently delete your account?">
+      data-confirm="@L["Are you sure you want to permanently delete your account?"]">
     <div asp-validation-summary="ModelOnly" role="alert"></div>
     @if (Model.RequirePassword)
     {
         <div class="form-floating mb-4">
             <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="Password" />
-            <label asp-for="Input.Password">Confirm with your password</label>
+            <label asp-for="Input.Password">@L["Confirm with your password"]</label>
             <span asp-validation-for="Input.Password" class="text-danger"></span>
         </div>
     }
-    <button class="btn btn-danger" type="submit"><i class="bi bi-trash3 me-1"></i> Delete data and close my account</button>
-    <a class="btn btn-link" asp-area="User" asp-controller="Manage" asp-action="PersonalData">Cancel</a>
+    <button class="btn btn-danger" type="submit"><i class="bi bi-trash3 me-1"></i> @L["Delete data and close my account"]</button>
+    <a class="btn btn-link" asp-area="User" asp-controller="Manage" asp-action="PersonalData">@L["Cancel"]</a>
 </form>
 
 @section Scripts {

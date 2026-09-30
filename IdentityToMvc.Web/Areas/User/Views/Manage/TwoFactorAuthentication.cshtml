@@ -1,22 +1,22 @@
 ﻿@using Microsoft.AspNetCore.Http.Features
 @model IdentityToMvc.Web.Areas.User.ViewModels.Manage.TwoFactorAuthenticationViewModel
 @{
-    ViewData["Title"] = "Two-factor authentication (2FA)";
+    ViewData["Title"] = L["Two-factor authentication (2FA)"].Value;
     var consentFeature = ViewContext.HttpContext.Features.Get<ITrackingConsentFeature>();
 }
 
 <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
     <div>
-        <h2 class="page-title">Two-factor authentication</h2>
-        <p class="page-subtitle">Add a second step to your login with an authenticator app.</p>
+        <h2 class="page-title">@L["Two-factor authentication"]</h2>
+        <p class="page-subtitle">@L["Add a second step to your login with an authenticator app."]</p>
     </div>
     @if (Model.Is2faEnabled)
     {
-        <span class="status-dot status-on"><i class="bi bi-shield-fill-check"></i> Enabled</span>
+        <span class="status-dot status-on"><i class="bi bi-shield-fill-check"></i> @L["Enabled"]</span>
     }
     else
     {
-        <span class="status-dot status-off"><i class="bi bi-shield"></i> Disabled</span>
+        <span class="status-dot status-off"><i class="bi bi-shield"></i> @L["Disabled"]</span>
     }
 </div>
 
@@ -27,64 +27,50 @@
     <div class="alert alert-danger" role="alert">
         <i class="bi bi-exclamation-octagon"></i>
         <div>
-            <strong>Privacy and cookie policy have not been accepted.</strong>
-            <p>You must accept the policy before you can enable two factor authentication.</p>
+            <strong>@L["Privacy and cookie policy have not been accepted."]</strong>
+            <p>@L["You must accept the policy before you can enable two factor authentication."]</p>
         </div>
     </div>
 }
 else
 {
-    @if (Model.Is2faEnabled)
+    @if (Model.Is2faEnabled && Model.RecoveryCodesLeft <= 3)
     {
-        if (Model.RecoveryCodesLeft == 0)
-        {
-            <div class="alert alert-danger" role="alert">
-                <i class="bi bi-exclamation-octagon"></i>
-                <div>
-                    <strong>You have no recovery codes left.</strong>
-                    <p>You must <a asp-area="User" asp-controller="Manage" asp-action="GenerateRecoveryCodes">generate a new set of recovery codes</a> before you can log in with a recovery code.</p>
-                </div>
+        <div class="alert @(Model.RecoveryCodesLeft <= 1 ? "alert-danger" : "alert-warning")" role="alert">
+            <i class="bi bi-exclamation-triangle"></i>
+            <div>
+                <strong>
+                    @if (Model.RecoveryCodesLeft == 0)
+                    {
+                        @L["You have no recovery codes left."]
+                    }
+                    else
+                    {
+                        @L["You have {0} recovery codes left.", Model.RecoveryCodesLeft]
+                    }
+                </strong>
+                <p><a asp-area="User" asp-controller="Manage" asp-action="GenerateRecoveryCodes">@L["Generate a new set of recovery codes"]</a>.</p>
             </div>
-        }
-        else if (Model.RecoveryCodesLeft == 1)
-        {
-            <div class="alert alert-danger" role="alert">
-                <i class="bi bi-exclamation-octagon"></i>
-                <div>
-                    <strong>You have 1 recovery code left.</strong>
-                    <p>You can <a asp-area="User" asp-controller="Manage" asp-action="GenerateRecoveryCodes">generate a new set of recovery codes</a>.</p>
-                </div>
-            </div>
-        }
-        else if (Model.RecoveryCodesLeft <= 3)
-        {
-            <div class="alert alert-warning" role="alert">
-                <i class="bi bi-exclamation-triangle"></i>
-                <div>
-                    <strong>You have @Model.RecoveryCodesLeft recovery codes left.</strong>
-                    <p>You should <a asp-area="User" asp-controller="Manage" asp-action="GenerateRecoveryCodes">generate a new set of recovery codes</a>.</p>
-                </div>
-            </div>
-        }
+        </div>
     }
 
     <div class="setting-row">
         <div class="d-flex gap-3 align-items-center">
             <span class="icon-badge"><i class="bi bi-phone"></i></span>
             <div>
-                <h3>Authenticator app</h3>
-                <p>@(Model.HasAuthenticator ? "An authenticator app is configured for your account." : "Use an app like Microsoft or Google Authenticator to generate codes.")</p>
+                <h3>@L["Authenticator app"]</h3>
+                <p>@(Model.HasAuthenticator ? L["An authenticator app is configured for your account."] : L["Use an app like Microsoft or Google Authenticator to generate codes."])</p>
             </div>
         </div>
         <div class="d-flex flex-wrap gap-2">
             @if (!Model.HasAuthenticator)
             {
-                <a id="enable-authenticator" asp-area="User" asp-controller="Manage" asp-action="EnableAuthenticator" class="btn btn-primary">Add authenticator app</a>
+                <a id="enable-authenticator" asp-area="User" asp-controller="Manage" asp-action="EnableAuthenticator" class="btn btn-primary">@L["Add authenticator app"]</a>
             }
             else
             {
-                <a id="enable-authenticator" asp-area="User" asp-controller="Manage" asp-action="EnableAuthenticator" class="btn btn-soft">Set up again</a>
-                <a id="reset-authenticator" asp-area="User" asp-controller="Manage" asp-action="ResetAuthenticator" class="btn btn-outline-danger">Reset key</a>
+                <a id="enable-authenticator" asp-area="User" asp-controller="Manage" asp-action="EnableAuthenticator" class="btn btn-soft">@L["Set up again"]</a>
+                <a id="reset-authenticator" asp-area="User" asp-controller="Manage" asp-action="ResetAuthenticator" class="btn btn-outline-danger">@L["Reset key"]</a>
             }
         </div>
     </div>
@@ -95,11 +81,11 @@ else
             <div class="d-flex gap-3 align-items-center">
                 <span class="icon-badge icon-badge-warning"><i class="bi bi-life-preserver"></i></span>
                 <div>
-                    <h3>Recovery codes</h3>
-                    <p>@Model.RecoveryCodesLeft code@(Model.RecoveryCodesLeft == 1 ? "" : "s") left. Use one if you lose access to your device.</p>
+                    <h3>@L["Recovery codes"]</h3>
+                    <p>@L["{0} codes left. Use one if you lose access to your device.", Model.RecoveryCodesLeft]</p>
                 </div>
             </div>
-            <a asp-area="User" asp-controller="Manage" asp-action="GenerateRecoveryCodes" class="btn btn-soft">Generate new codes</a>
+            <a asp-area="User" asp-controller="Manage" asp-action="GenerateRecoveryCodes" class="btn btn-soft">@L["Generate new codes"]</a>
         </div>
 
         @if (Model.IsMachineRemembered)
@@ -108,12 +94,12 @@ else
                 <div class="d-flex gap-3 align-items-center">
                     <span class="icon-badge"><i class="bi bi-laptop"></i></span>
                     <div>
-                        <h3>This browser is remembered</h3>
-                        <p>You won't be asked for a code on this browser.</p>
+                        <h3>@L["This browser is remembered"]</h3>
+                        <p>@L["You won't be asked for a code on this browser."]</p>
                     </div>
                 </div>
                 <form asp-area="User" asp-controller="Manage" asp-action="ForgetBrowser" method="post">
-                    <button type="submit" class="btn btn-soft">Forget this browser</button>
+                    <button type="submit" class="btn btn-soft">@L["Forget this browser"]</button>
                 </form>
             </div>
         }
@@ -122,11 +108,11 @@ else
             <div class="d-flex gap-3 align-items-center">
                 <span class="icon-badge icon-badge-danger"><i class="bi bi-shield-x"></i></span>
                 <div>
-                    <h3>Disable two-factor authentication</h3>
-                    <p>Your account will only be protected by your password.</p>
+                    <h3>@L["Disable two-factor authentication"]</h3>
+                    <p>@L["Your account will only be protected by your password."]</p>
                 </div>
             </div>
-            <a asp-area="User" asp-controller="Manage" asp-action="Disable2fa" class="btn btn-outline-danger">Disable 2FA</a>
+            <a asp-area="User" asp-controller="Manage" asp-action="Disable2fa" class="btn btn-outline-danger">@L["Disable 2FA"]</a>
         </div>
     }
 }

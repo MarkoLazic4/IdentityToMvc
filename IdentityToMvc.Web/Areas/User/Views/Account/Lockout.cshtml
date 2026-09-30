@@ -1,13 +1,13 @@
 ﻿@{
-    ViewData["Title"] = "Locked out";
+    ViewData["Title"] = L["Locked out"].Value;
 }
 
 <div class="card status-page">
     <span class="icon-badge icon-badge-danger"><i class="bi bi-lock"></i></span>
-    <h1>Account temporarily locked</h1>
-    <p>Too many failed attempts. For your security this account has been locked - please try again in a few minutes.</p>
+    <h1>@L["Account temporarily locked"]</h1>
+    <p>@L["Too many failed attempts. For your security this account has been locked - please try again in a few minutes, use a passkey, or use the unlock link we emailed you."]</p>
     <div class="d-flex flex-column flex-sm-row justify-content-center gap-2">
-        <a class="btn btn-primary" asp-area="User" asp-controller="Account" asp-action="ForgotPassword">Reset password</a>
-        <a class="btn btn-outline-primary" asp-area="" asp-controller="Home" asp-action="Index">Back to home</a>
+        <a class="btn btn-primary" asp-area="User" asp-controller="Account" asp-action="ForgotPassword">@L["Reset password"]</a>
+        <a class="btn btn-outline-primary" asp-area="" asp-controller="Home" asp-action="Index">@L["Back to home"]</a>
     </div>
 </div>

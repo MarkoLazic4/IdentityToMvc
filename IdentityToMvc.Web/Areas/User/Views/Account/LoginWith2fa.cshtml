@@ -1,14 +1,14 @@
 ﻿@model IdentityToMvc.Web.Areas.User.ViewModels.Account.LoginWith2faViewModel
 @{
-    ViewData["Title"] = "Two-factor authentication";
+    ViewData["Title"] = L["Two-factor authentication"].Value;
 }
 
 <div class="auth-wrapper">
     <div class="card auth-card">
         <div class="auth-header">
             <span class="icon-badge"><i class="bi bi-phone"></i></span>
-            <h1>Two-factor authentication</h1>
-            <p>Enter the 6-digit code from your authenticator app.</p>
+            <h1>@L["Two-factor authentication"]</h1>
+            <p>@L["Enter the 6-digit code from your authenticator app."]</p>
         </div>
 
         <form method="post" asp-area="User" asp-controller="Account" asp-action="LoginWith2fa" novalidate>
@@ -17,20 +17,20 @@
             <div asp-validation-summary="ModelOnly" role="alert"></div>
             <div class="form-floating mb-3">
                 <input asp-for="Input.TwoFactorCode" class="form-control code-input" autocomplete="one-time-code" inputmode="numeric" placeholder="000000" autofocus />
-                <label asp-for="Input.TwoFactorCode">Authenticator code</label>
+                <label asp-for="Input.TwoFactorCode"></label>
                 <span asp-validation-for="Input.TwoFactorCode" class="text-danger"></span>
             </div>
             <div class="form-check mb-4">
                 <input class="form-check-input" asp-for="Input.RememberMachine" />
-                <label class="form-check-label" asp-for="Input.RememberMachine">Remember this device</label>
+                <label class="form-check-label" asp-for="Input.RememberMachine"></label>
             </div>
-            <button type="submit" class="w-100 btn btn-lg btn-primary">Verify</button>
+            <button type="submit" class="w-100 btn btn-lg btn-primary">@L["Verify"]</button>
         </form>
     </div>
 
     <div class="auth-footer">
-        Lost access to your device?
-        <a id="recovery-code-login" asp-area="User" asp-controller="Account" asp-action="LoginWithRecoveryCode" asp-route-returnUrl="@Model.ReturnUrl">Use a recovery code</a>
+        @L["Lost access to your device?"]
+        <a id="recovery-code-login" asp-area="User" asp-controller="Account" asp-action="LoginWithRecoveryCode" asp-route-returnUrl="@Model.ReturnUrl">@L["Use a recovery code"]</a>
     </div>
 </div>
 

@@ -1,7 +1,10 @@
+using IdentityToMvc.Web;
 using IdentityToMvc.Web.Data;
+using IdentityToMvc.Web.Localization;
 using IdentityToMvc.Web.Security;
 using IdentityToMvc.Web.Services;
 using IdentityToMvc.Web.Settings;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -75,6 +78,7 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
 .AddEntityFrameworkStores<ApplicationDbContext>()
 // Encrypts the authenticator key and hashes recovery codes (see ProtectedUserStore)
 .AddUserStore<ProtectedUserStore>()
+.AddErrorDescriber<LocalizedIdentityErrorDescriber>()
 .AddDefaultTokenProviders()
 .AddPasswordValidator<UserInfoPasswordValidator>()
 .AddPasswordValidator<BreachedPasswordValidator>();
@@ -107,6 +111,19 @@ builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
 builder.Services.Configure<SecurityStampValidatorOptions>(options =>
     options.ValidationInterval = TimeSpan.FromMinutes(5));
 
+// When the stamp validator rebuilds the principal it must keep the device session id
+builder.Services.Configure<SecurityStampValidatorOptions>(options =>
+    options.OnRefreshingPrincipal = context =>
+    {
+        var sessionId = SessionService.GetSessionId(context.CurrentPrincipal);
+        if (sessionId != null && context.NewPrincipal?.Identity is System.Security.Claims.ClaimsIdentity identity
+            && !identity.HasClaim(c => c.Type == SessionService.SessionClaimType))
+        {
+            identity.AddClaim(new System.Security.Claims.Claim(SessionService.SessionClaimType, sessionId));
+        }
+        return Task.CompletedTask;
+    });
+
 // ---------------------------------------------------------------------------
 // Cookies: the __Host- prefix makes the browser reject the cookie unless it is
 // Secure, has Path=/ and no Domain - so a sibling subdomain can't overwrite it.
@@ -122,11 +139,44 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.SlidingExpiration = true;
 
     // Start "sudo mode" when the user actually authenticates (see RecentAuthenticationService)
-    options.Events.OnSigningIn = context =>
+    options.Events.OnSigningIn = async context =>
     {
-        context.HttpContext.RequestServices.GetRequiredService<RecentAuthenticationService>()
-            .OnSigningIn(context.HttpContext, context.Principal);
-        return Task.CompletedTask;
+        var services = context.HttpContext.RequestServices;
+        services.GetRequiredService<RecentAuthenticationService>().OnSigningIn(context.HttpContext, context.Principal);
+
+        // Device sessions: a real sign-in starts a new session, a refresh keeps the current one
+        if (context.Principal?.Identity is System.Security.Claims.ClaimsIdentity identity
+            && !identity.HasClaim(c => c.Type == SessionService.SessionClaimType))
+        {
+            var userId = identity.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var sessionId = RecentAuthenticationService.IsFreshSignIn(context.HttpContext) && userId != null
+                ? await services.GetRequiredService<SessionService>().StartAsync(context.HttpContext, userId)
+                : SessionService.GetSessionId(context.HttpContext.User);
+            if (sessionId != null)
+            {
+                identity.AddClaim(new System.Security.Claims.Claim(SessionService.SessionClaimType, sessionId));
+            }
+        }
+    };
+
+    // Keep Identity's security stamp check, then make sure the device session wasn't signed out
+    var validateSecurityStamp = options.Events.OnValidatePrincipal;
+    options.Events.OnValidatePrincipal = async context =>
+    {
+        await validateSecurityStamp(context);
+        var sessionId = SessionService.GetSessionId(context.Principal);
+        var userId = context.Principal?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (sessionId == null || userId == null)
+            return;
+
+        var sessions = context.HttpContext.RequestServices.GetRequiredService<SessionService>();
+        if (!await sessions.IsActiveAsync(sessionId, userId))
+        {
+            context.RejectPrincipal();
+            await context.HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
+            return;
+        }
+        await sessions.TouchAsync(sessionId, context.HttpContext);
     };
 
     options.LoginPath = "/User/Account/Login";
@@ -190,6 +240,11 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ISecurityNotifier, SecurityNotifier>();
 builder.Services.AddScoped<RecentAuthenticationService>();
 builder.Services.AddScoped<PasswordTimingEqualizer>();
+builder.Services.AddScoped<SessionService>();
+builder.Services.AddScoped<AdminBootstrapper>();
+builder.Services.AddHostedService<DataRetentionService>();
+builder.Services.AddScoped<EmailTemplates>();
+builder.Services.AddMemoryCache();
 
 builder.Services.AddHttpClient(BreachedPasswordValidator.HttpClientName, client =>
 {
@@ -220,9 +275,28 @@ builder.Services.AddHsts(options =>
     options.IncludeSubDomains = true;
 });
 
-builder.Services.AddControllersWithViews();
+// Translations: Resources/SharedResource.{culture}.resx, English text is the key
+builder.Services.AddLocalization(options => options.ResourcesPath = "Resources");
+
+builder.Services.AddControllersWithViews()
+    .AddViewLocalization()
+    .AddDataAnnotationsLocalization(options =>
+        options.DataAnnotationLocalizerProvider = (_, factory) => factory.Create(typeof(SharedResource)));
 
 var app = builder.Build();
+
+// Create the Admin role and promote the accounts listed in "Admin:Emails"
+using (var scope = app.Services.CreateScope())
+{
+    try
+    {
+        await scope.ServiceProvider.GetRequiredService<AdminBootstrapper>().InitializeAsync();
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogError(ex, "Could not initialize the Admin role. Has the database migration been applied?");
+    }
+}
 
 // Prepare the timing-equalizer hash in the background so even the first login is not measurably faster
 _ = Task.Run(() =>
@@ -250,6 +324,7 @@ app.UseMiddleware<SecurityHeadersMiddleware>();
 app.UseStatusCodePagesWithReExecute("/Home/StatusCode", "?code={0}");
 
 app.UseHttpsRedirection();
+app.UseRequestLocalization(LocalizationSetup.CreateOptions(builder.Configuration));
 app.UseRouting();
 
 if (builder.Configuration.GetValue("Security:EnableRateLimiting", true))

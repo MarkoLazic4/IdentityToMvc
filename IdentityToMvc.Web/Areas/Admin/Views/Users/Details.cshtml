@@ -1,0 +1,116 @@
+﻿@model UserDetailsViewModel
+@{
+    ViewData["Title"] = Model.Email;
+}
+
+<a asp-area="Admin" asp-controller="Users" asp-action="Index" class="small"><i class="bi bi-arrow-left"></i> @L["All users"]</a>
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mt-2">
+    <div class="min-w-0">
+        <h2 class="page-title text-break">@Model.Email</h2>
+        <p class="page-subtitle mb-3">
+            @if (Model.IsLocked)
+            {
+                <span class="badge text-bg-danger">@(Model.IsAdminLock ? L["Locked by an administrator"] : L["Temporarily locked"])</span>
+            }
+            @if (!Model.EmailConfirmed)
+            {
+                <span class="badge text-bg-warning">@L["Unconfirmed"]</span>
+            }
+            @if (Model.IsCurrentUser)
+            {
+                <span class="badge text-bg-secondary">@L["This is you"]</span>
+            }
+        </p>
+    </div>
+</div>
+<partial name="_StatusMessage" model="@TempData["StatusMessage"] as string" />
+
+<div class="detail-grid">
+    <div><span>@L["Email confirmed"]</span><strong>@(Model.EmailConfirmed ? L["Yes"] : L["No"])</strong></div>
+    <div><span>@L["Password"]</span><strong>@(Model.HasPassword ? L["Yes"] : L["No"])</strong></div>
+    <div><span>@L["Two-factor"]</span><strong>@(Model.TwoFactorEnabled ? L["On"] : L["Off"])</strong></div>
+    <div><span>@L["Passkeys"]</span><strong>@Model.PasskeyCount</strong></div>
+    <div><span>@L["External logins"]</span><strong>@(Model.ExternalLogins.Count == 0 ? "-" : string.Join(", ", Model.ExternalLogins))</strong></div>
+    <div><span>@L["Phone number"]</span><strong>@(Model.PhoneNumber ?? "-")</strong></div>
+    <div><span>@L["Failed attempts"]</span><strong>@Model.AccessFailedCount</strong></div>
+    <div><span>@L["Active devices"]</span><strong>@Model.Sessions.Count</strong></div>
+</div>
+
+<h3 class="h6 text-muted text-uppercase small mt-4 mb-2">@L["Roles"]</h3>
+<form asp-area="Admin" asp-controller="Users" asp-action="UpdateRoles" asp-route-id="@Model.Id" method="post" id="roles-form">
+    <div class="d-flex flex-wrap gap-3 mb-3">
+        @foreach (var role in Model.AllRoles)
+        {
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="roles" value="@role" id="role-@role" @(Model.Roles.Contains(role) ? "checked" : "") />
+                <label class="form-check-label" for="role-@role">@role</label>
+            </div>
+        }
+    </div>
+    <button type="submit" class="btn btn-soft">@L["Save roles"]</button>
+</form>
+
+<h3 class="h6 text-muted text-uppercase small mt-4 mb-2">@L["Actions"]</h3>
+<div class="d-flex flex-wrap gap-2">
+    @if (!Model.EmailConfirmed)
+    {
+        <form asp-area="Admin" asp-controller="Users" asp-action="ConfirmEmail" asp-route-id="@Model.Id" method="post">
+            <button type="submit" class="btn btn-soft">@L["Mark email as confirmed"]</button>
+        </form>
+    }
+    @if (!Model.IsCurrentUser)
+    {
+        @if (Model.IsLocked)
+        {
+            <form asp-area="Admin" asp-controller="Users" asp-action="Unlock" asp-route-id="@Model.Id" method="post">
+                <button type="submit" class="btn btn-soft" id="unlock-user">@L["Unlock"]</button>
+            </form>
+        }
+        else
+        {
+            <form asp-area="Admin" asp-controller="Users" asp-action="Lock" asp-route-id="@Model.Id" method="post" data-confirm="@L["Lock this account and sign it out everywhere?"]">
+                <button type="submit" class="btn btn-outline-danger" id="lock-user">@L["Lock account"]</button>
+            </form>
+        }
+        <form asp-area="Admin" asp-controller="Users" asp-action="SignOutUser" asp-route-id="@Model.Id" method="post">
+            <button type="submit" class="btn btn-soft" id="signout-user">@L["Sign out everywhere"]</button>
+        </form>
+        @if (Model.TwoFactorEnabled)
+        {
+            <form asp-area="Admin" asp-controller="Users" asp-action="ResetTwoFactor" asp-route-id="@Model.Id" method="post" data-confirm="@L["Turn off two-factor authentication for this user?"]">
+                <button type="submit" class="btn btn-outline-danger">@L["Reset 2FA"]</button>
+            </form>
+        }
+    }
+    else
+    {
+        <span class="text-muted small">@L["You can't lock, sign out or delete your own account here."]</span>
+    }
+</div>
+
+<h3 class="h6 text-muted text-uppercase small mt-4 mb-2">@L["Recent activity"]</h3>
+@if (Model.Events.Count == 0)
+{
+    <p class="text-muted">@L["No activity yet."]</p>
+}
+<ol class="timeline">
+    @foreach (var item in Model.Events)
+    {
+        <partial name="_EventText" model="item" />
+    }
+</ol>
+
+@if (!Model.IsCurrentUser)
+{
+    <div class="danger-zone mt-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <h3 class="h6 text-danger mb-1">@L["Delete account"]</h3>
+                <p class="small text-muted mb-0">@L["Permanently removes the account and its personal data. The user gets an email."]</p>
+            </div>
+            <form asp-area="Admin" asp-controller="Users" asp-action="Delete" asp-route-id="@Model.Id" method="post" data-confirm="@L["Permanently delete this account?"]">
+                <button type="submit" class="btn btn-danger" id="delete-user">@L["Delete account"]</button>
+            </form>
+        </div>
+    </div>
+}

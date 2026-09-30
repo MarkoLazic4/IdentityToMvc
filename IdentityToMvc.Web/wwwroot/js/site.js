@@ -2,6 +2,12 @@
 (function () {
     'use strict';
 
+    // Translated texts rendered by _Layout.cshtml
+    var i18n = {};
+    try { i18n = JSON.parse(document.getElementById('i18n').textContent); } catch (e) { }
+    var text = function (key, fallback) { return i18n[key] || fallback; };
+    window.appText = text;
+
     // ---------- Theme toggle ----------
     var themeToggle = document.getElementById('theme-toggle');
     if (themeToggle) {
@@ -22,12 +28,12 @@
         var button = document.createElement('button');
         button.type = 'button';
         button.className = 'password-toggle';
-        button.setAttribute('aria-label', 'Show password');
+        button.setAttribute('aria-label', text('showPassword', 'Show password'));
         button.innerHTML = '<i class="bi bi-eye"></i>';
         button.addEventListener('click', function () {
             var show = input.type === 'password';
             input.type = show ? 'text' : 'password';
-            button.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+            button.setAttribute('aria-label', show ? text('hidePassword', 'Hide password') : text('showPassword', 'Show password'));
             button.innerHTML = show ? '<i class="bi bi-eye-slash"></i>' : '<i class="bi bi-eye"></i>';
         });
         input.insertAdjacentElement('afterend', button);
@@ -35,11 +41,11 @@
 
     // ---------- Password strength meter (inputs with data-strength) ----------
     var levels = [
-        { label: 'Too weak', cls: 'bg-danger', width: 15 },
-        { label: 'Weak', cls: 'bg-danger', width: 35 },
-        { label: 'Fair', cls: 'bg-warning', width: 60 },
-        { label: 'Good', cls: 'bg-info', width: 80 },
-        { label: 'Strong', cls: 'bg-success', width: 100 }
+        { label: text('tooWeak', 'Too weak'), cls: 'bg-danger', width: 15 },
+        { label: text('weak', 'Weak'), cls: 'bg-danger', width: 35 },
+        { label: text('fair', 'Fair'), cls: 'bg-warning', width: 60 },
+        { label: text('good', 'Good'), cls: 'bg-info', width: 80 },
+        { label: text('strong', 'Strong'), cls: 'bg-success', width: 100 }
     ];
 
     function scorePassword(value) {
@@ -65,7 +71,7 @@
         container.insertAdjacentElement('afterend', meter);
 
         var bar = meter.querySelector('.progress-bar');
-        var text = meter.querySelector('small');
+        var hint = meter.querySelector('small');
 
         input.addEventListener('input', function () {
             var score = scorePassword(input.value);
@@ -74,7 +80,7 @@
             var level = levels[score];
             bar.className = 'progress-bar ' + level.cls;
             bar.style.width = level.width + '%';
-            text.textContent = level.label + ' - use 8+ characters with upper- and lowercase letters, a digit and a symbol.';
+            hint.textContent = level.label + ' - ' + text('strengthHint', 'use 8+ characters with upper- and lowercase letters, a digit and a symbol.');
         });
     });
 
@@ -83,10 +89,10 @@
         button.addEventListener('click', function () {
             var target = document.querySelector(button.getAttribute('data-copy-target'));
             if (!target || !navigator.clipboard) return;
-            var text = target.getAttribute('data-copy-text') || target.innerText;
-            navigator.clipboard.writeText(text.trim()).then(function () {
+            var value = target.getAttribute('data-copy-text') || target.innerText;
+            navigator.clipboard.writeText(value.trim()).then(function () {
                 var original = button.innerHTML;
-                button.innerHTML = '<i class="bi bi-check2"></i> Copied';
+                button.innerHTML = '<i class="bi bi-check2"></i> ' + text('copied', 'Copied');
                 setTimeout(function () { button.innerHTML = original; }, 1500);
             });
         });
@@ -97,8 +103,8 @@
         button.addEventListener('click', function () {
             var target = document.querySelector(button.getAttribute('data-download-target'));
             if (!target) return;
-            var text = target.getAttribute('data-copy-text') || target.innerText;
-            var blob = new Blob([text.trim() + '\n'], { type: 'text/plain' });
+            var content = target.getAttribute('data-copy-text') || target.innerText;
+            var blob = new Blob([content.trim() + '\n'], { type: 'text/plain' });
             var link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
             link.download = button.getAttribute('data-filename') || 'download.txt';

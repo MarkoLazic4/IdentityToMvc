@@ -1,5 +1,6 @@
 ﻿using IdentityToMvc.Web.Areas.User.ViewModels.Account;
 using IdentityToMvc.Web.Helpers;
+using IdentityToMvc.Web.Localization;
 using IdentityToMvc.Web.Security;
 using IdentityToMvc.Web.Services;
 using Microsoft.AspNetCore.Authentication;
@@ -7,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Localization;
 using System.Security.Claims;
 
 namespace IdentityToMvc.Web.Areas.User.Controllers
@@ -21,12 +23,21 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         private readonly IEmailQueue _emailQueue;
         private readonly ISecurityNotifier _securityNotifier;
         private readonly PasswordTimingEqualizer _timingEqualizer;
+        private readonly SessionService _sessions;
+        private readonly AdminBootstrapper _adminBootstrapper;
+        private readonly EmailTemplates _templates;
+        private readonly IStringLocalizer<SharedResource> _t;
         private readonly ILogger<AccountController> _logger;
 
         public AccountController(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager,
             IEmailQueue emailQueue, ISecurityNotifier securityNotifier, PasswordTimingEqualizer timingEqualizer,
-            ILogger<AccountController> logger)
+            SessionService sessions, EmailTemplates templates, IStringLocalizer<SharedResource> localizer,
+            AdminBootstrapper adminBootstrapper, ILogger<AccountController> logger)
         {
+            _adminBootstrapper = adminBootstrapper;
+            _sessions = sessions;
+            _templates = templates;
+            _t = localizer;
             _userManager = userManager;
             _signInManager = signInManager;
             _emailQueue = emailQueue;
@@ -74,7 +85,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
                     _timingEqualizer.HashDummy(model.Input.Password);
                     var loginUrl = Url.Action(nameof(Login), "Account", new { area = "User" }, Request.Scheme) ?? string.Empty;
                     var resetUrl = Url.Action(nameof(ForgotPassword), "Account", new { area = "User" }, Request.Scheme) ?? string.Empty;
-                    _emailQueue.Enqueue(model.Input.Email, "You already have an account", EmailTemplates.AccountAlreadyExists(loginUrl, resetUrl));
+                    _emailQueue.Enqueue(model.Input.Email, _templates.AccountAlreadyExistsSubject, _templates.AccountAlreadyExists(loginUrl, resetUrl));
                     return RedirectToAction(nameof(RegisterConfirmation), "Account", new { area = "User", email = model.Input.Email, returnUrl = model.ReturnUrl });
                 }
 
@@ -105,7 +116,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
                     new { area = "User", userId = userId, code = code, returnUrl = model.ReturnUrl },
                     protocol: Request.Scheme) ?? string.Empty;
 
-                _emailQueue.Enqueue(model.Input.Email, "Confirm your email", EmailTemplates.ConfirmAccount(callbackUrl));
+                _emailQueue.Enqueue(model.Input.Email, _templates.ConfirmAccountSubject, _templates.ConfirmAccount(callbackUrl));
 
                 if (_userManager.Options.SignIn.RequireConfirmedAccount)
                 {
@@ -113,6 +124,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
                 }
                 else
                 {
+                    RecentAuthenticationService.FlagFreshSignIn(HttpContext);
                     await _signInManager.SignInAsync(user, isPersistent: false);
                     return LocalRedirect(model.ReturnUrl);
                 }
@@ -185,14 +197,20 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
 
             if (!TokenEncoder.TryDecode(code, out var token))
             {
-                TempData["StatusMessage"] = "Error: the confirmation link is invalid or has expired.";
+                this.StatusError(_t["The confirmation link is invalid or has expired."]);
                 return View();
             }
 
             var result = await _userManager.ConfirmEmailAsync(user, token);
-            TempData["StatusMessage"] = result.Succeeded
-                ? "Thank you for confirming your email. You can now log in."
-                : "Error: the confirmation link is invalid or has expired.";
+            if (result.Succeeded)
+            {
+                await _adminBootstrapper.EnsureAdminAsync(user);
+                this.StatusSuccess(_t["Thank you for confirming your email. You can now log in."]);
+            }
+            else
+            {
+                this.StatusError(_t["The confirmation link is invalid or has expired."]);
+            }
             return View();
         }
 
@@ -218,13 +236,13 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            const string sentMessage = "If an unconfirmed account exists for that address, a verification email has been sent.";
+            var sentMessage = _t["If an unconfirmed account exists for that address, a verification email has been sent."];
 
             var user = await _userManager.FindByEmailAsync(model.Input.Email);
             if (user == null || await _userManager.IsEmailConfirmedAsync(user))
             {
                 // Don't reveal whether the user exists or is already confirmed
-                TempData["StatusMessage"] = sentMessage;
+                this.StatusSuccess(sentMessage);
                 return RedirectToAction(nameof(ResendEmailConfirmation), "Account", new { area = "User" });
             }
 
@@ -237,9 +255,9 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
                 new { area = "User", code, activate = true },
                 protocol: Request.Scheme) ?? string.Empty;
 
-            _emailQueue.Enqueue(model.Input.Email, "Finish setting up your account", EmailTemplates.FinishSetup(callbackUrl));
+            _emailQueue.Enqueue(model.Input.Email, _templates.FinishSetupSubject, _templates.FinishSetup(callbackUrl));
 
-            TempData["StatusMessage"] = sentMessage;
+            this.StatusSuccess(sentMessage);
             return RedirectToAction(nameof(ResendEmailConfirmation), "Account", new { area = "User" });
         }
 
@@ -309,7 +327,11 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
                 }
                 else
                 {
-                    ModelState.AddModelError(string.Empty, "Invalid login attempt. If you just registered, make sure you have confirmed your email.");
+                    if (candidate != null)
+                    {
+                        await _securityNotifier.NotifyAsync(candidate, SecurityEvent.LoginFailed, sendEmail: false);
+                    }
+                    ModelState.AddModelError(string.Empty, _t["Invalid login attempt. If you just registered, make sure you have confirmed your email."]);
                     return View(model);
                 }
             }
@@ -378,7 +400,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             else
             {
                 _logger.LogWarning("Invalid authenticator code entered for user with ID '{UserId}'.", user.Id);
-                ModelState.AddModelError(string.Empty, "Invalid authenticator code.");
+                ModelState.AddModelError(string.Empty, _t["Invalid authenticator code."]);
                 return View(model);
             }
         }
@@ -440,7 +462,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             else
             {
                 _logger.LogWarning("Invalid recovery code entered for user with ID '{UserId}' ", user.Id);
-                ModelState.AddModelError(string.Empty, "Invalid recovery code entered.");
+                ModelState.AddModelError(string.Empty, _t["Invalid recovery code entered."]);
                 return View(model);
             }
         }
@@ -469,13 +491,13 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
 
             if (remoteError != null)
             {
-                TempData["ErrorMessage"] = $"Error from external provider: {remoteError}";
+                TempData["ErrorMessage"] = _t["Error from external provider: {0}", remoteError].Value;
                 return RedirectToAction(nameof(Login), "Account", new { area = "User", returnUrl });
             }
             var info = await _signInManager.GetExternalLoginInfoAsync();
             if (info == null)
             {
-                TempData["ErrorMessage"] = "Error loading external login information.";
+                TempData["ErrorMessage"] = _t["Error loading external login information."].Value;
                 return RedirectToAction(nameof(Login), "Account", new { area = "User", returnUrl });
             }
 
@@ -498,7 +520,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             }
             if (result.IsNotAllowed)
             {
-                TempData["ErrorMessage"] = "You need to confirm your email before you can log in.";
+                TempData["ErrorMessage"] = _t["You need to confirm your email before you can log in."].Value;
                 return RedirectToAction(nameof(Login), "Account", new { area = "User", returnUrl });
             }
             else
@@ -507,7 +529,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
                 var providerEmail = info.Principal.FindFirstValue(ClaimTypes.Email);
                 if (string.IsNullOrWhiteSpace(providerEmail))
                 {
-                    TempData["ErrorMessage"] = "Your provider didn't share an email address. Sign up with your email first, then connect the provider under Manage account.";
+                    TempData["ErrorMessage"] = _t["Your provider didn't share an email address. Sign up with your email first, then connect the provider under Manage account."].Value;
                     return RedirectToAction(nameof(Login), "Account", new { area = "User", returnUrl });
                 }
 
@@ -515,7 +537,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
                 if (existing != null && await _userManager.IsEmailConfirmedAsync(existing))
                 {
                     // Never link automatically to an existing account: log in first, then connect
-                    TempData["ErrorMessage"] = "An account with this email already exists. Log in with it, then connect the provider under Manage account.";
+                    TempData["ErrorMessage"] = _t["An account with this email already exists. Log in with it, then connect the provider under Manage account."].Value;
                     return RedirectToAction(nameof(Login), "Account", new { area = "User", returnUrl });
                 }
 
@@ -541,7 +563,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             var info = await _signInManager.GetExternalLoginInfoAsync();
             if (info == null)
             {
-                TempData["ErrorMessage"] = "Error loading external login information during confirmation.";
+                TempData["ErrorMessage"] = _t["Error loading external login information during confirmation."].Value;
                 return RedirectToAction(nameof(Login), "Account", new { area = "User", returnUrl = model.ReturnUrl });
             }
 
@@ -550,7 +572,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             var providerEmail = info.Principal.FindFirstValue(ClaimTypes.Email);
             if (string.IsNullOrWhiteSpace(providerEmail))
             {
-                TempData["ErrorMessage"] = "Your provider didn't share an email address. Sign up with your email first, then connect the provider under Manage account.";
+                TempData["ErrorMessage"] = _t["Your provider didn't share an email address. Sign up with your email first, then connect the provider under Manage account."].Value;
                 return RedirectToAction(nameof(Login), "Account", new { area = "User", returnUrl = model.ReturnUrl });
             }
             model.Input.Email = providerEmail;
@@ -560,7 +582,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             {
                 if (await _userManager.IsEmailConfirmedAsync(existing))
                 {
-                    TempData["ErrorMessage"] = "An account with this email already exists. Log in with it, then connect the provider under Manage account.";
+                    TempData["ErrorMessage"] = _t["An account with this email already exists. Log in with it, then connect the provider under Manage account."].Value;
                     return RedirectToAction(nameof(Login), "Account", new { area = "User", returnUrl = model.ReturnUrl });
                 }
                 // Unconfirmed account for an address the provider has verified: replace it
@@ -587,6 +609,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
                 else
                 {
                     _logger.LogInformation("User created an account using {Name} provider.", info.LoginProvider);
+                    await _adminBootstrapper.EnsureAdminAsync(user);
                     RecentAuthenticationService.FlagFreshSignIn(HttpContext);
                     await _signInManager.SignInAsync(user, isPersistent: false, info.LoginProvider);
                     return LocalRedirect(model.ReturnUrl);
@@ -609,6 +632,12 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout(string? returnUrl = null)
         {
+            var sessionId = SessionService.GetSessionId(User);
+            var userId = _userManager.GetUserId(User);
+            if (sessionId != null && userId != null)
+            {
+                await _sessions.RevokeAsync(userId, sessionId);
+            }
             await _signInManager.SignOutAsync();
             _logger.LogInformation("User logged out.");
             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
@@ -677,7 +706,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
                     new { area = "User", code },
                     protocol: Request.Scheme) ?? string.Empty;
 
-                _emailQueue.Enqueue(model.Input.Email, "Reset your password", EmailTemplates.ResetPassword(callbackUrl));
+                _emailQueue.Enqueue(model.Input.Email, _templates.ResetPasswordSubject, _templates.ResetPassword(callbackUrl));
 
                 return RedirectToAction(nameof(ForgotPasswordConfirmation), "Account", new { area = "User" });
             }
@@ -702,7 +731,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         {
             if (!TokenEncoder.TryDecode(code, out var token))
             {
-                TempData["StatusMessage"] = "Error: the password reset link is invalid. Please request a new one.";
+                this.StatusError(_t["The password reset link is invalid. Please request a new one."]);
                 return RedirectToAction(nameof(ForgotPassword), "Account", new { area = "User" });
             }
 
@@ -728,7 +757,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            const string invalidLink = "The password reset link is invalid or has expired, or the email doesn't match. Please request a new link.";
+            string invalidLink = _t["The password reset link is invalid or has expired, or the email doesn't match. Please request a new link."];
 
             var user = await _userManager.FindByEmailAsync(model.Input.Email);
             if (user == null)
@@ -751,6 +780,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
                 {
                     var confirmToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                     await _userManager.ConfirmEmailAsync(user, confirmToken);
+                    await _adminBootstrapper.EnsureAdminAsync(user);
                 }
                 await _securityNotifier.NotifyAsync(user, SecurityEvent.PasswordReset);
                 return RedirectToAction(nameof(ResetPasswordConfirmation), "Account", new { area = "User" });
@@ -798,7 +828,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
 
             if (string.IsNullOrWhiteSpace(credentialJson))
             {
-                TempData["ErrorMessage"] = "The passkey sign-in was cancelled.";
+                TempData["ErrorMessage"] = _t["The passkey sign-in was cancelled."].Value;
                 return RedirectToAction(nameof(Login), "Account", new { area = "User", returnUrl });
             }
 
@@ -806,7 +836,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             if (!assertion.Succeeded)
             {
                 _logger.LogWarning("Passkey assertion failed: {Error}", assertion.Failure?.Message);
-                TempData["ErrorMessage"] = "This passkey couldn't be used to log in. It may have been removed from your account.";
+                TempData["ErrorMessage"] = _t["This passkey couldn't be used to log in. It may have been removed from your account."].Value;
                 return RedirectToAction(nameof(Login), "Account", new { area = "User", returnUrl });
             }
 
@@ -816,7 +846,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
 
             if (!await _signInManager.CanSignInAsync(user))
             {
-                TempData["ErrorMessage"] = "You need to confirm your email before you can log in.";
+                TempData["ErrorMessage"] = _t["You need to confirm your email before you can log in."].Value;
                 return RedirectToAction(nameof(Login), "Account", new { area = "User", returnUrl });
             }
 
@@ -855,7 +885,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
                 var code = await _userManager.GenerateUserTokenAsync(user, TokenOptions.DefaultProvider, UnlockTokenPurpose);
                 var callbackUrl = Url.Action(nameof(Unlock), "Account",
                     new { area = "User", userId = user.Id, code = TokenEncoder.Encode(code) }, Request.Scheme) ?? string.Empty;
-                _emailQueue.Enqueue(email, "Your account was locked", EmailTemplates.UnlockAccount(callbackUrl));
+                _emailQueue.Enqueue(email, _templates.UnlockAccountSubject, _templates.UnlockAccount(callbackUrl));
             }
         }
 
@@ -882,11 +912,12 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             {
                 await _userManager.SetLockoutEndDateAsync(user, null);
                 await _userManager.ResetAccessFailedCountAsync(user);
-                TempData["StatusMessage"] = "Your account is unlocked. You can log in now.";
+                await _securityNotifier.NotifyAsync(user, SecurityEvent.AccountUnlocked);
+                this.StatusSuccess(_t["Your account is unlocked. You can log in now."]);
             }
             else
             {
-                TempData["StatusMessage"] = "Error: the unlock link is invalid or has expired.";
+                this.StatusError(_t["The unlock link is invalid or has expired."]);
             }
             return RedirectToAction(nameof(Login), "Account", new { area = "User" });
         }

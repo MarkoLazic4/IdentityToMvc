@@ -1,0 +1,46 @@
+﻿@model AuditViewModel
+@inject Microsoft.Extensions.Localization.IStringLocalizer<IdentityToMvc.Web.SharedResource> T
+@{
+    ViewData["Title"] = L["Audit log"].Value;
+}
+
+<h2 class="page-title">@L["Audit log"]</h2>
+<p class="page-subtitle">@L["Every security-relevant event on every account."]</p>
+
+<form method="get" asp-area="Admin" asp-controller="Audit" asp-action="Index" class="d-flex flex-wrap gap-2 mb-3" role="search">
+    <input type="search" name="q" value="@Model.Query" class="form-control audit-search" placeholder="@L["Email or IP address"]" aria-label="@L["Email or IP address"]" />
+    <select name="eventType" class="form-select audit-filter" aria-label="@L["Event"]">
+        <option value="">@L["All events"]</option>
+        @foreach (var type in Model.EventTypes)
+        {
+            var label = Enum.TryParse<SecurityEvent>(type, out var e) ? SecurityEventText.Title(e, T) : type;
+            <option value="@type" selected="@(type == Model.EventType)">@label</option>
+        }
+    </select>
+    <button type="submit" class="btn btn-soft">@L["Filter"]</button>
+</form>
+
+@if (Model.Events.Count == 0)
+{
+    <p class="text-muted">@L["No events match."]</p>
+}
+<ol class="timeline">
+    @foreach (var item in Model.Events)
+    {
+        <partial name="_EventText" model="item" />
+    }
+</ol>
+
+@if (Model.TotalPages > 1)
+{
+    <nav class="mt-3" aria-label="@L["Pages"]">
+        <ul class="pagination mb-0 flex-wrap">
+            @for (var p = 1; p <= Model.TotalPages; p++)
+            {
+                <li class="page-item @(p == Model.Page ? "active" : "")">
+                    <a class="page-link" asp-area="Admin" asp-controller="Audit" asp-action="Index" asp-route-q="@Model.Query" asp-route-eventType="@Model.EventType" asp-route-page="@p">@p</a>
+                </li>
+            }
+        </ul>
+    </nav>
+}

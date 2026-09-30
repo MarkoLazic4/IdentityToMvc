@@ -2,18 +2,18 @@
 @{
     var (title, text) = Model switch
     {
-        404 => ("Page not found", "The page you are looking for doesn't exist or has been moved."),
-        403 => ("Access denied", "You don't have permission to view this page."),
-        400 => ("Bad request", "The request could not be understood by the server."),
-        429 => ("Too many requests", "You've made too many attempts in a short time. Please wait a few minutes and try again."),
-        _ => ("Something went wrong", "An unexpected error occurred while processing your request.")
+        404 => (L["Page not found"], L["The page you are looking for doesn't exist or has been moved."]),
+        403 => (L["Access denied"], L["You don't have permission to view this page."]),
+        400 => (L["Bad request"], L["The request could not be understood by the server."]),
+        429 => (L["Too many requests"], L["You've made too many attempts in a short time. Please wait a few minutes and try again."]),
+        _ => (L["Something went wrong"], L["An unexpected error occurred while processing your request."])
     };
-    ViewData["Title"] = title;
+    ViewData["Title"] = title.Value;
 }
 
 <div class="card status-page">
     <div class="status-code text-gradient mb-3">@Model</div>
     <h1>@title</h1>
     <p>@text</p>
-    <a class="btn btn-primary" asp-area="" asp-controller="Home" asp-action="Index"><i class="bi bi-house me-1"></i> Back to home</a>
+    <a class="btn btn-primary" asp-area="" asp-controller="Home" asp-action="Index"><i class="bi bi-house me-1"></i> @L["Back to home"]</a>
 </div>

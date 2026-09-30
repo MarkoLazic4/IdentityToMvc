@@ -34,6 +34,9 @@ namespace IdentityToMvc.Web.Security
         /// </summary>
         public static void FlagFreshSignIn(HttpContext context) => context.Items[FreshSignInItemKey] = true;
 
+        /// <summary>True when the current request is a real sign-in (not a session refresh).</summary>
+        public static bool IsFreshSignIn(HttpContext context) => context.Items.ContainsKey(FreshSignInItemKey);
+
         /// <summary>Hooked up to the application cookie's OnSigningIn event.</summary>
         public void OnSigningIn(HttpContext context, System.Security.Claims.ClaimsPrincipal? principal)
         {

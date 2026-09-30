@@ -1,5 +1,6 @@
 ﻿using IdentityToMvc.Web.Areas.User.ViewModels.Manage;
 using IdentityToMvc.Web.Helpers;
+using IdentityToMvc.Web.Localization;
 using IdentityToMvc.Web.Security;
 using IdentityToMvc.Web.Services;
 using Microsoft.AspNetCore.Authentication;
@@ -8,6 +9,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
 using System.Text.Encodings.Web;
 using System.Text.Json;
@@ -25,11 +27,18 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly ISecurityNotifier _securityNotifier;
         private readonly RecentAuthenticationService _recentAuthentication;
+        private readonly SessionService _sessions;
+        private readonly EmailTemplates _templates;
+        private readonly IStringLocalizer<SharedResource> _t;
         private readonly ILogger<ManageController> _logger;
 
         public ManageController(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager,
-            ISecurityNotifier securityNotifier, RecentAuthenticationService recentAuthentication, ILogger<ManageController> logger)
+            ISecurityNotifier securityNotifier, RecentAuthenticationService recentAuthentication, SessionService sessions,
+            EmailTemplates templates, IStringLocalizer<SharedResource> localizer, ILogger<ManageController> logger)
         {
+            _sessions = sessions;
+            _templates = templates;
+            _t = localizer;
             _userManager = userManager;
             _signInManager = signInManager;
             _securityNotifier = securityNotifier;
@@ -89,7 +98,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
 
             if (!is2faTokenValid)
             {
-                ModelState.AddModelError("Input.Code", "Verification code is invalid.");
+                ModelState.AddModelError("Input.Code", _t["Verification code is invalid."]);
                 (model.SharedKey, model.AuthenticatorUri) = await AuthenticatorHelper.LoadSharedKeyAndQrCodeUriAsync(_userManager, urlEncoder, user);
                 return View(model);
             }
@@ -99,7 +108,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             _logger.LogInformation("User with ID '{UserId}' has enabled 2FA with an authenticator app.", userId);
 
             await _securityNotifier.NotifyAsync(user, SecurityEvent.TwoFactorEnabled);
-            TempData["StatusMessage"] = "Your authenticator app has been verified.";
+            this.StatusSuccess(_t["Your authenticator app has been verified."]);
 
             if (await _userManager.CountRecoveryCodesAsync(user) == 0)
             {
@@ -129,7 +138,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
 
             if (!await _userManager.GetTwoFactorEnabledAsync(user))
             {
-                TempData["StatusMessage"] = "Error: two-factor authentication is not enabled.";
+                this.StatusError(_t["Two-factor authentication is not enabled."]);
                 return RedirectToAction(nameof(TwoFactorAuthentication), "Manage", new { area = "User" });
             }
 
@@ -155,13 +164,13 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             var disable2faResult = await _userManager.SetTwoFactorEnabledAsync(user, false);
             if (!disable2faResult.Succeeded)
             {
-                TempData["StatusMessage"] = "Error: unexpected error occurred disabling 2FA.";
+                this.StatusError(_t["Unexpected error occurred disabling 2FA."]);
                 return RedirectToAction(nameof(TwoFactorAuthentication), "Manage", new { area = "User" });
             }
 
             _logger.LogInformation("User with ID '{UserId}' has disabled 2fa.", _userManager.GetUserId(User));
             await _securityNotifier.NotifyAsync(user, SecurityEvent.TwoFactorDisabled);
-            TempData["StatusMessage"] = "2fa has been disabled. You can reenable 2fa when you setup an authenticator app";
+            this.StatusSuccess(_t["2fa has been disabled. You can reenable 2fa when you setup an authenticator app"]);
             return RedirectToAction(nameof(TwoFactorAuthentication), "Manage", new { area = "User" });
         }
 
@@ -205,7 +214,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
 
             await _signInManager.RefreshSignInAsync(user);
             await _securityNotifier.NotifyAsync(user, SecurityEvent.AuthenticatorReset);
-            TempData["StatusMessage"] = "Your authenticator app key has been reset, you will need to configure your authenticator app using the new key.";
+            this.StatusSuccess(_t["Your authenticator app key has been reset, you will need to configure your authenticator app using the new key."]);
 
             return RedirectToAction(nameof(EnableAuthenticator), "Manage", new { area = "User" });
         }
@@ -227,7 +236,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             var isTwoFactorEnabled = await _userManager.GetTwoFactorEnabledAsync(user);
             if (!isTwoFactorEnabled)
             {
-                TempData["StatusMessage"] = "Error: enable two-factor authentication before generating recovery codes.";
+                this.StatusError(_t["Enable two-factor authentication before generating recovery codes."]);
                 return RedirectToAction(nameof(TwoFactorAuthentication), "Manage", new { area = "User" });
             }
 
@@ -254,7 +263,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             var userId = await _userManager.GetUserIdAsync(user);
             if (!isTwoFactorEnabled)
             {
-                TempData["StatusMessage"] = "Error: enable two-factor authentication before generating recovery codes.";
+                this.StatusError(_t["Enable two-factor authentication before generating recovery codes."]);
                 return RedirectToAction(nameof(TwoFactorAuthentication), "Manage", new { area = "User" });
             }
 
@@ -263,7 +272,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
 
             _logger.LogInformation("User with ID '{UserId}' has generated new 2FA recovery codes.", userId);
             await _securityNotifier.NotifyAsync(user, SecurityEvent.RecoveryCodesGenerated);
-            TempData["StatusMessage"] = "You have generated new recovery codes.";
+            this.StatusSuccess(_t["You have generated new recovery codes."]);
             return RedirectToAction(nameof(ShowRecoveryCodes), "Manage", new { area = "User" });
         }
 
@@ -319,7 +328,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             }
 
             await _signInManager.ForgetTwoFactorClientAsync();
-            TempData["StatusMessage"] = "The current browser has been forgotten. When you login again from this browser you will be prompted for your 2fa code.";
+            this.StatusSuccess(_t["The current browser has been forgotten. When you login again from this browser you will be prompted for your 2fa code."]);
             return RedirectToAction(nameof(TwoFactorAuthentication), "Manage", new { area = "User" });
         }
 
@@ -376,13 +385,13 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
                 var setPhoneResult = await _userManager.SetPhoneNumberAsync(user, model.Input.PhoneNumber);
                 if (!setPhoneResult.Succeeded)
                 {
-                    TempData["StatusMessage"] = "Error: unexpected error when trying to set phone number.";
+                    this.StatusError(_t["Unexpected error when trying to set phone number."]);
                     return RedirectToAction(nameof(Index), "Manage", new { area = "User" });
                 }
             }
 
             await _signInManager.RefreshSignInAsync(user);
-            TempData["StatusMessage"] = "Your profile has been updated";
+            this.StatusSuccess(_t["Your profile has been updated"]);
             return RedirectToAction(nameof(Index), "Manage", new { area = "User" });
         }
 
@@ -431,20 +440,20 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             var logins = await _userManager.GetLoginsAsync(user);
             if (!hasPassword && logins.Count <= 1)
             {
-                TempData["StatusMessage"] = "Error: you can't remove your only login. Set a password first.";
+                this.StatusError(_t["You can't remove your only login. Set a password first."]);
                 return RedirectToAction(nameof(ExternalLogins), "Manage", new { area = "User" });
             }
 
             var result = await _userManager.RemoveLoginAsync(user, loginProvider, providerKey);
             if (!result.Succeeded)
             {
-                TempData["StatusMessage"] = "Error: the external login was not removed.";
+                this.StatusError(_t["The external login was not removed."]);
                 return RedirectToAction(nameof(ExternalLogins), "Manage", new { area = "User" });
             }
 
             await _signInManager.RefreshSignInAsync(user);
             await _securityNotifier.NotifyAsync(user, SecurityEvent.ExternalLoginRemoved);
-            TempData["StatusMessage"] = "The external login was removed.";
+            this.StatusSuccess(_t["The external login was removed."]);
             return RedirectToAction(nameof(ExternalLogins), "Manage", new { area = "User" });
         }
 
@@ -481,14 +490,14 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             var info = await _signInManager.GetExternalLoginInfoAsync(userId);
             if (info == null)
             {
-                TempData["StatusMessage"] = "Error: unexpected error occurred loading external login info.";
+                this.StatusError(_t["Unexpected error occurred loading external login info."]);
                 return RedirectToAction(nameof(ExternalLogins), "Manage", new { area = "User" });
             }
 
             var result = await _userManager.AddLoginAsync(user, info);
             if (!result.Succeeded)
             {
-                TempData["StatusMessage"] = "Error: the external login was not added. External logins can only be associated with one account.";
+                this.StatusError(_t["The external login was not added. External logins can only be associated with one account."]);
                 return RedirectToAction(nameof(ExternalLogins), "Manage", new { area = "User" });
             }
 
@@ -496,7 +505,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
 
             await _securityNotifier.NotifyAsync(user, SecurityEvent.ExternalLoginAdded);
-            TempData["StatusMessage"] = "The external login was added.";
+            this.StatusSuccess(_t["The external login was added."]);
             return RedirectToAction(nameof(ExternalLogins), "Manage", new { area = "User" });
         }
 
@@ -595,7 +604,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
                 }
                 if (!check.Succeeded)
                 {
-                    ModelState.AddModelError(string.Empty, "Incorrect password.");
+                    ModelState.AddModelError(string.Empty, _t["Incorrect password."]);
                     return View(model);
                 }
             }
@@ -604,7 +613,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             var result = await _userManager.DeleteAsync(user);
             if (!result.Succeeded)
             {
-                ModelState.AddModelError(string.Empty, "Unexpected error occurred deleting your account.");
+                ModelState.AddModelError(string.Empty, _t["Unexpected error occurred deleting your account."]);
                 return View(model);
             }
 
@@ -672,7 +681,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             _logger.LogInformation("User changed their password successfully.");
             await _recentAuthentication.MarkAsync(HttpContext, user);
             await _securityNotifier.NotifyAsync(user, SecurityEvent.PasswordChanged);
-            TempData["StatusMessage"] = "Your password has been changed. Your other sessions will be signed out.";
+            this.StatusSuccess(_t["Your password has been changed. Your other sessions will be signed out."]);
 
             return RedirectToAction(nameof(ChangePassword), "Manage", new { area = "User" });
         }
@@ -732,7 +741,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             await _signInManager.RefreshSignInAsync(user);
             await _recentAuthentication.MarkAsync(HttpContext, user);
             await _securityNotifier.NotifyAsync(user, SecurityEvent.PasswordSet);
-            TempData["StatusMessage"] = "Your password has been set.";
+            this.StatusSuccess(_t["Your password has been set."]);
 
             return RedirectToAction(nameof(SetPassword), "Manage", new { area = "User" });
         }
@@ -795,20 +804,21 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
                 var callbackUrl = Url.Action(nameof(ConfirmEmailChange), "Manage",
                     new { area = "User", userId = userId, email = model.Input.NewEmail, code = code },
                     protocol: Request.Scheme) ?? string.Empty;
-                var sent = await emailService.SendEmailAsync(model.Input.NewEmail, "Confirm your new email", EmailTemplates.ConfirmEmailChange(callbackUrl));
+                var sent = await emailService.SendEmailAsync(model.Input.NewEmail, _templates.ConfirmEmailChangeSubject, _templates.ConfirmEmailChange(callbackUrl));
                 if (sent)
                 {
                     // Warn the current address too, in case someone else is trying to take over the account
                     await _securityNotifier.NotifyAsync(user, SecurityEvent.EmailChangeRequested);
                 }
 
-                TempData["StatusMessage"] = sent
-                    ? "Confirmation link to change email sent. Please check your email."
-                    : "Error: the confirmation email could not be sent. Please try again later.";
+                if (sent)
+                    this.StatusSuccess(_t["Confirmation link to change email sent. Please check your email."]);
+                else
+                    this.StatusError(_t["The confirmation email could not be sent. Please try again later."]);
                 return RedirectToAction(nameof(Email), "Manage", new { area = "User" });
             }
 
-            TempData["StatusMessage"] = "Your email is unchanged.";
+            this.StatusSuccess(_t["Your email is unchanged."]);
             return RedirectToAction(nameof(Email), "Manage", new { area = "User" });
         }
 
@@ -830,7 +840,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
 
             if (string.IsNullOrEmpty(email))
             {
-                TempData["StatusMessage"] = "Error: your account has no email address.";
+                this.StatusError(_t["Your account has no email address."]);
                 return RedirectToAction(nameof(Email), "Manage", new { area = "User" });
             }
 
@@ -841,11 +851,12 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             var callbackUrl = Url.Action("ConfirmEmail", "Account",
                 new { area = "User", userId = userId, code = code },
                 protocol: Request.Scheme) ?? string.Empty;
-            var sent = await emailService.SendEmailAsync(email, "Confirm your email", EmailTemplates.ConfirmAccount(callbackUrl));
+            var sent = await emailService.SendEmailAsync(email, _templates.ConfirmAccountSubject, _templates.ConfirmAccount(callbackUrl));
 
-            TempData["StatusMessage"] = sent
-                ? "Verification email sent. Please check your email."
-                : "Error: the verification email could not be sent. Please try again later.";
+            if (sent)
+                this.StatusSuccess(_t["Verification email sent. Please check your email."]);
+            else
+                this.StatusError(_t["The verification email could not be sent. Please try again later."]);
             return RedirectToAction(nameof(Email), "Manage", new { area = "User" });
         }
 
@@ -869,13 +880,13 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             // The link is only valid for the account it was sent from
             if (!string.Equals(_userManager.GetUserId(User), userId, StringComparison.Ordinal))
             {
-                TempData["StatusMessage"] = "Error: log in with the account that requested the email change and open the link again.";
+                this.StatusError(_t["Log in with the account that requested the email change and open the link again."]);
                 return View();
             }
 
             if (!TokenEncoder.TryDecode(code, out var token))
             {
-                TempData["StatusMessage"] = "Error: the confirmation link is invalid or has expired.";
+                this.StatusError(_t["The confirmation link is invalid or has expired."]);
                 return View();
             }
 
@@ -883,7 +894,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             var result = await _userManager.ChangeEmailAsync(user, email, token);
             if (!result.Succeeded)
             {
-                TempData["StatusMessage"] = "Error changing email. The link may have expired or the address is already in use.";
+                this.StatusError(_t["Error changing email. The link may have expired or the address is already in use."]);
                 return View();
             }
 
@@ -892,13 +903,13 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             var setUserNameResult = await _userManager.SetUserNameAsync(user, email);
             if (!setUserNameResult.Succeeded)
             {
-                TempData["StatusMessage"] = "Error changing user name.";
+                this.StatusError(_t["Error changing user name."]);
                 return View();
             }
 
             await _signInManager.RefreshSignInAsync(user);
             await _securityNotifier.NotifyAsync(user, SecurityEvent.EmailChanged, overrideEmail: oldEmail);
-            TempData["StatusMessage"] = "Thank you for confirming your email change.";
+            this.StatusSuccess(_t["Thank you for confirming your email change."]);
             return View();
         }
 
@@ -918,14 +929,15 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             // A new security stamp invalidates every existing auth and "remember this browser"
             // cookie at their next validation (see SecurityStampValidatorOptions).
             await _userManager.UpdateSecurityStampAsync(user);
+            await _sessions.RevokeAllAsync(user.Id, exceptSessionId: SessionService.GetSessionId(User));
             await _signInManager.ForgetTwoFactorClientAsync();
             // Keep this session alive with a cookie carrying the new stamp
             await _signInManager.RefreshSignInAsync(user);
             await _recentAuthentication.MarkAsync(HttpContext, user);
             await _securityNotifier.NotifyAsync(user, SecurityEvent.SignedOutEverywhere);
 
-            TempData["StatusMessage"] = "All other sessions will be signed out within a few minutes.";
-            return RedirectToAction(nameof(Index), "Manage", new { area = "User" });
+            this.StatusSuccess(_t["All other devices were signed out."]);
+            return RedirectToAction(nameof(Devices), "Manage", new { area = "User" });
         }
 
         // ===========================================================================
@@ -962,7 +974,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             }
             if (!check.Succeeded)
             {
-                ModelState.AddModelError(string.Empty, "Incorrect password.");
+                ModelState.AddModelError(string.Empty, _t["Incorrect password."]);
                 return View(model);
             }
 
@@ -1050,14 +1062,14 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
 
             if (string.IsNullOrWhiteSpace(credentialJson))
             {
-                TempData["StatusMessage"] = "Error: the passkey registration was cancelled.";
+                this.StatusError(_t["The passkey registration was cancelled."]);
                 return RedirectToAction(nameof(Passkeys), "Manage", new { area = "User" });
             }
 
             var existing = await _userManager.GetPasskeysAsync(user);
             if (existing.Count >= securityOptions.CurrentValue.MaxPasskeysPerUser)
             {
-                TempData["StatusMessage"] = $"Error: you can register at most {securityOptions.CurrentValue.MaxPasskeysPerUser} passkeys.";
+                this.StatusError(_t["You can register at most {0} passkeys.", securityOptions.CurrentValue.MaxPasskeysPerUser]);
                 return RedirectToAction(nameof(Passkeys), "Manage", new { area = "User" });
             }
 
@@ -1065,7 +1077,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             if (!attestation.Succeeded)
             {
                 _logger.LogWarning("Passkey attestation failed for user {UserId}: {Error}", user.Id, attestation.Failure?.Message);
-                TempData["StatusMessage"] = "Error: the passkey could not be verified. Please try again.";
+                this.StatusError(_t["The passkey could not be verified. Please try again."]);
                 return RedirectToAction(nameof(Passkeys), "Manage", new { area = "User" });
             }
 
@@ -1074,12 +1086,12 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             var result = await _userManager.AddOrUpdatePasskeyAsync(user, passkey);
             if (!result.Succeeded)
             {
-                TempData["StatusMessage"] = "Error: the passkey could not be saved.";
+                this.StatusError(_t["The passkey could not be saved."]);
                 return RedirectToAction(nameof(Passkeys), "Manage", new { area = "User" });
             }
 
             await _securityNotifier.NotifyAsync(user, SecurityEvent.PasskeyAdded);
-            TempData["StatusMessage"] = $"Passkey \"{passkey.Name}\" was added. You can now use it to log in.";
+            this.StatusSuccess(_t["Passkey \"{0}\" was added. You can now use it to log in.", passkey.Name]);
             return RedirectToAction(nameof(Passkeys), "Manage", new { area = "User" });
         }
 
@@ -1114,20 +1126,101 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             var passkeys = await _userManager.GetPasskeysAsync(user);
             if (!hasPassword && logins.Count == 0 && passkeys.Count <= 1)
             {
-                TempData["StatusMessage"] = "Error: you can't remove your only way to log in. Set a password first.";
+                this.StatusError(_t["You can't remove your only way to log in. Set a password first."]);
                 return RedirectToAction(nameof(Passkeys), "Manage", new { area = "User" });
             }
 
             var result = await _userManager.RemovePasskeyAsync(user, credentialId);
             if (!result.Succeeded)
             {
-                TempData["StatusMessage"] = "Error: the passkey was not found.";
+                this.StatusError(_t["The passkey was not found."]);
                 return RedirectToAction(nameof(Passkeys), "Manage", new { area = "User" });
             }
 
             await _securityNotifier.NotifyAsync(user, SecurityEvent.PasskeyRemoved);
-            TempData["StatusMessage"] = "The passkey was removed.";
+            this.StatusSuccess(_t["The passkey was removed."]);
             return RedirectToAction(nameof(Passkeys), "Manage", new { area = "User" });
+        }
+
+        // ===========================================================================
+        // GET: /User/Account/Manage/Devices
+        // ===========================================================================
+        [HttpGet]
+        public async Task<IActionResult> Devices(
+            [FromServices] IOptionsMonitor<Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationOptions> cookieOptions)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+            }
+
+            // A session whose cookie has expired (idle longer than the cookie lifetime) is gone anyway
+            var maxIdle = cookieOptions.Get(IdentityConstants.ApplicationScheme).ExpireTimeSpan + TimeSpan.FromMinutes(10);
+            var currentSessionId = SessionService.GetSessionId(User);
+            var sessions = await _sessions.GetActiveAsync(user.Id, maxIdle);
+
+            var viewModel = new DevicesViewModel
+            {
+                Devices = sessions.Select(session => new DevicesViewModel.DeviceItem
+                {
+                    Id = session.Id,
+                    Device = session.Device ?? "Unknown device",
+                    IpAddress = session.IpAddress,
+                    CreatedAt = session.CreatedAt,
+                    LastSeenAt = session.LastSeenAt,
+                    IsCurrent = session.Id == currentSessionId
+                })
+                .OrderByDescending(d => d.IsCurrent)
+                .ToList()
+            };
+            return View(viewModel);
+        }
+
+        // ===========================================================================
+        // POST: /User/Account/Manage/RevokeSession
+        // ===========================================================================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RevokeSession(string id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+            }
+
+            if (id == SessionService.GetSessionId(User))
+            {
+                this.StatusError(_t["Use Log out to end the session on this device."]);
+            }
+            else if (await _sessions.RevokeAsync(user.Id, id))
+            {
+                await _securityNotifier.NotifyAsync(user, SecurityEvent.SessionRevoked);
+                this.StatusSuccess(_t["The device was signed out."]);
+            }
+            else
+            {
+                this.StatusError(_t["That device is no longer signed in."]);
+            }
+            return RedirectToAction(nameof(Devices), "Manage", new { area = "User" });
+        }
+
+        // ===========================================================================
+        // GET: /User/Account/Manage/Activity
+        // ===========================================================================
+        [HttpGet]
+        public async Task<IActionResult> Activity([FromServices] Data.ApplicationDbContext db)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+            }
+
+            var events = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(
+                db.SecurityEvents.Where(e => e.UserId == user.Id).OrderByDescending(e => e.CreatedAt).Take(50));
+            return View(new ActivityViewModel { Events = events });
         }
     }
 }

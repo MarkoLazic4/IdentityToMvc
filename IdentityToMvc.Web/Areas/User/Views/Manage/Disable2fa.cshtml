@@ -1,23 +1,23 @@
 ﻿@{
-    ViewData["Title"] = "Disable two-factor authentication (2FA)";
+    ViewData["Title"] = L["Disable two-factor authentication"].Value;
 }
 
 <partial name="_StatusMessage" model="@TempData["StatusMessage"] as string" />
-<h2 class="page-title">Disable two-factor authentication</h2>
-<p class="page-subtitle">Your account will only be protected by your password.</p>
+<h2 class="page-title">@L["Disable two-factor authentication"]</h2>
+<p class="page-subtitle">@L["Your account will only be protected by your password."]</p>
 
 <div class="alert alert-warning" role="alert">
     <i class="bi bi-exclamation-triangle"></i>
     <div>
-        <strong>This action only disables 2FA.</strong>
+        <strong>@L["This action only disables 2FA."]</strong>
         <p>
-            Disabling 2FA does not change the key used in your authenticator app. If you want to change it,
-            <a asp-area="User" asp-controller="Manage" asp-action="ResetAuthenticator">reset your authenticator key</a> instead.
+            @L["Disabling 2FA does not change the key used in your authenticator app."]
+            <a asp-area="User" asp-controller="Manage" asp-action="ResetAuthenticator">@L["Reset your authenticator key"]</a>
         </p>
     </div>
 </div>
 
 <form asp-area="User" asp-controller="Manage" asp-action="Disable2fa" method="post">
-    <button class="btn btn-danger" type="submit"><i class="bi bi-shield-x me-1"></i> Disable 2FA</button>
-    <a class="btn btn-link" asp-area="User" asp-controller="Manage" asp-action="TwoFactorAuthentication">Cancel</a>
+    <button class="btn btn-danger" type="submit"><i class="bi bi-shield-x me-1"></i> @L["Disable 2FA"]</button>
+    <a class="btn btn-link" asp-area="User" asp-controller="Manage" asp-action="TwoFactorAuthentication">@L["Cancel"]</a>
 </form>

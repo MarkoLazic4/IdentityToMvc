@@ -1,5 +1,30 @@
-﻿<!DOCTYPE html>
-<html lang="en" data-bs-theme="light">
+﻿@using System.Globalization
+@using System.Text.Json
+@{
+    var uiCulture = CultureInfo.CurrentUICulture;
+    var isSerbian = uiCulture.Name.StartsWith("sr", StringComparison.OrdinalIgnoreCase);
+    var returnUrl = Context.Request.Path + Context.Request.QueryString;
+
+    // Texts used by site.js / passkeys.js, rendered as JSON data (not executed, so CSP-safe)
+    var jsTexts = new Dictionary<string, string>
+    {
+        ["showPassword"] = L["Show password"].Value,
+        ["hidePassword"] = L["Hide password"].Value,
+        ["tooWeak"] = L["Too weak"].Value,
+        ["weak"] = L["Weak"].Value,
+        ["fair"] = L["Fair"].Value,
+        ["good"] = L["Good"].Value,
+        ["strong"] = L["Strong"].Value,
+        ["strengthHint"] = L["use 8+ characters with upper- and lowercase letters, a digit and a symbol."].Value,
+        ["copied"] = L["Copied"].Value,
+        ["passkeyCancelled"] = L["The passkey request was cancelled or timed out."].Value,
+        ["passkeyExists"] = L["This device already has a passkey for your account."].Value,
+        ["passkeyFailed"] = L["Something went wrong with the passkey request."].Value,
+        ["passkeyStart"] = L["Could not start the passkey request."].Value
+    };
+}
+<!DOCTYPE html>
+<html lang="@(isSerbian ? "sr-Latn" : "en")" data-bs-theme="light">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -23,7 +48,7 @@
     <link rel="stylesheet" href="~/IdentityToMvc.Web.styles.css" asp-append-version="true" />
 </head>
 <body class="d-flex flex-column min-vh-100">
-    <a class="visually-hidden-focusable skip-link" href="#main">Skip to content</a>
+    <a class="visually-hidden-focusable skip-link" href="#main">@L["Skip to content"]</a>
     <header>
         <nav class="navbar navbar-expand-md app-navbar sticky-top">
             <div class="container">
@@ -32,20 +57,24 @@
                     <span class="fw-semibold">IdentityToMvc</span>
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav"
-                        aria-expanded="false" aria-label="Toggle navigation">
+                        aria-expanded="false" aria-label="@L["Toggle navigation"]">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="mainNav">
                     <ul class="navbar-nav me-auto">
                         <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">@L["Home"]</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Privacy">@L["Privacy"]</a>
                         </li>
                     </ul>
                     <div class="d-flex flex-column flex-md-row align-items-md-center gap-2 py-2 py-md-0">
-                        <button type="button" class="btn btn-icon theme-toggle" id="theme-toggle" title="Toggle dark mode" aria-label="Toggle dark mode">
+                        <form asp-area="" asp-controller="Home" asp-action="SetLanguage" asp-route-returnUrl="@returnUrl" method="post" class="lang-switch" id="language-form">
+                            <button type="submit" name="culture" value="@LocalizationSetup.Serbian" class="@(isSerbian ? "active" : "")" aria-pressed="@(isSerbian ? "true" : "false")" title="Srpski" id="lang-sr">SR</button>
+                            <button type="submit" name="culture" value="@LocalizationSetup.English" class="@(isSerbian ? "" : "active")" aria-pressed="@(isSerbian ? "false" : "true")" title="English" id="lang-en">EN</button>
+                        </form>
+                        <button type="button" class="btn btn-icon theme-toggle" id="theme-toggle" title="@L["Toggle dark mode"]" aria-label="@L["Toggle dark mode"]">
                             <i class="bi bi-moon-stars-fill theme-icon-dark"></i>
                             <i class="bi bi-sun-fill theme-icon-light"></i>
                         </button>
@@ -64,14 +93,15 @@
 
     <footer class="app-footer py-4 mt-auto">
         <div class="container d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2">
-            <span>&copy; @DateTime.Now.Year IdentityToMvc &middot; ASP.NET Core Identity on MVC</span>
+            <span>&copy; @DateTime.Now.Year IdentityToMvc &middot; @L["ASP.NET Core Identity on MVC"]</span>
             <span class="d-flex gap-3">
-                <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                <a asp-area="" asp-controller="Home" asp-action="Privacy">@L["Privacy"]</a>
                 <a href="https://github.com/MarkoLazic4/IdentityToMvc" target="_blank" rel="noopener"><i class="bi bi-github"></i> GitHub</a>
             </span>
         </div>
     </footer>
 
+    <script type="application/json" id="i18n">@Html.Raw(JsonSerializer.Serialize(jsTexts))</script>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>

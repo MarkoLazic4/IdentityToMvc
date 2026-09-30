@@ -4,56 +4,67 @@
 @{
     var hasExternalLogins = (await SignInManager.GetExternalAuthenticationSchemesAsync()).Any();
     var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+    var options = SecurityOptions.CurrentValue;
 
     // Pages that belong to a nav section, so sub-pages keep their section highlighted
     string NavActive(params string[] actions) =>
         actions.Any(a => string.Equals(a, currentAction, StringComparison.OrdinalIgnoreCase)) ? "active" : "";
 }
 
-<nav class="card manage-nav" aria-label="Account settings">
+<nav class="card manage-nav" aria-label="@L["Account settings"]">
     <ul class="nav nav-pills flex-column gap-1">
         <li class="nav-item">
             <a asp-area="User" asp-controller="Manage" asp-action="Index" class="nav-link @NavActive("Index")" id="profile">
-                <i class="bi bi-person"></i> Profile
+                <i class="bi bi-person"></i> @L["Profile"]
             </a>
         </li>
         <li class="nav-item">
             <a asp-area="User" asp-controller="Manage" asp-action="Email" class="nav-link @NavActive("Email", "ChangeEmail", "SendVerificationEmail")" id="email">
-                <i class="bi bi-envelope"></i> Email
+                <i class="bi bi-envelope"></i> @L["Email"]
             </a>
         </li>
         <li class="nav-item">
             <a asp-area="User" asp-controller="Manage" asp-action="ChangePassword" class="nav-link @NavActive("ChangePassword", "SetPassword")" id="change-password">
-                <i class="bi bi-key"></i> Password
+                <i class="bi bi-key"></i> @L["Password"]
             </a>
         </li>
         @if (hasExternalLogins)
         {
             <li id="external-logins" class="nav-item">
                 <a asp-area="User" asp-controller="Manage" asp-action="ExternalLogins" id="external-login" class="nav-link @NavActive("ExternalLogins")">
-                    <i class="bi bi-link-45deg"></i> External logins
+                    <i class="bi bi-link-45deg"></i> @L["External logins"]
                 </a>
             </li>
         }
-        @if (SecurityOptions.CurrentValue.EnableTwoFactor)
+        @if (options.EnableTwoFactor)
         {
             <li class="nav-item">
                 <a asp-area="User" asp-controller="Manage" asp-action="TwoFactorAuthentication" class="nav-link @NavActive("TwoFactorAuthentication", "EnableAuthenticator", "Disable2fa", "ResetAuthenticator", "GenerateRecoveryCodes", "ShowRecoveryCodes")" id="two-factor">
-                    <i class="bi bi-shield-lock"></i> Two-factor authentication
+                    <i class="bi bi-shield-lock"></i> @L["Two-factor authentication"]
                 </a>
             </li>
         }
-        @if (SecurityOptions.CurrentValue.EnablePasskeys)
+        @if (options.EnablePasskeys)
         {
             <li class="nav-item">
                 <a asp-area="User" asp-controller="Manage" asp-action="Passkeys" class="nav-link @NavActive("Passkeys", "AddPasskey", "RemovePasskey")" id="passkeys">
-                    <i class="bi bi-fingerprint"></i> Passkeys
+                    <i class="bi bi-fingerprint"></i> @L["Passkeys"]
                 </a>
             </li>
         }
         <li class="nav-item">
+            <a asp-area="User" asp-controller="Manage" asp-action="Devices" class="nav-link @NavActive("Devices", "RevokeSession")" id="devices">
+                <i class="bi bi-laptop"></i> @L["Devices"]
+            </a>
+        </li>
+        <li class="nav-item">
+            <a asp-area="User" asp-controller="Manage" asp-action="Activity" class="nav-link @NavActive("Activity")" id="activity">
+                <i class="bi bi-clock-history"></i> @L["Security activity"]
+            </a>
+        </li>
+        <li class="nav-item">
             <a asp-area="User" asp-controller="Manage" asp-action="PersonalData" class="nav-link @NavActive("PersonalData", "DeletePersonalData")" id="personal-data">
-                <i class="bi bi-file-earmark-person"></i> Personal data
+                <i class="bi bi-file-earmark-person"></i> @L["Personal data"]
             </a>
         </li>
     </ul>

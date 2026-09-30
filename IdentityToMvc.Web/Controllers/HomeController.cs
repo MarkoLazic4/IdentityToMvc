@@ -1,4 +1,6 @@
+using IdentityToMvc.Web.Localization;
 using IdentityToMvc.Web.Models;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 
@@ -21,6 +23,31 @@ namespace IdentityToMvc.Web.Controllers
         public IActionResult Privacy()
         {
             return View();
+        }
+
+        // POST: /Home/SetLanguage - remembers the chosen language for a year
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult SetLanguage(string culture, string? returnUrl = null)
+        {
+            if (LocalizationSetup.SupportedCultures.Any(c => c.Name == culture))
+            {
+                Response.Cookies.Append(LocalizationSetup.CookieName,
+                    CookieRequestCultureProvider.MakeCookieValue(new RequestCulture(culture)),
+                    new CookieOptions
+                    {
+                        Expires = DateTimeOffset.UtcNow.AddYears(1),
+                        HttpOnly = true,
+                        Secure = true,
+                        SameSite = SameSiteMode.Lax,
+                        Path = "/",
+                        IsEssential = true
+                    });
+            }
+
+            return !string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl)
+                ? LocalRedirect(returnUrl)
+                : RedirectToAction(nameof(Index));
         }
 
         // Re-executed by UseStatusCodePagesWithReExecute for 4xx/5xx responses without a body

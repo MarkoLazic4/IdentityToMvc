@@ -1,14 +1,13 @@
 ﻿@model IdentityToMvc.Web.Areas.User.ViewModels.Manage.ConfirmIdentityViewModel
 @{
-    ViewData["Title"] = "Confirm it's you";
+    ViewData["Title"] = L["Confirm it's you"].Value;
 }
 
 <div class="col-xl-8">
     <span class="icon-badge mb-3"><i class="bi bi-person-lock"></i></span>
-    <h2 class="page-title">Confirm it's you</h2>
+    <h2 class="page-title">@L["Confirm it's you"]</h2>
     <p class="page-subtitle">
-        You're about to change a sensitive setting. Please enter your password to continue -
-        you won't be asked again for the next @RecentAuthenticationService.Window.TotalMinutes minutes.
+        @L["You're about to change a sensitive setting. Please enter your password to continue - you won't be asked again for the next {0} minutes.", RecentAuthenticationService.Window.TotalMinutes]
     </p>
 
     <form id="confirm-identity-form" asp-area="User" asp-controller="Manage" asp-action="ConfirmIdentity" method="post" novalidate>
@@ -16,11 +15,11 @@
         <div asp-validation-summary="ModelOnly" role="alert"></div>
         <div class="form-floating mb-4">
             <input asp-for="Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="Password" autofocus />
-            <label asp-for="Password">Password</label>
+            <label asp-for="Password"></label>
             <span asp-validation-for="Password" class="text-danger"></span>
         </div>
-        <button type="submit" class="btn btn-primary px-4">Continue</button>
-        <a class="btn btn-link" asp-area="User" asp-controller="Manage" asp-action="Index">Cancel</a>
+        <button type="submit" class="btn btn-primary px-4">@L["Continue"]</button>
+        <a class="btn btn-link" asp-area="User" asp-controller="Manage" asp-action="Index">@L["Cancel"]</a>
     </form>
 </div>
 

@@ -1,7 +1,7 @@
 ﻿@model IdentityToMvc.Web.Areas.User.ViewModels.Account.LoginViewModel
 @inject Microsoft.Extensions.Options.IOptionsMonitor<SecurityOptions> SecurityOptions
 @{
-    ViewData["Title"] = "Log in";
+    ViewData["Title"] = L["Log in"].Value;
     var passkeysEnabled = SecurityOptions.CurrentValue.EnablePasskeys;
 }
 
@@ -9,8 +9,8 @@
     <div class="card auth-card">
         <div class="auth-header">
             <span class="icon-badge"><i class="bi bi-box-arrow-in-right"></i></span>
-            <h1>Welcome back</h1>
-            <p>Log in to your account to continue.</p>
+            <h1>@L["Welcome back"]</h1>
+            <p>@L["Log in to your account to continue."]</p>
         </div>
 
         <partial name="_StatusMessage" model="@TempData["StatusMessage"] as string" />
@@ -20,22 +20,22 @@
             <div asp-validation-summary="ModelOnly" role="alert"></div>
             <div class="form-floating mb-3">
                 <input asp-for="Input.Email" class="form-control" autocomplete="@(passkeysEnabled ? "username webauthn" : "username")" aria-required="true" placeholder="name@example.com" autofocus />
-                <label asp-for="Input.Email">Email</label>
+                <label asp-for="Input.Email"></label>
                 <span asp-validation-for="Input.Email" class="text-danger"></span>
             </div>
             <div class="form-floating mb-3">
                 <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="password" />
-                <label asp-for="Input.Password">Password</label>
+                <label asp-for="Input.Password"></label>
                 <span asp-validation-for="Input.Password" class="text-danger"></span>
             </div>
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div class="form-check">
                     <input class="form-check-input" asp-for="Input.RememberMe" />
-                    <label class="form-check-label" asp-for="Input.RememberMe">Remember me</label>
+                    <label class="form-check-label" asp-for="Input.RememberMe"></label>
                 </div>
-                <a id="forgot-password" class="small" asp-area="User" asp-controller="Account" asp-action="ForgotPassword">Forgot password?</a>
+                <a id="forgot-password" class="small" asp-area="User" asp-controller="Account" asp-action="ForgotPassword">@L["Forgot password?"]</a>
             </div>
-            <button id="login-submit" type="submit" class="w-100 btn btn-lg btn-primary">Log in</button>
+            <button id="login-submit" type="submit" class="w-100 btn btn-lg btn-primary">@L["Log in"]</button>
         </form>
 
         @if (passkeysEnabled)
@@ -45,23 +45,23 @@
                 <input type="hidden" name="credentialJson" />
                 <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
                 <button id="passkey-login-button" type="button" class="w-100 btn btn-lg btn-soft mt-2">
-                    <i class="bi bi-fingerprint me-1"></i> Log in with a passkey
+                    <i class="bi bi-fingerprint me-1"></i> @L["Log in with a passkey"]
                 </button>
                 <div id="passkey-login-error" class="text-danger small mt-2" role="alert" hidden></div>
             </form>
         }
 
-        <partial name="_ExternalLoginButtons" model='(Model.ExternalLogins, Model.ReturnUrl, "Log in")' />
+        <partial name="_ExternalLoginButtons" model="(Model.ExternalLogins, Model.ReturnUrl, false)" />
     </div>
 
     <div class="auth-footer">
         <p class="mb-1">
-            Don't have an account?
-            <a asp-area="User" asp-controller="Account" asp-action="Register" asp-route-returnUrl="@Model.ReturnUrl">Sign up</a>
+            @L["Don't have an account?"]
+            <a asp-area="User" asp-controller="Account" asp-action="Register" asp-route-returnUrl="@Model.ReturnUrl">@L["Sign up"]</a>
         </p>
         <p class="small mb-0">
-            Didn't get the confirmation email?
-            <a id="resend-confirmation" asp-area="User" asp-controller="Account" asp-action="ResendEmailConfirmation">Resend it</a>
+            @L["Didn't get the confirmation email?"]
+            <a id="resend-confirmation" asp-area="User" asp-controller="Account" asp-action="ResendEmailConfirmation">@L["Resend it"]</a>
         </p>
     </div>
 </div>

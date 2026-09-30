@@ -1,14 +1,14 @@
 ﻿@model IdentityToMvc.Web.Areas.User.ViewModels.Account.ResendEmailConfirmationViewModel
 @{
-    ViewData["Title"] = "Resend email confirmation";
+    ViewData["Title"] = L["Resend email confirmation"].Value;
 }
 
 <div class="auth-wrapper">
     <div class="card auth-card">
         <div class="auth-header">
             <span class="icon-badge"><i class="bi bi-envelope-arrow-up"></i></span>
-            <h1>Resend confirmation</h1>
-            <p>Enter your email and we'll send you a new confirmation link.</p>
+            <h1>@L["Resend confirmation"]</h1>
+            <p>@L["Enter your email and we'll send you a link to finish setting up your account."]</p>
         </div>
 
         <partial name="_StatusMessage" model="@TempData["StatusMessage"] as string" />
@@ -17,15 +17,15 @@
             <div asp-validation-summary="ModelOnly" role="alert"></div>
             <div class="form-floating mb-4">
                 <input asp-for="Input.Email" class="form-control" autocomplete="email" aria-required="true" placeholder="name@example.com" autofocus />
-                <label asp-for="Input.Email">Email</label>
+                <label asp-for="Input.Email"></label>
                 <span asp-validation-for="Input.Email" class="text-danger"></span>
             </div>
-            <button type="submit" class="w-100 btn btn-lg btn-primary">Resend link</button>
+            <button type="submit" class="w-100 btn btn-lg btn-primary">@L["Resend link"]</button>
         </form>
     </div>
 
     <div class="auth-footer">
-        <a asp-area="User" asp-controller="Account" asp-action="Login"><i class="bi bi-arrow-left"></i> Back to log in</a>
+        <a asp-area="User" asp-controller="Account" asp-action="Login"><i class="bi bi-arrow-left"></i> @L["Back to log in"]</a>
     </div>
 </div>
 

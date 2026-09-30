@@ -10,6 +10,8 @@
         return;
     }
 
+    var t = window.appText || function (key, fallback) { return fallback; };
+
     // ---------- base64url helpers ----------
     function toBuffer(base64url) {
         var base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
@@ -84,7 +86,7 @@
                 window.location.href = response.url;
                 return new Promise(function () { });
             }
-            if (!response.ok) throw new Error('Could not start the passkey request (' + response.status + ').');
+            if (!response.ok) throw new Error(t('passkeyStart', 'Could not start the passkey request.') + ' (' + response.status + ')');
             return response.json();
         });
     }
@@ -96,9 +98,9 @@
     }
 
     function friendlyError(error) {
-        if (error && error.name === 'NotAllowedError') return 'The passkey request was cancelled or timed out.';
-        if (error && error.name === 'InvalidStateError') return 'This device already has a passkey for your account.';
-        return (error && error.message) || 'Something went wrong with the passkey request.';
+        if (error && error.name === 'NotAllowedError') return t('passkeyCancelled', 'The passkey request was cancelled or timed out.');
+        if (error && error.name === 'InvalidStateError') return t('passkeyExists', 'This device already has a passkey for your account.');
+        return (error && error.message) || t('passkeyFailed', 'Something went wrong with the passkey request.');
     }
 
     // ---------- Register a passkey (Manage > Passkeys) ----------
