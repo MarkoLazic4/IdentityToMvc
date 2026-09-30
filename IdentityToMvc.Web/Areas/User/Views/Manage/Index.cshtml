@@ -22,6 +22,21 @@
     <button id="update-profile-button" type="submit" class="btn btn-primary px-4">Save changes</button>
 </form>
 
+<h3 class="h6 text-muted text-uppercase small mt-5 mb-2">Sessions</h3>
+<div class="setting-row">
+    <div class="d-flex gap-3 align-items-center">
+        <span class="icon-badge icon-badge-warning"><i class="bi bi-laptop"></i></span>
+        <div>
+            <h3>Sign out of all other devices</h3>
+            <p>Ends every other session and forgets remembered 2FA browsers. You stay signed in here.</p>
+        </div>
+    </div>
+    <form id="sign-out-everywhere-form" asp-area="User" asp-controller="Manage" asp-action="SignOutEverywhere" method="post"
+          data-confirm="Sign out of all other devices?">
+        <button id="sign-out-everywhere" type="submit" class="btn btn-outline-danger">Sign out everywhere</button>
+    </form>
+</div>
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 }

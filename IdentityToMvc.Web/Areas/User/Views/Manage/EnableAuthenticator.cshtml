@@ -58,12 +58,5 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script src="~/lib/qrcodejs/qrcode.min.js"></script>
-    <script>
-        (function () {
-            var data = document.getElementById('qrCodeData');
-            var target = document.getElementById('qrCode');
-            if (!data || !target || typeof QRCode === 'undefined') return;
-            new QRCode(target, { text: data.getAttribute('data-url'), width: 160, height: 160 });
-        })();
-    </script>
+    <script src="~/js/site.qrcode.js" asp-append-version="true"></script>
 }

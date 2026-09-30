@@ -21,6 +21,44 @@ Projekat prikazuje kako prevesti standardne Identity RCL stranice u MVC controll
   
 ---
 
+## Bezbednost
+
+Pored podrazumevanih Identity podešavanja, aplikacija dodaje:
+
+| Oblast | Šta radi |
+|--------|----------|
+| **Passkeys (WebAuthn)** | Prijava bez lozinke, otporna na phishing - Face ID / Touch ID / Windows Hello / sigurnosni ključevi (.NET 10 Identity passkeys, šema v3). Passkey autofill u polju za email, obavezna verifikacija korisnika. Upravljanje u *Manage account &rarr; Passkeys*. |
+| **Sudo mode** | Osetljive izmene (2FA, recovery kodovi, email, eksterni nalozi, passkeys, preuzimanje podataka) traže ponovo lozinku ako je od poslednje prijave prošlo više od 15 minuta. |
+| **Zaključavanje** | 3 neuspešna pokušaja zaključavaju nalog na 10 minuta (login, 2FA kodovi, potvrda identiteta, brisanje naloga). |
+| **Rate limiting** | Ograničenja po IP adresi za forme naloga (20/min) i za rute koje šalju email (5 na 10 min), odgovor `429` sa `Retry-After`. |
+| **Politika lozinki** | 8+ karaktera sa velikim/malim slovom, cifrom i simbolom; ne sme sadržati email; provera u [Have I Been Pwned](https://haveibeenpwned.com/Passwords) bazi procurelih lozinki preko k-anonymity (samo 5 karaktera heša napušta server; ako API nije dostupan, provera se preskače). |
+| **Heširanje lozinki** | PBKDF2-HMAC-SHA512 sa 600.000 iteracija; stari heševi se automatski unapređuju pri sledećoj prijavi. |
+| **Sesije** | „Odjavi me sa svih drugih uređaja“, security stamp se proverava na 5 minuta, promena lozinke/2FA gasi ostale sesije a trenutnu zadržava. |
+| **Bezbednosna obaveštenja** | Email + strukturisani audit log (`Security audit: <Event>`) za promene lozinke/emaila/2FA/passkey-a/načina prijave, zaključavanja i brisanje naloga. |
+| **Bez otkrivanja naloga** | Potvrda registracije, ponovno slanje potvrde i reset lozinke odgovaraju isto za nepostojeće naloge; mejlovi idu kroz pozadinski red pa ni vreme odgovora ne otkriva ništa. |
+| **Kolačići** | `__Host-` prefiks, `Secure`, `HttpOnly`; antiforgery kolačić `SameSite=Strict`. |
+| **Zaglavlja** | Content-Security-Policy sa nonce-om po zahtevu (bez inline skripti), HSTS (1 godina), `X-Frame-Options`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, COOP/CORP, bez `Server` zaglavlja, `no-store` na stranicama naloga. |
+| **Tokeni i ključevi** | Linkovi za potvrdu/reset ističu posle 3 sata; Data Protection ključevi se čuvaju u bazi pa tokeni i kolačići preživljavaju restart i rade na više instanci. |
+
+Podešavanja (`Security` sekcija u `appsettings.json`):
+
+```json
+"Security": {
+  "CheckBreachedPasswords": true,
+  "SendSecurityNotifications": true,
+  "MaxPasskeysPerUser": 10,
+  "PasskeyServerDomain": "",      // npr. "example.com" - podrazumevano host iz zahteva
+  "KnownProxies": []              // IP adrese reverse proxy-ja kojima se veruje za X-Forwarded-*
+}
+```
+
+> Passkeys zahtevaju HTTPS (ili `localhost`). Posle ovih izmena napravi novu migraciju - šema sada
+> sadrži tabele za passkeys i Data Protection ključeve.
+
+![Passkeys](docs/screenshots/passkeys.png)
+
+---
+
 ## Preduslovi
 - [.NET SDK 10.x](https://dotnet.microsoft.com/download/dotnet/10.0)
 - Visual Studio 2026 (preporučeno) ili VS Code + C# Dev Kit  

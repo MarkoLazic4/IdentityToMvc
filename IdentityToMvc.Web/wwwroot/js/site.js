@@ -45,12 +45,12 @@
     function scorePassword(value) {
         if (!value) return -1;
         var score = 0;
-        if (value.length >= 6) score++;
-        if (value.length >= 10) score++;
+        if (value.length >= 8) score++;
+        if (value.length >= 12) score++;
         if (/[a-z]/.test(value) && /[A-Z]/.test(value)) score++;
         if (/\d/.test(value)) score++;
         if (/[^A-Za-z0-9]/.test(value)) score++;
-        if (value.length < 6) score = Math.min(score, 1);
+        if (value.length < 8) score = Math.min(score, 1);
         return Math.min(score, 4);
     }
 
@@ -74,7 +74,7 @@
             var level = levels[score];
             bar.className = 'progress-bar ' + level.cls;
             bar.style.width = level.width + '%';
-            text.textContent = level.label + ' - use at least 6 characters with a digit and a symbol.';
+            text.textContent = level.label + ' - use 8+ characters with upper- and lowercase letters, a digit and a symbol.';
         });
     });
 

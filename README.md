@@ -21,6 +21,44 @@ This project demonstrates how to translate the standard Identity RCL Pages into 
   
 ---
 
+## Security
+
+On top of ASP.NET Core Identity's defaults the app adds:
+
+| Area | What it does |
+|------|--------------|
+| **Passkeys (WebAuthn)** | Passwordless, phishing-resistant login with Face ID / Touch ID / Windows Hello / security keys (.NET 10 Identity passkeys, schema v3). Passkey autofill in the email field, user verification required. Manage them under *Manage account &rarr; Passkeys*. |
+| **Sudo mode** | Sensitive changes (2FA, recovery codes, email, external logins, passkeys, personal data download) require the password again if the last authentication was more than 15 minutes ago. |
+| **Lockout** | 3 failed attempts lock the account for 10 minutes (login, 2FA codes, "confirm it's you", delete account). |
+| **Rate limiting** | Per-IP limits on account form posts (20/min) and on endpoints that send email (5 per 10 min), `429` with `Retry-After`. |
+| **Password policy** | 8+ characters with upper/lowercase, digit and symbol; must not contain the email; checked against the [Have I Been Pwned](https://haveibeenpwned.com/Passwords) breach corpus using k-anonymity (only 5 hash characters leave the server, fails open if the API is down). |
+| **Password hashing** | PBKDF2-HMAC-SHA512 with 600,000 iterations; older hashes are upgraded on the next login. |
+| **Sessions** | "Sign out of all other devices", security stamp re-validated every 5 minutes, password/2FA changes end other sessions while keeping the current one. |
+| **Security notifications** | Email + structured audit log (`Security audit: <Event>`) for password/email/2FA/passkey/login-method changes, lockouts and account deletion. |
+| **No user enumeration** | Register confirmation, resend confirmation, forgot/reset password answer the same way for unknown accounts; emails are sent from a background queue so timing doesn't leak either. |
+| **Cookies** | `__Host-` prefixed, `Secure`, `HttpOnly`; antiforgery cookie `SameSite=Strict`. |
+| **Headers** | Content-Security-Policy with per-request nonces (no inline scripts), HSTS (1 year), `X-Frame-Options`, `nosniff`, `Referrer-Policy`, `Permissions-Policy`, COOP/CORP, no `Server` header, `no-store` on account pages. |
+| **Tokens & keys** | Email/reset links expire after 3 hours; Data Protection keys are stored in the database so tokens and cookies survive restarts and work across instances. |
+
+Configuration (`Security` section in `appsettings.json`):
+
+```json
+"Security": {
+  "CheckBreachedPasswords": true,
+  "SendSecurityNotifications": true,
+  "MaxPasskeysPerUser": 10,
+  "PasskeyServerDomain": "",      // e.g. "example.com" - defaults to the request host
+  "KnownProxies": []              // reverse proxy IPs trusted for X-Forwarded-For/Proto
+}
+```
+
+> Passkeys require HTTPS (or `localhost`). After pulling these changes, create a new migration - the
+> schema now includes the passkeys and Data Protection keys tables.
+
+![Passkeys](docs/screenshots/passkeys.png)
+
+---
+
 ## Prerequisites
 - [.NET SDK 10.x](https://dotnet.microsoft.com/download/dotnet/10.0)
 - Visual Studio 2026 (recommended) or VS Code + C# Dev Kit  

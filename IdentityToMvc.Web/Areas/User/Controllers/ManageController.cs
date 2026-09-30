@@ -1,10 +1,14 @@
 ﻿using IdentityToMvc.Web.Areas.User.ViewModels.Manage;
 using IdentityToMvc.Web.Helpers;
+using IdentityToMvc.Web.Security;
 using IdentityToMvc.Web.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Options;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 
@@ -12,17 +16,24 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
 {
     [Area("User")]
     [Authorize]
+    [EnableRateLimiting(RateLimitPolicies.Auth)]
+    [TypeFilter(typeof(RefreshSessionOnSecurityStampChangeFilter))]
     [Route("{area}/Account/[controller]/[action]")]
     public class ManageController : Controller
     {
         private readonly UserManager<IdentityUser> _userManager;
         private readonly SignInManager<IdentityUser> _signInManager;
+        private readonly ISecurityNotifier _securityNotifier;
+        private readonly RecentAuthenticationService _recentAuthentication;
         private readonly ILogger<ManageController> _logger;
+
         public ManageController(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager,
-            ILogger<ManageController> logger)
+            ISecurityNotifier securityNotifier, RecentAuthenticationService recentAuthentication, ILogger<ManageController> logger)
         {
             _userManager = userManager;
             _signInManager = signInManager;
+            _securityNotifier = securityNotifier;
+            _recentAuthentication = recentAuthentication;
             _logger = logger;
         }
 
@@ -30,6 +41,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         // GET: /User/Account/Manage/EnableAuthenticator
         // ===========================================================================
         [HttpGet]
+        [RequireRecentAuthentication]
         public async Task<IActionResult> EnableAuthenticator([FromServices] UrlEncoder urlEncoder)
         {
             var user = await _userManager.GetUserAsync(User);
@@ -52,6 +64,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         // ===========================================================================
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [RequireRecentAuthentication]
         public async Task<IActionResult> EnableAuthenticator([FromServices] UrlEncoder urlEncoder, EnableAuthenticatorViewModel model)
         {
             var user = await _userManager.GetUserAsync(User);
@@ -83,6 +96,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             var userId = await _userManager.GetUserIdAsync(user);
             _logger.LogInformation("User with ID '{UserId}' has enabled 2FA with an authenticator app.", userId);
 
+            await _securityNotifier.NotifyAsync(user, SecurityEvent.TwoFactorEnabled);
             TempData["StatusMessage"] = "Your authenticator app has been verified.";
 
             if (await _userManager.CountRecoveryCodesAsync(user) == 0)
@@ -101,6 +115,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         // GET: /User/Account/Manage/Disable2fa
         // ===========================================================================
         [HttpGet]
+        [RequireRecentAuthentication]
         public async Task<IActionResult> Disable2fa()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -124,6 +139,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ActionName("Disable2fa")]
+        [RequireRecentAuthentication]
         public async Task<IActionResult> Disable2faPost()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -140,6 +156,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             }
 
             _logger.LogInformation("User with ID '{UserId}' has disabled 2fa.", _userManager.GetUserId(User));
+            await _securityNotifier.NotifyAsync(user, SecurityEvent.TwoFactorDisabled);
             TempData["StatusMessage"] = "2fa has been disabled. You can reenable 2fa when you setup an authenticator app";
             return RedirectToAction(nameof(TwoFactorAuthentication), "Manage", new { area = "User" });
         }
@@ -148,6 +165,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         // GET: /User/Account/Manage/ResetAuthenticator
         // ===========================================================================
         [HttpGet]
+        [RequireRecentAuthentication]
         public async Task<IActionResult> ResetAuthenticator()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -165,6 +183,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ActionName("ResetAuthenticator")]
+        [RequireRecentAuthentication]
         public async Task<IActionResult> ResetAuthenticatorKey()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -179,6 +198,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             _logger.LogInformation("User with ID '{UserId}' has reset their authentication app key.", user.Id);
 
             await _signInManager.RefreshSignInAsync(user);
+            await _securityNotifier.NotifyAsync(user, SecurityEvent.AuthenticatorReset);
             TempData["StatusMessage"] = "Your authenticator app key has been reset, you will need to configure your authenticator app using the new key.";
 
             return RedirectToAction(nameof(EnableAuthenticator), "Manage", new { area = "User" });
@@ -188,6 +208,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         // GET: /User/Account/Manage/GenerateRecoveryCodes
         // ===========================================================================
         [HttpGet]
+        [RequireRecentAuthentication]
         public async Task<IActionResult> GenerateRecoveryCodes()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -212,6 +233,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [ActionName("GenerateRecoveryCodes")]
+        [RequireRecentAuthentication]
         public async Task<IActionResult> GenerateRecoveryCodesPost()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -232,6 +254,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             TempData["RecoveryCodes"] = recoveryCodes?.ToArray();
 
             _logger.LogInformation("User with ID '{UserId}' has generated new 2FA recovery codes.", userId);
+            await _securityNotifier.NotifyAsync(user, SecurityEvent.RecoveryCodesGenerated);
             TempData["StatusMessage"] = "You have generated new recovery codes.";
             return RedirectToAction(nameof(ShowRecoveryCodes), "Manage", new { area = "User" });
         }
@@ -317,7 +340,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         // POST: /User/Account/Manage/Index
         // ===========================================================================
         [HttpPost]
-        [AutoValidateAntiforgeryToken]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Index(IndexViewModel model)
         {
             var user = await _userManager.GetUserAsync(User);
@@ -382,6 +405,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         // ===========================================================================
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [RequireRecentAuthentication]
         public async Task<IActionResult> RemoveExternalLogin(string loginProvider, string providerKey)
         {
             var user = await _userManager.GetUserAsync(User);
@@ -408,6 +432,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             }
 
             await _signInManager.RefreshSignInAsync(user);
+            await _securityNotifier.NotifyAsync(user, SecurityEvent.ExternalLoginRemoved);
             TempData["StatusMessage"] = "The external login was removed.";
             return RedirectToAction(nameof(ExternalLogins), "Manage", new { area = "User" });
         }
@@ -417,6 +442,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         // ===========================================================================
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [RequireRecentAuthentication]
         public async Task<IActionResult> LinkLogin(string provider)
         {
             // Clear the existing external cookie to ensure a clean login process
@@ -458,6 +484,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             // Clear the existing external cookie to ensure a clean login process
             await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
 
+            await _securityNotifier.NotifyAsync(user, SecurityEvent.ExternalLoginAdded);
             TempData["StatusMessage"] = "The external login was added.";
             return RedirectToAction(nameof(ExternalLogins), "Manage", new { area = "User" });
         }
@@ -481,7 +508,8 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         // POST: /User/Account/Manage/DownloadPersonalData
         // ===========================================================================
         [HttpPost]
-        [AutoValidateAntiforgeryToken]
+        [ValidateAntiForgeryToken]
+        [RequireRecentAuthentication]
         public async Task<IActionResult> DownloadPersonalData()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -535,7 +563,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         // POST: /User/Account/Manage/DeletePersonalData
         // ===========================================================================
         [HttpPost]
-        [AutoValidateAntiforgeryToken]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeletePersonalData(DeletePersonalDataViewModel model)
         {
             var user = await _userManager.GetUserAsync(User);
@@ -570,6 +598,8 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             }
 
             await _signInManager.SignOutAsync();
+            _recentAuthentication.Clear(HttpContext);
+            await _securityNotifier.NotifyAsync(user, SecurityEvent.AccountDeleted);
 
             _logger.LogInformation("User with ID '{UserId}' deleted themselves.", userId);
 
@@ -629,7 +659,9 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
 
             await _signInManager.RefreshSignInAsync(user);
             _logger.LogInformation("User changed their password successfully.");
-            TempData["StatusMessage"] = "Your password has been changed.";
+            await _recentAuthentication.MarkAsync(HttpContext, user);
+            await _securityNotifier.NotifyAsync(user, SecurityEvent.PasswordChanged);
+            TempData["StatusMessage"] = "Your password has been changed. Your other sessions will be signed out.";
 
             return RedirectToAction(nameof(ChangePassword), "Manage", new { area = "User" });
         }
@@ -687,6 +719,8 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             }
 
             await _signInManager.RefreshSignInAsync(user);
+            await _recentAuthentication.MarkAsync(HttpContext, user);
+            await _securityNotifier.NotifyAsync(user, SecurityEvent.PasswordSet);
             TempData["StatusMessage"] = "Your password has been set.";
 
             return RedirectToAction(nameof(SetPassword), "Manage", new { area = "User" });
@@ -723,6 +757,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         // ===========================================================================
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [RequireRecentAuthentication]
         public async Task<IActionResult> ChangeEmail([FromServices] IEmailService emailService, ChangeEmailViewModel model)
         {
             var user = await _userManager.GetUserAsync(User);
@@ -750,6 +785,11 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
                     new { area = "User", userId = userId, email = model.Input.NewEmail, code = code },
                     protocol: Request.Scheme) ?? string.Empty;
                 var sent = await emailService.SendEmailAsync(model.Input.NewEmail, "Confirm your new email", EmailTemplates.ConfirmEmailChange(callbackUrl));
+                if (sent)
+                {
+                    // Warn the current address too, in case someone else is trying to take over the account
+                    await _securityNotifier.NotifyAsync(user, SecurityEvent.EmailChangeRequested);
+                }
 
                 TempData["StatusMessage"] = sent
                     ? "Confirmation link to change email sent. Please check your email."
@@ -828,6 +868,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
                 return View();
             }
 
+            var oldEmail = await _userManager.GetEmailAsync(user);
             var result = await _userManager.ChangeEmailAsync(user, email, token);
             if (!result.Succeeded)
             {
@@ -845,8 +886,233 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             }
 
             await _signInManager.RefreshSignInAsync(user);
+            await _securityNotifier.NotifyAsync(user, SecurityEvent.EmailChanged, overrideEmail: oldEmail);
             TempData["StatusMessage"] = "Thank you for confirming your email change.";
             return View();
+        }
+
+        // ===========================================================================
+        // POST: /User/Account/Manage/SignOutEverywhere
+        // ===========================================================================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SignOutEverywhere()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+            }
+
+            // A new security stamp invalidates every existing auth and "remember this browser"
+            // cookie at their next validation (see SecurityStampValidatorOptions).
+            await _userManager.UpdateSecurityStampAsync(user);
+            await _signInManager.ForgetTwoFactorClientAsync();
+            // Keep this session alive with a cookie carrying the new stamp
+            await _signInManager.RefreshSignInAsync(user);
+            await _recentAuthentication.MarkAsync(HttpContext, user);
+            await _securityNotifier.NotifyAsync(user, SecurityEvent.SignedOutEverywhere);
+
+            TempData["StatusMessage"] = "All other sessions will be signed out within a few minutes.";
+            return RedirectToAction(nameof(Index), "Manage", new { area = "User" });
+        }
+
+        // ===========================================================================
+        // GET: /User/Account/Manage/ConfirmIdentity  ("sudo mode")
+        // ===========================================================================
+        [HttpGet]
+        public IActionResult ConfirmIdentity(string? returnUrl = null)
+        {
+            return View(new ConfirmIdentityViewModel { ReturnUrl = returnUrl });
+        }
+
+        // ===========================================================================
+        // POST: /User/Account/Manage/ConfirmIdentity
+        // ===========================================================================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ConfirmIdentity(ConfirmIdentityViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+            }
+
+            // Wrong passwords count towards lockout just like on the login page
+            var check = await _signInManager.CheckPasswordSignInAsync(user, model.Password, lockoutOnFailure: true);
+            if (check.IsLockedOut)
+            {
+                await _signInManager.SignOutAsync();
+                return RedirectToAction("Lockout", "Account", new { area = "User" });
+            }
+            if (!check.Succeeded)
+            {
+                ModelState.AddModelError(string.Empty, "Incorrect password.");
+                return View(model);
+            }
+
+            await _recentAuthentication.MarkAsync(HttpContext, user);
+
+            if (!string.IsNullOrEmpty(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
+            {
+                return LocalRedirect(model.ReturnUrl);
+            }
+            return RedirectToAction(nameof(Index), "Manage", new { area = "User" });
+        }
+
+        // ===========================================================================
+        // GET: /User/Account/Manage/Passkeys
+        // ===========================================================================
+        [HttpGet]
+        public async Task<IActionResult> Passkeys([FromServices] IOptionsMonitor<SecurityOptions> securityOptions)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+            }
+
+            var passkeys = await _userManager.GetPasskeysAsync(user);
+            var viewModel = new PasskeysViewModel
+            {
+                MaxPasskeys = securityOptions.CurrentValue.MaxPasskeysPerUser,
+                Passkeys = passkeys
+                    .OrderBy(p => p.CreatedAt)
+                    .Select(p => new PasskeysViewModel.PasskeyItem
+                    {
+                        Id = WebEncoders.Base64UrlEncode(p.CredentialId),
+                        Name = string.IsNullOrWhiteSpace(p.Name) ? "Unnamed passkey" : p.Name,
+                        CreatedAt = p.CreatedAt,
+                        IsBackedUp = p.IsBackedUp
+                    })
+                    .ToList()
+            };
+
+            return View(viewModel);
+        }
+
+        // ===========================================================================
+        // POST: /User/Account/Manage/PasskeyCreationOptions  (called from JavaScript)
+        // ===========================================================================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [RequireRecentAuthentication]
+        public async Task<IActionResult> PasskeyCreationOptions()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            var userName = await _userManager.GetUserNameAsync(user) ?? "User";
+            var optionsJson = await _signInManager.MakePasskeyCreationOptionsAsync(new PasskeyUserEntity
+            {
+                Id = await _userManager.GetUserIdAsync(user),
+                Name = userName,
+                DisplayName = userName
+            });
+            return Content(optionsJson, "application/json");
+        }
+
+        // ===========================================================================
+        // POST: /User/Account/Manage/AddPasskey
+        // ===========================================================================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [RequireRecentAuthentication]
+        public async Task<IActionResult> AddPasskey([FromServices] IOptionsMonitor<SecurityOptions> securityOptions,
+            string? credentialJson, string? name)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+            }
+
+            if (string.IsNullOrWhiteSpace(credentialJson))
+            {
+                TempData["StatusMessage"] = "Error: the passkey registration was cancelled.";
+                return RedirectToAction(nameof(Passkeys), "Manage", new { area = "User" });
+            }
+
+            var existing = await _userManager.GetPasskeysAsync(user);
+            if (existing.Count >= securityOptions.CurrentValue.MaxPasskeysPerUser)
+            {
+                TempData["StatusMessage"] = $"Error: you can register at most {securityOptions.CurrentValue.MaxPasskeysPerUser} passkeys.";
+                return RedirectToAction(nameof(Passkeys), "Manage", new { area = "User" });
+            }
+
+            var attestation = await _signInManager.PerformPasskeyAttestationAsync(credentialJson);
+            if (!attestation.Succeeded)
+            {
+                _logger.LogWarning("Passkey attestation failed for user {UserId}: {Error}", user.Id, attestation.Failure?.Message);
+                TempData["StatusMessage"] = "Error: the passkey could not be verified. Please try again.";
+                return RedirectToAction(nameof(Passkeys), "Manage", new { area = "User" });
+            }
+
+            var passkey = attestation.Passkey;
+            passkey.Name = string.IsNullOrWhiteSpace(name) ? "Passkey" : name.Trim()[..Math.Min(name.Trim().Length, 50)];
+            var result = await _userManager.AddOrUpdatePasskeyAsync(user, passkey);
+            if (!result.Succeeded)
+            {
+                TempData["StatusMessage"] = "Error: the passkey could not be saved.";
+                return RedirectToAction(nameof(Passkeys), "Manage", new { area = "User" });
+            }
+
+            await _securityNotifier.NotifyAsync(user, SecurityEvent.PasskeyAdded);
+            TempData["StatusMessage"] = $"Passkey \"{passkey.Name}\" was added. You can now use it to log in.";
+            return RedirectToAction(nameof(Passkeys), "Manage", new { area = "User" });
+        }
+
+        // ===========================================================================
+        // POST: /User/Account/Manage/RemovePasskey
+        // ===========================================================================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [RequireRecentAuthentication]
+        public async Task<IActionResult> RemovePasskey(string id)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+            }
+
+            byte[] credentialId;
+            try
+            {
+                credentialId = WebEncoders.Base64UrlDecode(id ?? string.Empty);
+            }
+            catch (FormatException)
+            {
+                return BadRequest();
+            }
+
+            // Never remove the last way to log in
+            var hasPassword = await _userManager.HasPasswordAsync(user);
+            var logins = await _userManager.GetLoginsAsync(user);
+            var passkeys = await _userManager.GetPasskeysAsync(user);
+            if (!hasPassword && logins.Count == 0 && passkeys.Count <= 1)
+            {
+                TempData["StatusMessage"] = "Error: you can't remove your only way to log in. Set a password first.";
+                return RedirectToAction(nameof(Passkeys), "Manage", new { area = "User" });
+            }
+
+            var result = await _userManager.RemovePasskeyAsync(user, credentialId);
+            if (!result.Succeeded)
+            {
+                TempData["StatusMessage"] = "Error: the passkey was not found.";
+                return RedirectToAction(nameof(Passkeys), "Manage", new { area = "User" });
+            }
+
+            await _securityNotifier.NotifyAsync(user, SecurityEvent.PasskeyRemoved);
+            TempData["StatusMessage"] = "The passkey was removed.";
+            return RedirectToAction(nameof(Passkeys), "Manage", new { area = "User" });
         }
     }
 }

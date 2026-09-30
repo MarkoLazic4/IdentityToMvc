@@ -22,6 +22,25 @@ namespace IdentityToMvc.Web.Services
                 "We received a request to reset your password. If you didn't ask for this, you can ignore this email.",
                 "Reset password", callbackUrl);
 
+        public static string SecurityNotification(string title, string text, DateTimeOffset when, string ip, string userAgent)
+        {
+            var encoder = HtmlEncoder.Default;
+            return $"""
+                <div style="font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:#f4f5fb;padding:32px 16px;">
+                  <div style="max-width:480px;margin:0 auto;background:#ffffff;border-radius:12px;padding:32px;">
+                    <h1 style="margin:0 0 16px;font-size:22px;color:#1f2340;">{encoder.Encode(title)}</h1>
+                    <p style="margin:0 0 16px;font-size:15px;line-height:1.5;color:#4a4f6a;">{encoder.Encode(text)}</p>
+                    <table style="font-size:13px;color:#4a4f6a;margin:0 0 20px;border-collapse:collapse;">
+                      <tr><td style="padding:2px 12px 2px 0;color:#8a8fa8;">When</td><td>{encoder.Encode(when.ToString("yyyy-MM-dd HH:mm 'UTC'"))}</td></tr>
+                      <tr><td style="padding:2px 12px 2px 0;color:#8a8fa8;">IP address</td><td>{encoder.Encode(ip)}</td></tr>
+                      <tr><td style="padding:2px 12px 2px 0;color:#8a8fa8;">Device</td><td>{encoder.Encode(userAgent)}</td></tr>
+                    </table>
+                    <p style="margin:0;font-size:14px;line-height:1.5;color:#b91c1c;">If this wasn't you, reset your password immediately and review your two-factor authentication settings.</p>
+                  </div>
+                </div>
+                """;
+        }
+
         private static string Build(string title, string text, string buttonText, string url)
         {
             var encoder = HtmlEncoder.Default;

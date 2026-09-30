@@ -5,6 +5,7 @@
         404 => ("Page not found", "The page you are looking for doesn't exist or has been moved."),
         403 => ("Access denied", "You don't have permission to view this page."),
         400 => ("Bad request", "The request could not be understood by the server."),
+        429 => ("Too many requests", "You've made too many attempts in a short time. Please wait a few minutes and try again."),
         _ => ("Something went wrong", "An unexpected error occurred while processing your request.")
     };
     ViewData["Title"] = title;

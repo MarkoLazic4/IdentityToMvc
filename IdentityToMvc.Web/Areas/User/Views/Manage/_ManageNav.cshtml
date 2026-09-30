@@ -40,6 +40,11 @@
             </a>
         </li>
         <li class="nav-item">
+            <a asp-area="User" asp-controller="Manage" asp-action="Passkeys" class="nav-link @NavActive("Passkeys", "AddPasskey", "RemovePasskey")" id="passkeys">
+                <i class="bi bi-fingerprint"></i> Passkeys
+            </a>
+        </li>
+        <li class="nav-item">
             <a asp-area="User" asp-controller="Manage" asp-action="PersonalData" class="nav-link @NavActive("PersonalData", "DeletePersonalData")" id="personal-data">
                 <i class="bi bi-file-earmark-person"></i> Personal data
             </a>

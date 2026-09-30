@@ -1,27 +1,34 @@
 ﻿using IdentityToMvc.Web.Areas.User.ViewModels.Account;
 using IdentityToMvc.Web.Helpers;
+using IdentityToMvc.Web.Security;
 using IdentityToMvc.Web.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using System.Security.Claims;
 
 namespace IdentityToMvc.Web.Areas.User.Controllers
 {
     [Area("User")]
     [AllowAnonymous]
+    [EnableRateLimiting(RateLimitPolicies.Auth)]
     public class AccountController : Controller
     {
         private readonly UserManager<IdentityUser> _userManager;
         private readonly SignInManager<IdentityUser> _signInManager;
+        private readonly IEmailQueue _emailQueue;
+        private readonly ISecurityNotifier _securityNotifier;
         private readonly ILogger<AccountController> _logger;
 
         public AccountController(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager,
-            ILogger<AccountController> logger)
+            IEmailQueue emailQueue, ISecurityNotifier securityNotifier, ILogger<AccountController> logger)
         {
             _userManager = userManager;
             _signInManager = signInManager;
+            _emailQueue = emailQueue;
+            _securityNotifier = securityNotifier;
             _logger = logger;
         }
 
@@ -45,7 +52,8 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         // ===========================================================================
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Register([FromServices] IEmailService emailService, RegisterViewModel model)
+        [EnableRateLimiting(RateLimitPolicies.Email)]
+        public async Task<IActionResult> Register(RegisterViewModel model)
         {
             model.ReturnUrl = SanitizeReturnUrl(model.ReturnUrl) ?? DefaultUrl();
             model.ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
@@ -73,7 +81,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
                     new { area = "User", userId = userId, code = code, returnUrl = model.ReturnUrl },
                     protocol: Request.Scheme) ?? string.Empty;
 
-                await emailService.SendEmailAsync(model.Input.Email, "Confirm your email", EmailTemplates.ConfirmAccount(callbackUrl));
+                _emailQueue.Enqueue(model.Input.Email, "Confirm your email", EmailTemplates.ConfirmAccount(callbackUrl));
 
                 if (_userManager.Options.SignIn.RequireConfirmedAccount)
                 {
@@ -180,7 +188,8 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         // ===========================================================================
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ResendEmailConfirmation([FromServices] IEmailService emailService, ResendEmailConfirmationViewModel model)
+        [EnableRateLimiting(RateLimitPolicies.Email)]
+        public async Task<IActionResult> ResendEmailConfirmation(ResendEmailConfirmationViewModel model)
         {
             if (!ModelState.IsValid)
                 return View(model);
@@ -203,7 +212,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
                 new { area = "User", userId = userId, code = code },
                 protocol: Request.Scheme) ?? string.Empty;
 
-            await emailService.SendEmailAsync(model.Input.Email, "Confirm your email", EmailTemplates.ConfirmAccount(callbackUrl));
+            _emailQueue.Enqueue(model.Input.Email, "Confirm your email", EmailTemplates.ConfirmAccount(callbackUrl));
 
             TempData["StatusMessage"] = sentMessage;
             return RedirectToAction(nameof(ResendEmailConfirmation), "Account", new { area = "User" });
@@ -246,6 +255,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             if (ModelState.IsValid)
             {
                 // Failed attempts count towards lockout (see Lockout options in Program.cs)
+                RecentAuthenticationService.FlagFreshSignIn(HttpContext);
                 var result = await _signInManager.PasswordSignInAsync(model.Input.Email, model.Input.Password, model.Input.RememberMe, lockoutOnFailure: true);
                 if (result.Succeeded)
                 {
@@ -259,6 +269,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
                 if (result.IsLockedOut)
                 {
                     _logger.LogWarning("User account locked out.");
+                    await NotifyIfJustLockedOutAsync(model.Input.Email);
                     return RedirectToAction(nameof(Lockout), "Account", new { area = "User" });
                 }
                 else
@@ -316,6 +327,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
 
             var authenticatorCode = model.Input.TwoFactorCode.Replace(" ", string.Empty).Replace("-", string.Empty);
 
+            RecentAuthenticationService.FlagFreshSignIn(HttpContext);
             var result = await _signInManager.TwoFactorAuthenticatorSignInAsync(authenticatorCode, model.RememberMe, model.Input.RememberMachine);
 
             if (result.Succeeded)
@@ -377,6 +389,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
 
             var recoveryCode = model.Input.RecoveryCode.Replace(" ", string.Empty);
 
+            RecentAuthenticationService.FlagFreshSignIn(HttpContext);
             var result = await _signInManager.TwoFactorRecoveryCodeSignInAsync(recoveryCode);
 
             if (result.Succeeded)
@@ -433,6 +446,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
 
             // Sign in the user with this external login provider if the user already has a login.
             // bypassTwoFactor: false - users who enabled 2FA must still enter their code
+            RecentAuthenticationService.FlagFreshSignIn(HttpContext);
             var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: false, bypassTwoFactor: false);
             if (result.Succeeded)
             {
@@ -474,7 +488,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         // ===========================================================================
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ExternalLoginConfirmation([FromServices] IEmailService emailService, ExternalLoginViewModel model)
+        public async Task<IActionResult> ExternalLoginConfirmation(ExternalLoginViewModel model)
         {
             model.ReturnUrl = SanitizeReturnUrl(model.ReturnUrl) ?? DefaultUrl();
             // Get the information about the user from the external login provider
@@ -514,7 +528,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
                             new { area = "User", userId = userId, code = code },
                             protocol: Request.Scheme) ?? string.Empty;
 
-                        await emailService.SendEmailAsync(model.Input.Email, "Confirm your email", EmailTemplates.ConfirmAccount(callbackUrl));
+                        _emailQueue.Enqueue(model.Input.Email, "Confirm your email", EmailTemplates.ConfirmAccount(callbackUrl));
 
                         // If account confirmation is required, we need to show the link if we don't have a real email sender
                         if (_userManager.Options.SignIn.RequireConfirmedAccount)
@@ -522,6 +536,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
                             return RedirectToAction(nameof(RegisterConfirmation), "Account", new { area = "User", email = model.Input.Email });
                         }
 
+                        RecentAuthenticationService.FlagFreshSignIn(HttpContext);
                         await _signInManager.SignInAsync(user, isPersistent: false, info.LoginProvider);
                         return LocalRedirect(model.ReturnUrl);
                     }
@@ -591,7 +606,8 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         // ===========================================================================
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ForgotPassword([FromServices] IEmailService emailService, ForgotPasswordViewModel model)
+        [EnableRateLimiting(RateLimitPolicies.Email)]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
         {
             if (ModelState.IsValid)
             {
@@ -611,7 +627,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
                     new { area = "User", code },
                     protocol: Request.Scheme) ?? string.Empty;
 
-                await emailService.SendEmailAsync(model.Input.Email, "Reset your password", EmailTemplates.ResetPassword(callbackUrl));
+                _emailQueue.Enqueue(model.Input.Email, "Reset your password", EmailTemplates.ResetPassword(callbackUrl));
 
                 return RedirectToAction(nameof(ForgotPasswordConfirmation), "Account", new { area = "User" });
             }
@@ -661,25 +677,30 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
+            const string invalidLink = "The password reset link is invalid or has expired, or the email doesn't match. Please request a new link.";
+
             var user = await _userManager.FindByEmailAsync(model.Input.Email);
             if (user == null)
             {
-                // Don't reveal that the user does not exist
-                return RedirectToAction(nameof(ResetPasswordConfirmation), "Account", new { area = "User" });
+                // Same answer as an invalid token, so the form can't be used to probe for accounts
+                ModelState.AddModelError(string.Empty, invalidLink);
+                return View(model);
             }
 
             var result = await _userManager.ResetPasswordAsync(user, model.Input.Code, model.Input.Password);
             if (result.Succeeded)
             {
-                // The user proved they own the mailbox, so lift any lockout from failed logins
+                // The user proved they own the mailbox, so lift any lockout from failed logins.
+                // ResetPasswordAsync also rotates the security stamp, signing out every other session.
                 await _userManager.ResetAccessFailedCountAsync(user);
                 await _userManager.SetLockoutEndDateAsync(user, null);
+                await _securityNotifier.NotifyAsync(user, SecurityEvent.PasswordReset);
                 return RedirectToAction(nameof(ResetPasswordConfirmation), "Account", new { area = "User" });
             }
 
             foreach (var error in result.Errors)
             {
-                ModelState.AddModelError(string.Empty, error.Description);
+                ModelState.AddModelError(string.Empty, error.Code == nameof(IdentityErrorDescriber.InvalidToken) ? invalidLink : error.Description);
             }
             return View(model);
         }
@@ -691,6 +712,67 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         public IActionResult ResetPasswordConfirmation()
         {
             return View();
+        }
+
+        // ===========================================================================
+        // POST: /User/Account/PasskeyRequestOptions  (called from JavaScript)
+        // ===========================================================================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [DisableRateLimiting] // requested automatically on every login page view for passkey autofill
+        public async Task<IActionResult> PasskeyRequestOptions()
+        {
+            // No user: the browser offers every discoverable passkey it has for this site
+            var optionsJson = await _signInManager.MakePasskeyRequestOptionsAsync(user: null);
+            return Content(optionsJson, "application/json");
+        }
+
+        // ===========================================================================
+        // POST: /User/Account/LoginWithPasskey
+        // ===========================================================================
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> LoginWithPasskey(string? credentialJson, string? returnUrl = null)
+        {
+            returnUrl = SanitizeReturnUrl(returnUrl) ?? DefaultUrl();
+
+            if (string.IsNullOrWhiteSpace(credentialJson))
+            {
+                TempData["ErrorMessage"] = "The passkey sign-in was cancelled.";
+                return RedirectToAction(nameof(Login), "Account", new { area = "User", returnUrl });
+            }
+
+            RecentAuthenticationService.FlagFreshSignIn(HttpContext);
+            var result = await _signInManager.PasskeySignInAsync(credentialJson);
+            if (result.Succeeded)
+            {
+                _logger.LogInformation("User logged in with a passkey.");
+                return LocalRedirect(returnUrl);
+            }
+            if (result.IsLockedOut)
+            {
+                return RedirectToAction(nameof(Lockout), "Account", new { area = "User" });
+            }
+
+            TempData["ErrorMessage"] = result.IsNotAllowed
+                ? "You need to confirm your email before you can log in."
+                : "This passkey couldn't be used to log in. It may have been removed from your account.";
+            return RedirectToAction(nameof(Login), "Account", new { area = "User", returnUrl });
+        }
+
+        /// <summary>
+        /// Emails the owner when this login attempt is the one that locked the account
+        /// (not on every attempt made while it is already locked).
+        /// </summary>
+        private async Task NotifyIfJustLockedOutAsync(string email)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+            var lockoutEnd = user == null ? null : await _userManager.GetLockoutEndDateAsync(user);
+            if (user != null && lockoutEnd.HasValue
+                && lockoutEnd.Value - DateTimeOffset.UtcNow > _userManager.Options.Lockout.DefaultLockoutTimeSpan - TimeSpan.FromSeconds(10))
+            {
+                await _securityNotifier.NotifyAsync(user, SecurityEvent.AccountLockedOut);
+            }
         }
 
         private string? SanitizeReturnUrl(string? returnUrl)
