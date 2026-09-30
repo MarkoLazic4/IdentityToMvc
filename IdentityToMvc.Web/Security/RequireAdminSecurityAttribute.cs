@@ -34,15 +34,21 @@ namespace IdentityToMvc.Web.Security
             public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
             {
                 var options = _options.CurrentValue;
-#if (TwoFactor && Passkeys)
-                var available = options.EnableTwoFactor || options.EnablePasskeys;
-                var setupPage = options.EnableTwoFactor ? "TwoFactorAuthentication" : "Passkeys";
-#elif (TwoFactor)
-                var available = options.EnableTwoFactor;
-                var setupPage = "TwoFactorAuthentication";
-#else
-                var available = options.EnablePasskeys;
-                var setupPage = "Passkeys";
+                var available = false;
+                var setupPage = "";
+#if (Passkeys)
+                if (options.EnablePasskeys)
+                {
+                    available = true;
+                    setupPage = "Passkeys";
+                }
+#endif
+#if (TwoFactor)
+                if (options.EnableTwoFactor)
+                {
+                    available = true;
+                    setupPage = "TwoFactorAuthentication";
+                }
 #endif
                 var required = _configuration.GetValue("Security:RequireTwoFactorForAdmins", true) && available;
                 var user = await _userManager.GetUserAsync(context.HttpContext.User);

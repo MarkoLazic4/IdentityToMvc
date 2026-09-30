@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.DataProtection;
+﻿using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
@@ -151,12 +151,10 @@ namespace IdentityToMvc.Web.Security
                 _recentAuthentication = recentAuthentication;
             }
 
-            public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
+#if (Sudo)
+            /// <summary>Sends the user to "Confirm it's you" when the last authentication is too old.</summary>
+            private async Task<bool> RedirectToConfirmIdentityAsync(ActionExecutingContext context)
             {
-#if (!Sudo)
-                // Sudo mode isn't included in this app: the attribute lets every request through
-                await next();
-#else
                 var httpContext = context.HttpContext;
                 var options = httpContext.RequestServices.GetRequiredService<Microsoft.Extensions.Options.IOptionsMonitor<SecurityOptions>>().CurrentValue;
                 var user = await _userManager.GetUserAsync(httpContext.User);
@@ -165,8 +163,7 @@ namespace IdentityToMvc.Web.Security
                     || !await _userManager.HasPasswordAsync(user)
                     || await _recentAuthentication.IsRecentAsync(httpContext, user))
                 {
-                    await next();
-                    return;
+                    return false;
                 }
 
                 // Come back to the page after confirming. For POSTs go back to the page the form was on.
@@ -175,7 +172,7 @@ namespace IdentityToMvc.Web.Security
                     : LocalReferer(httpContext);
 
                 context.Result = new RedirectToActionResult("ConfirmIdentity", "Manage", new { area = "User", returnUrl });
-#endif
+                return true;
             }
 
             private static string? LocalReferer(HttpContext context)
@@ -187,6 +184,18 @@ namespace IdentityToMvc.Web.Security
                     return uri.PathAndQuery;
                 }
                 return null;
+            }
+
+#endif
+            public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
+            {
+#if (Sudo)
+                if (await RedirectToConfirmIdentityAsync(context))
+                {
+                    return;
+                }
+#endif
+                await next();
             }
         }
     }

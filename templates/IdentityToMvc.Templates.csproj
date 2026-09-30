@@ -12,7 +12,7 @@
     <Version>1.0.0</Version>
     <Title>IdentityToMvc project templates</Title>
     <Authors>Marko Lazić</Authors>
-    <Description>ASP.NET Core MVC with a complete, hardened account system (registration, 2FA, passkeys, devices, security activity, admin panel, Serbian/English). "dotnet new identitymvc --tier basic|standard|full" plus one switch per feature.</Description>
+    <Description>Two templates: "identitymvc" creates an ASP.NET Core MVC with a complete, hardened account system (registration, 2FA, passkeys, devices, security activity, admin panel, Serbian/English). "dotnet new identitymvc --tier basic|standard|full" plus one switch per feature; "identitymvc-add --feature ..." adds a feature to an existing app later.</Description>
     <PackageTags>dotnet-new;templates;aspnetcore;mvc;identity;authentication;passkeys;2fa</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/MarkoLazic4/IdentityToMvc</PackageProjectUrl>
@@ -29,7 +29,7 @@
 
   <ItemGroup>
     <Content Include="../**/*"
-             Exclude="../**/bin/**;../**/obj/**;../.git/**;../.vs/**;../**/*.user;../**/*.db;../artifacts/**;../templates/**;../docs/**;../README.md;../README.sr.md;../.github/**;../**/appsettings.Local.json"
+             Exclude="../**/bin/**;../**/obj/**;../.git/**;../.vs/**;../**/*.user;../**/*.db;../artifacts/**;../templates/*.csproj;../templates/**/bin/**;../templates/**/obj/**;../docs/**;../README.md;../README.sr.md;../.github/**;../**/appsettings.Local.json"
              PackagePath="content/IdentityToMvc/" />
   </ItemGroup>
 

@@ -32,8 +32,6 @@ project.fragment.lock.json
 .nuget/
 packages/
 
-# EF Core migrations
-# Ako želiš da držis migracije pod verzionom, ukloni ili komentariši ovu liniju
 
 # user secrets / local config
 secrets.json

@@ -2,10 +2,9 @@
 @inject Microsoft.Extensions.Options.IOptionsMonitor<SecurityOptions> SecurityOptions
 @{
     ViewData["Title"] = L["Log in"].Value;
-#if (Passkeys)
-    var passkeysEnabled = SecurityOptions.CurrentValue.EnablePasskeys;
-#else
     var passkeysEnabled = false;
+#if (Passkeys)
+    passkeysEnabled = SecurityOptions.CurrentValue.EnablePasskeys;
 #endif
 }
 

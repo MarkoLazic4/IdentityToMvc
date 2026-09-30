@@ -44,15 +44,14 @@
     <!--#endif -->
   </ItemGroup>
 
-  <!--#if (ExternalLogins) -->
-  <!-- External login providers -->
+  <!--#if (Google) -->
   <ItemGroup>
-    <!--#if (Google) -->
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="10.0.12" />
-    <!--#endif -->
-    <!--#if (Facebook) -->
+  </ItemGroup>
+  <!--#endif -->
+  <!--#if (Facebook) -->
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Facebook" Version="10.0.12" />
-    <!--#endif -->
   </ItemGroup>
   <!--#endif -->
 

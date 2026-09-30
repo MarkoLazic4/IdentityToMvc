@@ -224,15 +224,12 @@ builder.Services.Configure<CookieTempDataProviderOptions>(options =>
     options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
 });
 
-#if (ExternalLogins)
 // External login providers are only added when their keys are configured, so the
 // "Log in with ..." buttons never show up for a provider that can't work.
-var authentication = builder.Services.AddAuthentication();
-#endif
 #if (Google)
 if (!string.IsNullOrWhiteSpace(builder.Configuration["GoogleClientId"]))
 {
-    authentication.AddGoogle(options =>
+    builder.Services.AddAuthentication().AddGoogle(options =>
     {
         options.ClientId = builder.Configuration["GoogleClientId"]!;
         options.ClientSecret = builder.Configuration["GoogleClientSecret"]!;
@@ -242,7 +239,7 @@ if (!string.IsNullOrWhiteSpace(builder.Configuration["GoogleClientId"]))
 #if (Facebook)
 if (!string.IsNullOrWhiteSpace(builder.Configuration["FacebookAppId"]))
 {
-    authentication.AddFacebook(options =>
+    builder.Services.AddAuthentication().AddFacebook(options =>
     {
         options.AppId = builder.Configuration["FacebookAppId"]!;
         options.AppSecret = builder.Configuration["FacebookAppSecret"]!;

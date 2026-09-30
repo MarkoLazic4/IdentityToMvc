@@ -23,6 +23,9 @@ jobs:
       - name: Every text has a Serbian translation
         run: python3 tools/extract_keys.py
 
+      - name: The add-a-feature template is up to date
+        run: python3 tools/build_feature_template.py --check
+
       - name: Restore
         run: dotnet restore IdentityToMvc.sln
 
@@ -31,6 +34,11 @@ jobs:
 
       - name: Test
         run: dotnet test --solution IdentityToMvc.sln --no-build --configuration Release
+
+      - name: The migrations match the model
+        run: |
+          dotnet tool install --global dotnet-ef --version 10.0.12
+          dotnet ef migrations has-pending-model-changes --project IdentityToMvc.Web --no-build --configuration Release
 
       - name: Vulnerable packages
         run: |
@@ -83,6 +91,34 @@ jobs:
           else
             echo "No tests in this package"
           fi
+
+  # "dotnet new identitymvc-add": add each feature to a basic app by following its ADD-<feature>.md
+  add-feature:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        feature: [ profile, email-change, personal-data, unlock-link, breached-passwords, two-factor, sudo,
+                   passkeys, google, facebook, notifications, devices, activity, admin ]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Basic app + ${{ matrix.feature }}
+        run: |
+          dotnet new install ./
+          cd "$RUNNER_TEMP"
+          dotnet new identitymvc -n Shop -o Shop --tier basic --tests
+          cd Shop
+          dotnet new identitymvc-add --feature ${{ matrix.feature }} -n Shop --tier basic --tests
+          python3 "$GITHUB_WORKSPACE/tools/apply_add_feature.py" . ADD-${{ matrix.feature }}.md
+          dotnet build
+          dotnet test --project Shop.Tests
 
   # Runs a generated PostgreSQL app against a real server: migrations, registration, login.
   postgres:

@@ -1,13 +1,14 @@
 ﻿@{
     ViewData["Title"] = L["Locked out"].Value;
-#if (UnlockLink && Passkeys)
-    var hint = L["Too many failed attempts. For your security this account has been locked - please try again in a few minutes, use a passkey, or use the unlock link we emailed you."];
-#elif (UnlockLink)
-    var hint = L["Too many failed attempts. For your security this account has been locked - please try again in a few minutes or use the unlock link we emailed you."];
-#elif (Passkeys)
-    var hint = L["Too many failed attempts. For your security this account has been locked - please try again in a few minutes or use a passkey."];
-#else
     var hint = L["Too many failed attempts. For your security this account has been locked - please try again in a few minutes."];
+#if (UnlockLink)
+    hint = L["Too many failed attempts. For your security this account has been locked - please try again in a few minutes or use the unlock link we emailed you."];
+#endif
+#if (Passkeys)
+    hint = L["Too many failed attempts. For your security this account has been locked - please try again in a few minutes or use a passkey."];
+#endif
+#if (UnlockLink && Passkeys)
+    hint = L["Too many failed attempts. For your security this account has been locked - please try again in a few minutes, use a passkey, or use the unlock link we emailed you."];
 #endif
 }
 
