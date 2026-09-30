@@ -3,29 +3,28 @@
     ViewData["Title"] = "Delete Personal Data";
 }
 
-<h3>@ViewData["Title"]</h3>
+<h2 class="page-title text-danger">Delete account</h2>
+<p class="page-subtitle">This permanently removes your account and all of its data.</p>
 
-<div class="alert alert-warning" role="alert">
-    <p>
-        <strong>Deleting this data will permanently remove your account, and this cannot be recovered.</strong>
-    </p>
+<div class="alert alert-danger" role="alert">
+    <i class="bi bi-exclamation-octagon"></i>
+    <div><strong>Deleting this data will permanently remove your account, and this cannot be recovered.</strong></div>
 </div>
 
-<div>
-    <form id="delete-user" asp-area="User" asp-controller="Manage" asp-action="DeletePersonalData" method="post">
-        @Html.AntiForgeryToken()
-        <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
-        @if (Model.RequirePassword)
-        {
-            <div class="form-floating mb-3">
-                <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="Please enter your password." />
-                <label asp-for="Input.Password" class="form-label"></label>
-                <span asp-validation-for="Input.Password" class="text-danger"></span>
-            </div>
-        }
-        <button class="w-100 btn btn-lg btn-danger" type="submit">Delete data and close my account</button>
-    </form>
-</div>
+<form id="delete-user" asp-area="User" asp-controller="Manage" asp-action="DeletePersonalData" method="post" class="col-xl-8" novalidate
+      data-confirm="Are you sure you want to permanently delete your account?">
+    <div asp-validation-summary="ModelOnly" role="alert"></div>
+    @if (Model.RequirePassword)
+    {
+        <div class="form-floating mb-4">
+            <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="Password" />
+            <label asp-for="Input.Password">Confirm with your password</label>
+            <span asp-validation-for="Input.Password" class="text-danger"></span>
+        </div>
+    }
+    <button class="btn btn-danger" type="submit"><i class="bi bi-trash3 me-1"></i> Delete data and close my account</button>
+    <a class="btn btn-link" asp-area="User" asp-controller="Manage" asp-action="PersonalData">Cancel</a>
+</form>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

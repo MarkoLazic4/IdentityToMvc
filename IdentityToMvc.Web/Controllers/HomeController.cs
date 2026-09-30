@@ -23,6 +23,14 @@ namespace IdentityToMvc.Web.Controllers
             return View();
         }
 
+        // Re-executed by UseStatusCodePagesWithReExecute for 4xx/5xx responses without a body
+        [ActionName("StatusCode")]
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        public IActionResult HttpStatusCode(int code)
+        {
+            return View("StatusCode", code);
+        }
+
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {

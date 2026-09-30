@@ -3,26 +3,24 @@
     ViewData["Title"] = "Profile";
 }
 
-<h3>@ViewData["Title"]</h3>
+<h2 class="page-title">Profile</h2>
+<p class="page-subtitle">Your basic account information.</p>
 <partial name="_StatusMessage" model="@TempData["StatusMessage"] as string" />
-<div class="row">
-    <div class="col-md-6">
-        <form id="profile-form" asp-area="User" asp-controller="Manage" asp-action="Index" method="post">
-            @Html.AntiForgeryToken()
-            <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
-            <div class="form-floating mb-3">
-                <input asp-for="Username" class="form-control" placeholder="Please choose your username." disabled />
-                <label asp-for="Username" class="form-label"></label>
-            </div>
-            <div class="form-floating mb-3">
-                <input asp-for="Input.PhoneNumber" class="form-control" placeholder="Please enter your phone number." />
-                <label asp-for="Input.PhoneNumber" class="form-label"></label>
-                <span asp-validation-for="Input.PhoneNumber" class="text-danger"></span>
-            </div>
-            <button id="update-profile-button" type="submit" class="w-100 btn btn-lg btn-primary">Save</button>
-        </form>
+
+<form id="profile-form" asp-area="User" asp-controller="Manage" asp-action="Index" method="post" class="col-xl-8" novalidate>
+    <div asp-validation-summary="ModelOnly" role="alert"></div>
+    <div class="form-floating mb-3">
+        <input asp-for="Username" class="form-control" placeholder="Username" disabled />
+        <label asp-for="Username">Username</label>
+        <div class="form-text">Your username is your email address. Change it on the <a asp-area="User" asp-controller="Manage" asp-action="Email">Email</a> page.</div>
     </div>
-</div>
+    <div class="form-floating mb-4">
+        <input asp-for="Input.PhoneNumber" class="form-control" autocomplete="tel" placeholder="Phone number" />
+        <label asp-for="Input.PhoneNumber">Phone number</label>
+        <span asp-validation-for="Input.PhoneNumber" class="text-danger"></span>
+    </div>
+    <button id="update-profile-button" type="submit" class="btn btn-primary px-4">Save changes</button>
+</form>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

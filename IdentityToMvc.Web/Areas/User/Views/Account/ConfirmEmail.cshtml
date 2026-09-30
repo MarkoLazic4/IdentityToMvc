@@ -1,6 +1,21 @@
 ﻿@{
     ViewData["Title"] = "Confirm email";
+    var message = TempData["StatusMessage"] as string;
+    var isError = message?.StartsWith("Error", StringComparison.OrdinalIgnoreCase) ?? true;
 }
 
-<h1>@ViewData["Title"]</h1>
-<partial name="_StatusMessage" model="@TempData["StatusMessage"] as string" />
+<div class="card status-page">
+    <span class="icon-badge @(isError ? "icon-badge-danger" : "icon-badge-success")">
+        <i class="bi @(isError ? "bi-x-circle" : "bi-patch-check")"></i>
+    </span>
+    <h1>@(isError ? "Confirmation failed" : "Email confirmed")</h1>
+    <p>@(message ?? "Error: the confirmation link is invalid or has expired.")</p>
+    @if (isError)
+    {
+        <a class="btn btn-primary" asp-area="User" asp-controller="Account" asp-action="ResendEmailConfirmation">Send a new link</a>
+    }
+    else
+    {
+        <a class="btn btn-primary" asp-area="User" asp-controller="Account" asp-action="Login">Log in</a>
+    }
+</div>

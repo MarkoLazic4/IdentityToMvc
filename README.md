@@ -7,8 +7,17 @@ This project demonstrates how to translate the standard Identity RCL Pages into 
 
 ## Features
 - **Auth**: registration, login/logout, external providers, email confirmation  
-- **Security**: password reset, 2FA, recovery codes  
+- **Security**: password reset, 2FA with QR code, recovery codes, lockout after 3 failed attempts, 2FA enforced for external logins too  
 - **Profile**: change password/email/personal data, external logins, delete account  
+- **UI**: Bootstrap 5.3 + Bootstrap Icons, light/dark theme, password strength meter and show/hide toggle, responsive layout  
+
+| Home | Log in |
+|------|--------|
+| ![Home](docs/screenshots/home.png) | ![Log in](docs/screenshots/login.png) |
+
+| Authenticator setup | Two-factor settings (dark) |
+|---------------------|----------------------------|
+| ![Authenticator setup](docs/screenshots/enable-authenticator.png) | ![Two-factor settings](docs/screenshots/two-factor-dark.png) |
   
 ---
 
@@ -45,7 +54,9 @@ cd IdentityToMvc
     "Port": 587,
     "EnableSsl": true,
     "Username": "user@example.com",
-    "Password": "your-password"
+    "Password": "your-password",
+    "From": "no-reply@example.com",
+    "FromName": "IdentityToMvc"
   },
   "GoogleClientId": "...",
   "GoogleClientSecret": "...",

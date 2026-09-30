@@ -3,21 +3,21 @@
 }
 
 <partial name="_StatusMessage" model="@TempData["StatusMessage"] as string" />
-<h3>@ViewData["Title"]</h3>
+<h2 class="page-title">Disable two-factor authentication</h2>
+<p class="page-subtitle">Your account will only be protected by your password.</p>
 
 <div class="alert alert-warning" role="alert">
-    <p>
+    <i class="bi bi-exclamation-triangle"></i>
+    <div>
         <strong>This action only disables 2FA.</strong>
-    </p>
-    <p>
-        Disabling 2FA does not change the keys used in authenticator apps. If you wish to change the key
-        used in an authenticator app you should <a asp-area="User" asp-controller="Manage" asp-action="ResetAuthenticator">reset your authenticator keys.</a>
-    </p>
+        <p>
+            Disabling 2FA does not change the key used in your authenticator app. If you want to change it,
+            <a asp-area="User" asp-controller="Manage" asp-action="ResetAuthenticator">reset your authenticator key</a> instead.
+        </p>
+    </div>
 </div>
 
-<div>
-    <form asp-area="User" asp-controller="Manage" asp-action="Disable2fa" method="post">
-        @Html.AntiForgeryToken()
-        <button class="btn btn-danger" type="submit">Disable 2FA</button>
-    </form>
-</div>
+<form asp-area="User" asp-controller="Manage" asp-action="Disable2fa" method="post">
+    <button class="btn btn-danger" type="submit"><i class="bi bi-shield-x me-1"></i> Disable 2FA</button>
+    <a class="btn btn-link" asp-area="User" asp-controller="Manage" asp-action="TwoFactorAuthentication">Cancel</a>
+</form>

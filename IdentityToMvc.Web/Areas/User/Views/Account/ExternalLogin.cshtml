@@ -1,29 +1,28 @@
 ﻿@model IdentityToMvc.Web.Areas.User.ViewModels.Account.ExternalLoginViewModel
 @{
-    ViewData["Title"] = "Register";
+    ViewData["Title"] = "Finish signing up";
 }
 
-<h1>@ViewData["Title"]</h1>
-<h2 id="external-login-title">Associate your @Model.ProviderDisplayName account.</h2>
-<hr />
+<div class="auth-wrapper">
+    <div class="card auth-card">
+        <div class="auth-header">
+            <span class="icon-badge"><i class="bi bi-link-45deg"></i></span>
+            <h1 id="external-login-title">Associate your @Model.ProviderDisplayName account</h1>
+            <p id="external-login-description">
+                You've successfully authenticated with <strong>@Model.ProviderDisplayName</strong>.
+                Enter an email address for this site to finish signing up.
+            </p>
+        </div>
 
-<p id="external-login-description" class="text-info">
-    You've successfully authenticated with <strong>@Model.ProviderDisplayName</strong>.
-    Please enter an email address for this site below and click the Register button to finish
-    logging in.
-</p>
-
-<div class="row">
-    <div class="col-md-4">
-        <form asp-area="User" asp-controller="Account" asp-action="ExternalLoginConfirmation" asp-route-returnUrl="@Model.ReturnUrl" method="post">
-            @Html.AntiForgeryToken()
-            <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
-            <div class="form-floating mb-3">
-                <input asp-for="Input.Email" class="form-control" autocomplete="email" placeholder="Please enter your email." />
-                <label asp-for="Input.Email" class="form-label"></label>
+        <form asp-area="User" asp-controller="Account" asp-action="ExternalLoginConfirmation" method="post" novalidate>
+            <input asp-for="ReturnUrl" type="hidden" />
+            <div asp-validation-summary="ModelOnly" role="alert"></div>
+            <div class="form-floating mb-4">
+                <input asp-for="Input.Email" class="form-control" autocomplete="email" placeholder="name@example.com" autofocus />
+                <label asp-for="Input.Email">Email</label>
                 <span asp-validation-for="Input.Email" class="text-danger"></span>
             </div>
-            <button type="submit" class="w-100 btn btn-lg btn-primary">Register</button>
+            <button type="submit" class="w-100 btn btn-lg btn-primary">Finish sign up</button>
         </form>
     </div>
 </div>

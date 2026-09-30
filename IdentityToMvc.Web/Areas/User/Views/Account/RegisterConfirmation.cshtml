@@ -1,22 +1,29 @@
 ﻿@model IdentityToMvc.Web.Areas.User.ViewModels.Account.RegisterConfirmationViewModel
 @{
-    ViewData["Title"] = "Register confirmation";
+    ViewData["Title"] = "Check your email";
 }
 
-<h1>@ViewData["Title"]</h1>
-@{
-    if (@Model.DisplayConfirmAccountLink)
-    {
-        <p>
-            This app does not currently have a real email sender registered, see <a href="https://aka.ms/aspaccountconf">these docs</a> for how to configure a real email sender.
-            Normally this would be emailed: <a id="confirm-link" href="@Model.EmailConfirmationUrl">Click here to confirm your account</a>
-        </p>
-    }
-    else
-    {
-        <p>
-            Please check your email to confirm your account.
-        </p>
-    }
-}
+<div class="card status-page">
+    <span class="icon-badge"><i class="bi bi-envelope-check"></i></span>
+    <h1>Check your email</h1>
+    <p>
+        We sent a confirmation link to <strong>@Model.Email</strong>.
+        Open it to activate your account, then log in.
+    </p>
 
+    @if (Model.DisplayConfirmAccountLink)
+    {
+        <div class="alert alert-warning text-start my-4" role="alert">
+            <i class="bi bi-cone-striped"></i>
+            <div>
+                <strong>Development mode.</strong> Emails may not be delivered locally, so here is the link that was sent:
+                <a id="confirm-link" class="d-block mt-2 fw-semibold" href="@Model.EmailConfirmationUrl">Confirm my account</a>
+            </div>
+        </div>
+    }
+
+    <div class="d-flex flex-column flex-sm-row justify-content-center gap-2 mt-3">
+        <a class="btn btn-primary" asp-area="User" asp-controller="Account" asp-action="Login">Go to log in</a>
+        <a class="btn btn-outline-primary" asp-area="User" asp-controller="Account" asp-action="ResendEmailConfirmation">Resend email</a>
+    </div>
+</div>

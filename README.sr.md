@@ -7,8 +7,17 @@ Projekat prikazuje kako prevesti standardne Identity RCL stranice u MVC controll
 
 ## Funkcionalnosti
 - **Auth**: registracija, login/logout, eksterni provideri, potvrda email-a  
-- **Bezbednost**: reset lozinke, 2FA, recovery kodovi  
+- **Bezbednost**: reset lozinke, 2FA sa QR kodom, recovery kodovi, zaključavanje naloga posle 3 neuspešna pokušaja, 2FA važi i za eksterne prijave  
 - **Profil**: izmena lozinke/email-a/podataka, spoljašnji nalozi, brisanje podataka  
+- **UI**: Bootstrap 5.3 + Bootstrap Icons, svetla/tamna tema, indikator jačine lozinke i prikaz/sakrivanje lozinke, responsive layout  
+
+| Početna | Prijava |
+|---------|---------|
+| ![Početna](docs/screenshots/home.png) | ![Prijava](docs/screenshots/login.png) |
+
+| Podešavanje authenticator-a | 2FA podešavanja (tamna tema) |
+|-----------------------------|------------------------------|
+| ![Authenticator](docs/screenshots/enable-authenticator.png) | ![2FA](docs/screenshots/two-factor-dark.png) |
   
 ---
 
@@ -45,7 +54,9 @@ cd IdentityToMvc
     "Port": 587,
     "EnableSsl": true,
     "Username": "user@example.com",
-    "Password": "tvoja-lozinka"
+    "Password": "tvoja-lozinka",
+    "From": "no-reply@example.com",
+    "FromName": "IdentityToMvc"
   },
   "GoogleClientId": "...",
   "GoogleClientSecret": "...",

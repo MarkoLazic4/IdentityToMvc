@@ -1,8 +1,116 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@{
+    ViewData["Title"] = "Home";
+    var signedIn = SignInManager.IsSignedIn(User);
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<section class="hero">
+    <span class="pill mb-4"><i class="bi bi-stars"></i> ASP.NET Core Identity &middot; .NET 10</span>
+    <h1>Identity, rebuilt the <span class="text-gradient">MVC way</span></h1>
+    <p class="lead">
+        The complete ASP.NET Core Identity UI - registration, login, two-factor authentication and account
+        management - migrated from Razor Pages to plain MVC controllers and views.
+    </p>
+    <div class="d-flex flex-column flex-sm-row justify-content-center gap-2">
+        @if (signedIn)
+        {
+            <a class="btn btn-primary btn-lg px-4" asp-area="User" asp-controller="Manage" asp-action="Index">
+                <i class="bi bi-person-gear me-1"></i> Manage your account
+            </a>
+            <a class="btn btn-outline-primary btn-lg px-4" asp-area="User" asp-controller="Manage" asp-action="TwoFactorAuthentication">
+                <i class="bi bi-shield-check me-1"></i> Security settings
+            </a>
+        }
+        else
+        {
+            <a class="btn btn-primary btn-lg px-4" asp-area="User" asp-controller="Account" asp-action="Register">
+                Create an account <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+            <a class="btn btn-outline-primary btn-lg px-4" asp-area="User" asp-controller="Account" asp-action="Login">
+                Log in
+            </a>
+        }
+    </div>
+</section>
+
+<div class="section-title">
+    <h2>Everything Identity ships with</h2>
+    <p>Every flow from the default Identity UI, as controllers, view models and Razor views.</p>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-6 col-lg-4">
+        <div class="card feature-card">
+            <span class="icon-badge"><i class="bi bi-person-plus"></i></span>
+            <h3>Registration</h3>
+            <p>Sign up with email confirmation, resend confirmation and a password strength hint.</p>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-4">
+        <div class="card feature-card">
+            <span class="icon-badge"><i class="bi bi-box-arrow-in-right"></i></span>
+            <h3>Login &amp; lockout</h3>
+            <p>Local and external logins, "remember me" and lockout after repeated failed attempts.</p>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-4">
+        <div class="card feature-card">
+            <span class="icon-badge"><i class="bi bi-shield-lock"></i></span>
+            <h3>Two-factor authentication</h3>
+            <p>Authenticator apps with QR code setup, remembered browsers and one-time recovery codes.</p>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-4">
+        <div class="card feature-card">
+            <span class="icon-badge"><i class="bi bi-key"></i></span>
+            <h3>Password recovery</h3>
+            <p>Forgot and reset password flows that never reveal whether an account exists.</p>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-4">
+        <div class="card feature-card">
+            <span class="icon-badge"><i class="bi bi-google"></i></span>
+            <h3>External providers</h3>
+            <p>Google and Facebook sign-in, plus linking and unlinking providers from your profile.</p>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-4">
+        <div class="card feature-card">
+            <span class="icon-badge"><i class="bi bi-file-earmark-lock"></i></span>
+            <h3>Personal data</h3>
+            <p>Download everything stored about you as JSON, or delete your account for good.</p>
+        </div>
+    </div>
+</div>
+
+<div class="section-title">
+    <h2>How the migration works</h2>
+    <p>The same Identity services, a different presentation layer.</p>
+</div>
+
+<div class="card p-4 p-md-5">
+    <div class="row g-4">
+        <div class="col-md-4 d-flex gap-3">
+            <span class="step-number">1</span>
+            <div>
+                <h3 class="h6 mb-1">PageModels become controllers</h3>
+                <p class="text-muted mb-0">Each Razor Page handler maps to a GET/POST action on <code>AccountController</code> or <code>ManageController</code>.</p>
+            </div>
+        </div>
+        <div class="col-md-4 d-flex gap-3">
+            <span class="step-number">2</span>
+            <div>
+                <h3 class="h6 mb-1">Bound properties become view models</h3>
+                <p class="text-muted mb-0"><code>[BindProperty] Input</code> classes live on as strongly typed view models with the same validation.</p>
+            </div>
+        </div>
+        <div class="col-md-4 d-flex gap-3">
+            <span class="step-number">3</span>
+            <div>
+                <h3 class="h6 mb-1">Pages become views</h3>
+                <p class="text-muted mb-0">Markup moves to the <code>User</code> area and routes through standard MVC tag helpers.</p>
+            </div>
+        </div>
+    </div>
 </div>

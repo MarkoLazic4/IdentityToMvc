@@ -1,6 +1,14 @@
 ﻿@{
     ViewData["Title"] = "Confirm email change";
+    var message = TempData["StatusMessage"] as string;
+    var isError = message?.StartsWith("Error", StringComparison.OrdinalIgnoreCase) ?? true;
 }
 
-<h1>@ViewData["Title"]</h1>
-<partial name="_StatusMessage" model="@TempData["StatusMessage"] as string" />
+<div class="text-center py-3">
+    <span class="icon-badge @(isError ? "icon-badge-danger" : "icon-badge-success") mb-3">
+        <i class="bi @(isError ? "bi-x-circle" : "bi-patch-check")"></i>
+    </span>
+    <h2 class="page-title">@(isError ? "Email change failed" : "Email changed")</h2>
+    <p class="text-muted">@(message ?? "Error changing email.")</p>
+    <a class="btn btn-primary" asp-area="User" asp-controller="Manage" asp-action="Email">Back to email settings</a>
+</div>
