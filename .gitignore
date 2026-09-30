@@ -34,7 +34,6 @@ packages/
 
 # EF Core migrations
 # Ako želiš da držis migracije pod verzionom, ukloni ili komentariši ovu liniju
-Migrations/
 
 # user secrets / local config
 secrets.json
