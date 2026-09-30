@@ -4,6 +4,9 @@ namespace IdentityToMvc.Web.Areas.User.ViewModels.Account
 {
     public class ResetPasswordViewModel
     {
+        /// <summary>True when the link finishes the setup of a not yet confirmed account.</summary>
+        public bool IsActivation { get; set; }
+
         public InputModel Input { get; set; } = new();
 
 

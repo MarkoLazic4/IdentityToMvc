@@ -35,9 +35,19 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // tokens (email confirmation, password reset). Persist them in the database so
 // they survive restarts/deployments and are shared by every app instance.
 // ---------------------------------------------------------------------------
-builder.Services.AddDataProtection()
+var dataProtection = builder.Services.AddDataProtection()
     .SetApplicationName("IdentityToMvc")
     .PersistKeysToDbContext<ApplicationDbContext>();
+
+// Encrypt the keys themselves with a certificate, so a copy of the database alone is not enough
+// to decrypt cookies, tokens or authenticator secrets. Strongly recommended in production.
+var keyCertificatePath = builder.Configuration["Security:DataProtectionCertificatePath"];
+if (!string.IsNullOrWhiteSpace(keyCertificatePath))
+{
+    dataProtection.ProtectKeysWithCertificate(
+        System.Security.Cryptography.X509Certificates.X509CertificateLoader.LoadPkcs12FromFile(
+            keyCertificatePath, builder.Configuration["Security:DataProtectionCertificatePassword"]));
+}
 
 // ---------------------------------------------------------------------------
 // Identity
@@ -63,6 +73,8 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
     options.Stores.SchemaVersion = IdentitySchemaVersions.Version3;
 })
 .AddEntityFrameworkStores<ApplicationDbContext>()
+// Encrypts the authenticator key and hashes recovery codes (see ProtectedUserStore)
+.AddUserStore<ProtectedUserStore>()
 .AddDefaultTokenProviders()
 .AddPasswordValidator<UserInfoPasswordValidator>()
 .AddPasswordValidator<BreachedPasswordValidator>();
@@ -177,6 +189,7 @@ builder.Services.AddHostedService<EmailQueueWorker>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ISecurityNotifier, SecurityNotifier>();
 builder.Services.AddScoped<RecentAuthenticationService>();
+builder.Services.AddScoped<PasswordTimingEqualizer>();
 
 builder.Services.AddHttpClient(BreachedPasswordValidator.HttpClientName, client =>
 {
@@ -210,6 +223,19 @@ builder.Services.AddHsts(options =>
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
+
+// Prepare the timing-equalizer hash in the background so even the first login is not measurably faster
+_ = Task.Run(() =>
+{
+    using var scope = app.Services.CreateScope();
+    scope.ServiceProvider.GetRequiredService<PasswordTimingEqualizer>().VerifyDummy(null);
+});
+
+if (string.IsNullOrWhiteSpace(keyCertificatePath) && !app.Environment.IsDevelopment())
+{
+    app.Logger.LogWarning("Data Protection keys are stored in the database without encryption. " +
+        "Set Security:DataProtectionCertificatePath to protect them with a certificate.");
+}
 
 // Configure the HTTP request pipeline.
 app.UseForwardedHeaders();

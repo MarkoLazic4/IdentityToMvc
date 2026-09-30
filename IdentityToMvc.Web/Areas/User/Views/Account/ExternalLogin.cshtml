@@ -10,7 +10,7 @@
             <h1 id="external-login-title">Associate your @Model.ProviderDisplayName account</h1>
             <p id="external-login-description">
                 You've successfully authenticated with <strong>@Model.ProviderDisplayName</strong>.
-                Enter an email address for this site to finish signing up.
+                Your account will use the email address your provider has verified.
             </p>
         </div>
 
@@ -18,7 +18,7 @@
             <input asp-for="ReturnUrl" type="hidden" />
             <div asp-validation-summary="ModelOnly" role="alert"></div>
             <div class="form-floating mb-4">
-                <input asp-for="Input.Email" class="form-control" autocomplete="email" placeholder="name@example.com" autofocus />
+                <input asp-for="Input.Email" class="form-control" readonly />
                 <label asp-for="Input.Email">Email</label>
                 <span asp-validation-for="Input.Email" class="text-danger"></span>
             </div>

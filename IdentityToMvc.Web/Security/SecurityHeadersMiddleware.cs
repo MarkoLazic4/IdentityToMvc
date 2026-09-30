@@ -40,8 +40,8 @@ namespace IdentityToMvc.Web.Security
                 var csp =
                     "default-src 'self'; " +
                     $"script-src 'self' 'nonce-{nonce}'{devScript}; " +
-                    // Bootstrap components and qrcode.js set inline style attributes
-                    "style-src 'self' 'unsafe-inline'; " +
+                    // No inline <style> or style="" attributes (scripts may still set element.style)
+                    "style-src 'self'; " +
                     "img-src 'self' data:; " +
                     "font-src 'self'; " +
                     $"connect-src 'self'{devConnect}; " +

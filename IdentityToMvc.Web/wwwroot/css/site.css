@@ -801,3 +801,7 @@ h1, h2, h3, h4, h5 {
 .min-w-0 {
   min-width: 0;
 }
+
+.reading-width {
+  max-width: 760px;
+}

@@ -58,7 +58,24 @@ namespace IdentityToMvc.Web.Security
             return services;
         }
 
-        private static string ClientKey(HttpContext context) =>
-            context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        /// <summary>
+        /// IPv4 clients are limited per address. IPv6 clients usually control a whole /64 network
+        /// (18 quintillion addresses), so they are limited per /64 - otherwise changing the address
+        /// would reset the limit.
+        /// </summary>
+        internal static string ClientKey(HttpContext context)
+        {
+            var ip = context.Connection.RemoteIpAddress;
+            if (ip == null)
+                return "unknown";
+            if (ip.IsIPv4MappedToIPv6)
+                ip = ip.MapToIPv4();
+            if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
+            {
+                var bytes = ip.GetAddressBytes();
+                return Convert.ToHexString(bytes, 0, 8) + "::/64";
+            }
+            return ip.ToString();
+        }
     }
 }

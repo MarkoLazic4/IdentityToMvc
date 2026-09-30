@@ -32,7 +32,8 @@ namespace IdentityToMvc.Web.Security
     {
         /// <param name="overrideEmail">Send the notification to this address instead of the user's
         /// current one (e.g. the old address after an email change).</param>
-        Task NotifyAsync(IdentityUser user, SecurityEvent securityEvent, string? overrideEmail = null);
+        /// <param name="sendEmail">False to only write the audit entry (the caller sends its own email).</param>
+        Task NotifyAsync(IdentityUser user, SecurityEvent securityEvent, string? overrideEmail = null, bool sendEmail = true);
     }
 
     public sealed class SecurityNotifier : ISecurityNotifier
@@ -51,7 +52,7 @@ namespace IdentityToMvc.Web.Security
             _logger = logger;
         }
 
-        public Task NotifyAsync(IdentityUser user, SecurityEvent securityEvent, string? overrideEmail = null)
+        public Task NotifyAsync(IdentityUser user, SecurityEvent securityEvent, string? overrideEmail = null, bool sendEmail = true)
         {
             var httpContext = _httpContextAccessor.HttpContext;
             var ip = httpContext?.Connection.RemoteIpAddress?.ToString() ?? "unknown";
@@ -64,7 +65,7 @@ namespace IdentityToMvc.Web.Security
                 securityEvent, user.Id, ip, userAgent);
 
             var to = overrideEmail ?? user.Email;
-            if (!_options.CurrentValue.SendSecurityNotifications || string.IsNullOrEmpty(to))
+            if (!sendEmail || !_options.CurrentValue.SendSecurityNotifications || string.IsNullOrEmpty(to))
                 return Task.CompletedTask;
 
             var (subject, text) = Describe(securityEvent);

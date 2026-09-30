@@ -20,15 +20,18 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly IEmailQueue _emailQueue;
         private readonly ISecurityNotifier _securityNotifier;
+        private readonly PasswordTimingEqualizer _timingEqualizer;
         private readonly ILogger<AccountController> _logger;
 
         public AccountController(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager,
-            IEmailQueue emailQueue, ISecurityNotifier securityNotifier, ILogger<AccountController> logger)
+            IEmailQueue emailQueue, ISecurityNotifier securityNotifier, PasswordTimingEqualizer timingEqualizer,
+            ILogger<AccountController> logger)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _emailQueue = emailQueue;
             _securityNotifier = securityNotifier;
+            _timingEqualizer = timingEqualizer;
             _logger = logger;
         }
 
@@ -60,6 +63,27 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
 
             if (!ModelState.IsValid)
                 return View(model);
+
+            var existing = await _userManager.FindByEmailAsync(model.Input.Email);
+            if (existing != null)
+            {
+                if (await _userManager.IsEmailConfirmedAsync(existing))
+                {
+                    // Don't reveal that the address is taken: answer exactly like a new registration
+                    // and tell the real owner by email instead.
+                    _timingEqualizer.HashDummy(model.Input.Password);
+                    var loginUrl = Url.Action(nameof(Login), "Account", new { area = "User" }, Request.Scheme) ?? string.Empty;
+                    var resetUrl = Url.Action(nameof(ForgotPassword), "Account", new { area = "User" }, Request.Scheme) ?? string.Empty;
+                    _emailQueue.Enqueue(model.Input.Email, "You already have an account", EmailTemplates.AccountAlreadyExists(loginUrl, resetUrl));
+                    return RedirectToAction(nameof(RegisterConfirmation), "Account", new { area = "User", email = model.Input.Email, returnUrl = model.ReturnUrl });
+                }
+
+                // An unconfirmed account proves nothing about who owns the address. Replace it, so
+                // nobody can "reserve" someone else's email with credentials they know
+                // (pre-account-takeover). Whoever confirms the new email owns the account.
+                _logger.LogInformation("Replacing unconfirmed account {UserId} with a new registration.", existing.Id);
+                await _userManager.DeleteAsync(existing);
+            }
 
             var user = new IdentityUser
             {
@@ -204,15 +228,16 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
                 return RedirectToAction(nameof(ResendEmailConfirmation), "Account", new { area = "User" });
             }
 
-            var userId = await _userManager.GetUserIdAsync(user);
-            var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            // The resent link doesn't just confirm the existing account - it makes the recipient choose
+            // a new password. If someone else registered this address, their password stops working.
+            var code = await _userManager.GeneratePasswordResetTokenAsync(user);
             code = TokenEncoder.Encode(code);
             var callbackUrl = Url.Action(
-                nameof(ConfirmEmail), "Account",
-                new { area = "User", userId = userId, code = code },
+                nameof(ResetPassword), "Account",
+                new { area = "User", code, activate = true },
                 protocol: Request.Scheme) ?? string.Empty;
 
-            _emailQueue.Enqueue(model.Input.Email, "Confirm your email", EmailTemplates.ConfirmAccount(callbackUrl));
+            _emailQueue.Enqueue(model.Input.Email, "Finish setting up your account", EmailTemplates.FinishSetup(callbackUrl));
 
             TempData["StatusMessage"] = sentMessage;
             return RedirectToAction(nameof(ResendEmailConfirmation), "Account", new { area = "User" });
@@ -255,6 +280,16 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             if (ModelState.IsValid)
             {
                 // Failed attempts count towards lockout (see Lockout options in Program.cs)
+                // Identity skips the slow password check for unknown, unconfirmed or locked-out
+                // accounts; do an equivalent check so timing doesn't reveal which accounts exist.
+                var candidate = await _userManager.FindByEmailAsync(model.Input.Email);
+                if (candidate == null
+                    || !await _signInManager.CanSignInAsync(candidate)
+                    || await _userManager.IsLockedOutAsync(candidate))
+                {
+                    _timingEqualizer.VerifyDummy(model.Input.Password);
+                }
+
                 RecentAuthenticationService.FlagFreshSignIn(HttpContext);
                 var result = await _signInManager.PasswordSignInAsync(model.Input.Email, model.Input.Password, model.Input.RememberMe, lockoutOnFailure: true);
                 if (result.Succeeded)
@@ -468,17 +503,28 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             }
             else
             {
-                // If the user does not have an account, then ask the user to create an account.
-                var viewModel = new ExternalLoginViewModel();
-                viewModel.ReturnUrl = returnUrl;
-                viewModel.ProviderDisplayName = info.ProviderDisplayName ?? info.LoginProvider;
-                if (info.Principal.HasClaim(c => c.Type == ClaimTypes.Email))
+                // No account is linked to this provider login yet - offer to create one
+                var providerEmail = info.Principal.FindFirstValue(ClaimTypes.Email);
+                if (string.IsNullOrWhiteSpace(providerEmail))
                 {
-                    viewModel.Input = new ExternalLoginViewModel.InputModel
-                    {
-                        Email = info.Principal.FindFirstValue(ClaimTypes.Email) ?? string.Empty
-                    };
+                    TempData["ErrorMessage"] = "Your provider didn't share an email address. Sign up with your email first, then connect the provider under Manage account.";
+                    return RedirectToAction(nameof(Login), "Account", new { area = "User", returnUrl });
                 }
+
+                var existing = await _userManager.FindByEmailAsync(providerEmail);
+                if (existing != null && await _userManager.IsEmailConfirmedAsync(existing))
+                {
+                    // Never link automatically to an existing account: log in first, then connect
+                    TempData["ErrorMessage"] = "An account with this email already exists. Log in with it, then connect the provider under Manage account.";
+                    return RedirectToAction(nameof(Login), "Account", new { area = "User", returnUrl });
+                }
+
+                var viewModel = new ExternalLoginViewModel
+                {
+                    ReturnUrl = returnUrl,
+                    ProviderDisplayName = info.ProviderDisplayName ?? info.LoginProvider,
+                    Input = new ExternalLoginViewModel.InputModel { Email = providerEmail }
+                };
                 return View("ExternalLogin", viewModel);
             }
         }
@@ -499,52 +545,56 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
                 return RedirectToAction(nameof(Login), "Account", new { area = "User", returnUrl = model.ReturnUrl });
             }
 
-            if (ModelState.IsValid)
+            // The account email is always the one the provider verified - never what was typed in -
+            // so an external login can't be used to claim someone else's address.
+            var providerEmail = info.Principal.FindFirstValue(ClaimTypes.Email);
+            if (string.IsNullOrWhiteSpace(providerEmail))
             {
-                var user = new IdentityUser
+                TempData["ErrorMessage"] = "Your provider didn't share an email address. Sign up with your email first, then connect the provider under Manage account.";
+                return RedirectToAction(nameof(Login), "Account", new { area = "User", returnUrl = model.ReturnUrl });
+            }
+            model.Input.Email = providerEmail;
+
+            var existing = await _userManager.FindByEmailAsync(providerEmail);
+            if (existing != null)
+            {
+                if (await _userManager.IsEmailConfirmedAsync(existing))
                 {
-                    UserName = model.Input.Email,
-                    Email = model.Input.Email
-                };
-
-                var result = await _userManager.CreateAsync(user);
-                if (result.Succeeded)
-                {
-                    result = await _userManager.AddLoginAsync(user, info);
-                    if (!result.Succeeded)
-                    {
-                        // Don't leave behind an account without any way to log in
-                        await _userManager.DeleteAsync(user);
-                    }
-                    else
-                    {
-                        _logger.LogInformation("User created an account using {Name} provider.", info.LoginProvider);
-
-                        var userId = await _userManager.GetUserIdAsync(user);
-                        var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                        code = TokenEncoder.Encode(code);
-                        var callbackUrl = Url.Action(
-                            nameof(ConfirmEmail), "Account", 
-                            new { area = "User", userId = userId, code = code },
-                            protocol: Request.Scheme) ?? string.Empty;
-
-                        _emailQueue.Enqueue(model.Input.Email, "Confirm your email", EmailTemplates.ConfirmAccount(callbackUrl));
-
-                        // If account confirmation is required, we need to show the link if we don't have a real email sender
-                        if (_userManager.Options.SignIn.RequireConfirmedAccount)
-                        {
-                            return RedirectToAction(nameof(RegisterConfirmation), "Account", new { area = "User", email = model.Input.Email });
-                        }
-
-                        RecentAuthenticationService.FlagFreshSignIn(HttpContext);
-                        await _signInManager.SignInAsync(user, isPersistent: false, info.LoginProvider);
-                        return LocalRedirect(model.ReturnUrl);
-                    }
+                    TempData["ErrorMessage"] = "An account with this email already exists. Log in with it, then connect the provider under Manage account.";
+                    return RedirectToAction(nameof(Login), "Account", new { area = "User", returnUrl = model.ReturnUrl });
                 }
-                foreach (var error in result.Errors)
+                // Unconfirmed account for an address the provider has verified: replace it
+                await _userManager.DeleteAsync(existing);
+            }
+
+            var user = new IdentityUser
+            {
+                UserName = providerEmail,
+                Email = providerEmail,
+                // Google/Facebook only hand out addresses they have verified
+                EmailConfirmed = true
+            };
+
+            var result = await _userManager.CreateAsync(user);
+            if (result.Succeeded)
+            {
+                result = await _userManager.AddLoginAsync(user, info);
+                if (!result.Succeeded)
                 {
-                    ModelState.AddModelError(string.Empty, error.Description);
+                    // Don't leave behind an account without any way to log in
+                    await _userManager.DeleteAsync(user);
                 }
+                else
+                {
+                    _logger.LogInformation("User created an account using {Name} provider.", info.LoginProvider);
+                    RecentAuthenticationService.FlagFreshSignIn(HttpContext);
+                    await _signInManager.SignInAsync(user, isPersistent: false, info.LoginProvider);
+                    return LocalRedirect(model.ReturnUrl);
+                }
+            }
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
             }
 
             model.ProviderDisplayName = info.ProviderDisplayName ?? info.LoginProvider;
@@ -648,7 +698,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         // GET: /User/Account/ResetPassword 
         // ===========================================================================
         [HttpGet]
-        public IActionResult ResetPassword(string? code = null)
+        public IActionResult ResetPassword(string? code = null, bool activate = false)
         {
             if (!TokenEncoder.TryDecode(code, out var token))
             {
@@ -658,6 +708,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
 
             var viewModel = new ResetPasswordViewModel
             {
+                IsActivation = activate,
                 Input = new ResetPasswordViewModel.InputModel
                 {
                     Code = token
@@ -694,6 +745,13 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
                 // ResetPasswordAsync also rotates the security stamp, signing out every other session.
                 await _userManager.ResetAccessFailedCountAsync(user);
                 await _userManager.SetLockoutEndDateAsync(user, null);
+
+                // The reset link was delivered to the mailbox, which proves ownership of the address
+                if (!await _userManager.IsEmailConfirmedAsync(user))
+                {
+                    var confirmToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                    await _userManager.ConfirmEmailAsync(user, confirmToken);
+                }
                 await _securityNotifier.NotifyAsync(user, SecurityEvent.PasswordReset);
                 return RedirectToAction(nameof(ResetPasswordConfirmation), "Account", new { area = "User" });
             }
@@ -744,22 +802,40 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
                 return RedirectToAction(nameof(Login), "Account", new { area = "User", returnUrl });
             }
 
-            RecentAuthenticationService.FlagFreshSignIn(HttpContext);
-            var result = await _signInManager.PasskeySignInAsync(credentialJson);
-            if (result.Succeeded)
+            var assertion = await _signInManager.PerformPasskeyAssertionAsync(credentialJson);
+            if (!assertion.Succeeded)
             {
-                _logger.LogInformation("User logged in with a passkey.");
-                return LocalRedirect(returnUrl);
-            }
-            if (result.IsLockedOut)
-            {
-                return RedirectToAction(nameof(Lockout), "Account", new { area = "User" });
+                _logger.LogWarning("Passkey assertion failed: {Error}", assertion.Failure?.Message);
+                TempData["ErrorMessage"] = "This passkey couldn't be used to log in. It may have been removed from your account.";
+                return RedirectToAction(nameof(Login), "Account", new { area = "User", returnUrl });
             }
 
-            TempData["ErrorMessage"] = result.IsNotAllowed
-                ? "You need to confirm your email before you can log in."
-                : "This passkey couldn't be used to log in. It may have been removed from your account.";
-            return RedirectToAction(nameof(Login), "Account", new { area = "User", returnUrl });
+            var user = assertion.User;
+            // Store the updated signature counter (detects cloned authenticators)
+            await _userManager.AddOrUpdatePasskeyAsync(user, assertion.Passkey);
+
+            if (!await _signInManager.CanSignInAsync(user))
+            {
+                TempData["ErrorMessage"] = "You need to confirm your email before you can log in.";
+                return RedirectToAction(nameof(Login), "Account", new { area = "User", returnUrl });
+            }
+
+            if (await _userManager.IsLockedOutAsync(user))
+            {
+                if (IsLockedByAdministrator(await _userManager.GetLockoutEndDateAsync(user)))
+                {
+                    return RedirectToAction(nameof(Lockout), "Account", new { area = "User" });
+                }
+                // A lockout from failed password attempts protects against guessing. A passkey can't be
+                // guessed, so it still works - an attacker can't lock the owner out of their account.
+                await _userManager.SetLockoutEndDateAsync(user, null);
+            }
+            await _userManager.ResetAccessFailedCountAsync(user);
+
+            RecentAuthenticationService.FlagFreshSignIn(HttpContext);
+            await _signInManager.SignInWithClaimsAsync(user, isPersistent: false, [new Claim("amr", "pop")]);
+            _logger.LogInformation("User logged in with a passkey.");
+            return LocalRedirect(returnUrl);
         }
 
         /// <summary>
@@ -773,8 +849,46 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             if (user != null && lockoutEnd.HasValue
                 && lockoutEnd.Value - DateTimeOffset.UtcNow > _userManager.Options.Lockout.DefaultLockoutTimeSpan - TimeSpan.FromSeconds(10))
             {
-                await _securityNotifier.NotifyAsync(user, SecurityEvent.AccountLockedOut);
+                await _securityNotifier.NotifyAsync(user, SecurityEvent.AccountLockedOut, sendEmail: false);
+
+                // Give the owner a way out: an attacker who keeps locking the account can't keep them out
+                var code = await _userManager.GenerateUserTokenAsync(user, TokenOptions.DefaultProvider, UnlockTokenPurpose);
+                var callbackUrl = Url.Action(nameof(Unlock), "Account",
+                    new { area = "User", userId = user.Id, code = TokenEncoder.Encode(code) }, Request.Scheme) ?? string.Empty;
+                _emailQueue.Enqueue(email, "Your account was locked", EmailTemplates.UnlockAccount(callbackUrl));
             }
+        }
+
+        private const string UnlockTokenPurpose = "UnlockAccount";
+
+        /// <summary>
+        /// Locks set by an administrator last (practically) forever; failed-attempt lockouts last minutes.
+        /// Only the latter can be lifted by a passkey or the unlock link.
+        /// </summary>
+        private static bool IsLockedByAdministrator(DateTimeOffset? lockoutEnd) =>
+            lockoutEnd.HasValue && lockoutEnd.Value > DateTimeOffset.UtcNow.AddYears(1);
+
+        // ===========================================================================
+        // GET: /User/Account/Unlock  (link from the "account locked" email)
+        // ===========================================================================
+        [HttpGet]
+        public async Task<IActionResult> Unlock(string? userId, string? code)
+        {
+            var user = string.IsNullOrEmpty(userId) ? null : await _userManager.FindByIdAsync(userId);
+            if (user != null
+                && TokenEncoder.TryDecode(code, out var token)
+                && await _userManager.VerifyUserTokenAsync(user, TokenOptions.DefaultProvider, UnlockTokenPurpose, token)
+                && !IsLockedByAdministrator(await _userManager.GetLockoutEndDateAsync(user)))
+            {
+                await _userManager.SetLockoutEndDateAsync(user, null);
+                await _userManager.ResetAccessFailedCountAsync(user);
+                TempData["StatusMessage"] = "Your account is unlocked. You can log in now.";
+            }
+            else
+            {
+                TempData["StatusMessage"] = "Error: the unlock link is invalid or has expired.";
+            }
+            return RedirectToAction(nameof(Login), "Account", new { area = "User" });
         }
 
         private string? SanitizeReturnUrl(string? returnUrl)
