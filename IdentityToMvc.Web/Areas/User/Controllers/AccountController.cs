@@ -1,4 +1,4 @@
-﻿using IdentityToMvc.Web.Areas.User.ViewModels.Account;
+using IdentityToMvc.Web.Areas.User.ViewModels.Account;
 using IdentityToMvc.Web.Helpers;
 using IdentityToMvc.Web.Localization;
 using IdentityToMvc.Web.Security;
@@ -16,7 +16,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
     [Area("User")]
     [AllowAnonymous]
     [EnableRateLimiting(RateLimitPolicies.Auth)]
-    public class AccountController : Controller
+    public partial class AccountController : Controller
     {
         private readonly UserManager<IdentityUser> _userManager;
         private readonly SignInManager<IdentityUser> _signInManager;
@@ -340,292 +340,6 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         }
 
         // ===========================================================================
-        // GET: /User/Account/LoginWith2fa
-        // ===========================================================================
-        [HttpGet]
-        public async Task<IActionResult> LoginWith2fa(bool rememberMe, string? returnUrl = null)
-        {
-            // Ensure the user has gone through the username & password screen first
-            var user = await _signInManager.GetTwoFactorAuthenticationUserAsync();
-
-            if (user == null)
-            {
-                // The 2FA cookie is missing or expired - start the login over
-                return RedirectToAction(nameof(Login), "Account", new { area = "User", returnUrl });
-            }
-
-            var viewModel = new LoginWith2faViewModel();
-            viewModel.ReturnUrl = SanitizeReturnUrl(returnUrl);
-            viewModel.RememberMe = rememberMe;
-
-            return View(viewModel);
-        }
-
-        // ===========================================================================
-        // POST: /User/Account/LoginWith2fa
-        // ===========================================================================
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> LoginWith2fa(LoginWith2faViewModel model)
-        {
-            model.ReturnUrl = SanitizeReturnUrl(model.ReturnUrl) ?? DefaultUrl();
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
-
-
-            var user = await _signInManager.GetTwoFactorAuthenticationUserAsync();
-            if (user == null)
-            {
-                // The 2FA cookie is missing or expired - start the login over
-                return RedirectToAction(nameof(Login), "Account", new { area = "User", returnUrl = model.ReturnUrl });
-            }
-
-            var authenticatorCode = model.Input.TwoFactorCode.Replace(" ", string.Empty).Replace("-", string.Empty);
-
-            RecentAuthenticationService.FlagFreshSignIn(HttpContext);
-            var result = await _signInManager.TwoFactorAuthenticatorSignInAsync(authenticatorCode, model.RememberMe, model.Input.RememberMachine);
-
-            if (result.Succeeded)
-            {
-                _logger.LogInformation("User with ID '{UserId}' logged in with 2fa.", user.Id);
-                return LocalRedirect(model.ReturnUrl);
-            }
-            else if (result.IsLockedOut)
-            {
-                _logger.LogWarning("User with ID '{UserId}' account locked out.", user.Id);
-                return RedirectToAction(nameof(Lockout), "Account", new { area = "User" });
-            }
-            else
-            {
-                _logger.LogWarning("Invalid authenticator code entered for user with ID '{UserId}'.", user.Id);
-                ModelState.AddModelError(string.Empty, _t["Invalid authenticator code."]);
-                return View(model);
-            }
-        }
-
-        // ===========================================================================
-        // GET: /User/Account/LoginWithRecoveryCode
-        // ===========================================================================
-        [HttpGet]
-        public async Task<IActionResult> LoginWithRecoveryCode(string? returnUrl = null)
-        {
-            // Ensure the user has gone through the username & password screen first
-            var user = await _signInManager.GetTwoFactorAuthenticationUserAsync();
-            if (user == null)
-            {
-                // The 2FA cookie is missing or expired - start the login over
-                return RedirectToAction(nameof(Login), "Account", new { area = "User", returnUrl });
-            }
-
-            var viewModel = new LoginWithRecoveryCodeViewModel();
-            viewModel.ReturnUrl = SanitizeReturnUrl(returnUrl);
-
-            return View(viewModel);
-        }
-
-        // ===========================================================================
-        // POST: /User/Account/LoginWithRecoveryCode
-        // ===========================================================================
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> LoginWithRecoveryCode(LoginWithRecoveryCodeViewModel model)
-        {
-            model.ReturnUrl = SanitizeReturnUrl(model.ReturnUrl);
-
-            if (!ModelState.IsValid)
-                return View(model);
-
-            var user = await _signInManager.GetTwoFactorAuthenticationUserAsync();
-            if (user == null)
-            {
-                // The 2FA cookie is missing or expired - start the login over
-                return RedirectToAction(nameof(Login), "Account", new { area = "User", returnUrl = model.ReturnUrl });
-            }
-
-            var recoveryCode = model.Input.RecoveryCode.Replace(" ", string.Empty);
-
-            RecentAuthenticationService.FlagFreshSignIn(HttpContext);
-            var result = await _signInManager.TwoFactorRecoveryCodeSignInAsync(recoveryCode);
-
-            if (result.Succeeded)
-            {
-                _logger.LogInformation("User with ID '{UserId}' logged in with a recovery code.", user.Id);
-                return LocalRedirect(model.ReturnUrl ?? DefaultUrl());
-            }
-            if (result.IsLockedOut)
-            {
-                _logger.LogWarning("User account locked out.");
-                return RedirectToAction(nameof(Lockout), "Account", new { area = "User" });
-            }
-            else
-            {
-                _logger.LogWarning("Invalid recovery code entered for user with ID '{UserId}' ", user.Id);
-                ModelState.AddModelError(string.Empty, _t["Invalid recovery code entered."]);
-                return View(model);
-            }
-        }
-
-        // ===========================================================================
-        // POST: /User/Account/ExternalLogin
-        // ===========================================================================
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult ExternalLogin(string provider, string? returnUrl = null)
-        {
-            returnUrl = SanitizeReturnUrl(returnUrl);
-            // Request a redirect to the external login provider.
-            var redirectUrl = Url.Action(nameof(ExternalLoginCallback), "Account", new { area = "User", returnUrl });
-            var properties = _signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl);
-            return Challenge(properties, provider);
-        }
-
-        // ===========================================================================
-        // GET: /User/Account/ExternalLoginCallback
-        // ===========================================================================
-        [HttpGet]
-        public async Task<IActionResult> ExternalLoginCallback(string? returnUrl = null, string? remoteError = null)
-        {
-            returnUrl = SanitizeReturnUrl(returnUrl) ?? DefaultUrl();
-
-            if (remoteError != null)
-            {
-                TempData["ErrorMessage"] = _t["Error from external provider: {0}", remoteError].Value;
-                return RedirectToAction(nameof(Login), "Account", new { area = "User", returnUrl });
-            }
-            var info = await _signInManager.GetExternalLoginInfoAsync();
-            if (info == null)
-            {
-                TempData["ErrorMessage"] = _t["Error loading external login information."].Value;
-                return RedirectToAction(nameof(Login), "Account", new { area = "User", returnUrl });
-            }
-
-            // Sign in the user with this external login provider if the user already has a login.
-            // bypassTwoFactor: false - users who enabled 2FA must still enter their code
-            RecentAuthenticationService.FlagFreshSignIn(HttpContext);
-            var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: false, bypassTwoFactor: false);
-            if (result.Succeeded)
-            {
-                _logger.LogInformation("{Name} logged in with {LoginProvider} provider.", info.Principal.Identity?.Name, info.LoginProvider);
-                return LocalRedirect(returnUrl);
-            }
-            if (result.RequiresTwoFactor)
-            {
-                return RedirectToAction(nameof(LoginWith2fa), "Account", new { area = "User", returnUrl, rememberMe = false });
-            }
-            if (result.IsLockedOut)
-            {
-                return RedirectToAction(nameof(Lockout), "Account", new { area = "User" });
-            }
-            if (result.IsNotAllowed)
-            {
-                TempData["ErrorMessage"] = _t["You need to confirm your email before you can log in."].Value;
-                return RedirectToAction(nameof(Login), "Account", new { area = "User", returnUrl });
-            }
-            else
-            {
-                // No account is linked to this provider login yet - offer to create one
-                var providerEmail = info.Principal.FindFirstValue(ClaimTypes.Email);
-                if (string.IsNullOrWhiteSpace(providerEmail))
-                {
-                    TempData["ErrorMessage"] = _t["Your provider didn't share an email address. Sign up with your email first, then connect the provider under Manage account."].Value;
-                    return RedirectToAction(nameof(Login), "Account", new { area = "User", returnUrl });
-                }
-
-                var existing = await _userManager.FindByEmailAsync(providerEmail);
-                if (existing != null && await _userManager.IsEmailConfirmedAsync(existing))
-                {
-                    // Never link automatically to an existing account: log in first, then connect
-                    TempData["ErrorMessage"] = _t["An account with this email already exists. Log in with it, then connect the provider under Manage account."].Value;
-                    return RedirectToAction(nameof(Login), "Account", new { area = "User", returnUrl });
-                }
-
-                var viewModel = new ExternalLoginViewModel
-                {
-                    ReturnUrl = returnUrl,
-                    ProviderDisplayName = info.ProviderDisplayName ?? info.LoginProvider,
-                    Input = new ExternalLoginViewModel.InputModel { Email = providerEmail }
-                };
-                return View("ExternalLogin", viewModel);
-            }
-        }
-
-        // ===========================================================================
-        // POST: /User/Account/ExternalLoginConfirmation
-        // ===========================================================================
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ExternalLoginConfirmation(ExternalLoginViewModel model)
-        {
-            model.ReturnUrl = SanitizeReturnUrl(model.ReturnUrl) ?? DefaultUrl();
-            // Get the information about the user from the external login provider
-            var info = await _signInManager.GetExternalLoginInfoAsync();
-            if (info == null)
-            {
-                TempData["ErrorMessage"] = _t["Error loading external login information during confirmation."].Value;
-                return RedirectToAction(nameof(Login), "Account", new { area = "User", returnUrl = model.ReturnUrl });
-            }
-
-            // The account email is always the one the provider verified - never what was typed in -
-            // so an external login can't be used to claim someone else's address.
-            var providerEmail = info.Principal.FindFirstValue(ClaimTypes.Email);
-            if (string.IsNullOrWhiteSpace(providerEmail))
-            {
-                TempData["ErrorMessage"] = _t["Your provider didn't share an email address. Sign up with your email first, then connect the provider under Manage account."].Value;
-                return RedirectToAction(nameof(Login), "Account", new { area = "User", returnUrl = model.ReturnUrl });
-            }
-            model.Input.Email = providerEmail;
-
-            var existing = await _userManager.FindByEmailAsync(providerEmail);
-            if (existing != null)
-            {
-                if (await _userManager.IsEmailConfirmedAsync(existing))
-                {
-                    TempData["ErrorMessage"] = _t["An account with this email already exists. Log in with it, then connect the provider under Manage account."].Value;
-                    return RedirectToAction(nameof(Login), "Account", new { area = "User", returnUrl = model.ReturnUrl });
-                }
-                // Unconfirmed account for an address the provider has verified: replace it
-                await _userManager.DeleteAsync(existing);
-            }
-
-            var user = new IdentityUser
-            {
-                UserName = providerEmail,
-                Email = providerEmail,
-                // Google/Facebook only hand out addresses they have verified
-                EmailConfirmed = true
-            };
-
-            var result = await _userManager.CreateAsync(user);
-            if (result.Succeeded)
-            {
-                result = await _userManager.AddLoginAsync(user, info);
-                if (!result.Succeeded)
-                {
-                    // Don't leave behind an account without any way to log in
-                    await _userManager.DeleteAsync(user);
-                }
-                else
-                {
-                    _logger.LogInformation("User created an account using {Name} provider.", info.LoginProvider);
-                    await _adminBootstrapper.EnsureAdminAsync(user);
-                    RecentAuthenticationService.FlagFreshSignIn(HttpContext);
-                    await _signInManager.SignInAsync(user, isPersistent: false, info.LoginProvider);
-                    return LocalRedirect(model.ReturnUrl);
-                }
-            }
-            foreach (var error in result.Errors)
-            {
-                ModelState.AddModelError(string.Empty, error.Description);
-            }
-
-            model.ProviderDisplayName = info.ProviderDisplayName ?? info.LoginProvider;
-            return View("ExternalLogin", model);
-        }
-
-
-        // ===========================================================================
         // POST: /User/Account/Logout
         // ===========================================================================
         [HttpPost]
@@ -667,7 +381,6 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         {
             return View();
         }
-
 
         // ===========================================================================
         // GET: /User/Account/ForgotPassword
@@ -802,72 +515,6 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             return View();
         }
 
-        // ===========================================================================
-        // POST: /User/Account/PasskeyRequestOptions  (called from JavaScript)
-        // ===========================================================================
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        [DisableRateLimiting] // requested automatically on every login page view for passkey autofill
-        [FeatureGate(SecurityFeature.Passkeys)]
-        public async Task<IActionResult> PasskeyRequestOptions()
-        {
-            // No user: the browser offers every discoverable passkey it has for this site
-            var optionsJson = await _signInManager.MakePasskeyRequestOptionsAsync(user: null);
-            return Content(optionsJson, "application/json");
-        }
-
-        // ===========================================================================
-        // POST: /User/Account/LoginWithPasskey
-        // ===========================================================================
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        [FeatureGate(SecurityFeature.Passkeys)]
-        public async Task<IActionResult> LoginWithPasskey(string? credentialJson, string? returnUrl = null)
-        {
-            returnUrl = SanitizeReturnUrl(returnUrl) ?? DefaultUrl();
-
-            if (string.IsNullOrWhiteSpace(credentialJson))
-            {
-                TempData["ErrorMessage"] = _t["The passkey sign-in was cancelled."].Value;
-                return RedirectToAction(nameof(Login), "Account", new { area = "User", returnUrl });
-            }
-
-            var assertion = await _signInManager.PerformPasskeyAssertionAsync(credentialJson);
-            if (!assertion.Succeeded)
-            {
-                _logger.LogWarning("Passkey assertion failed: {Error}", assertion.Failure?.Message);
-                TempData["ErrorMessage"] = _t["This passkey couldn't be used to log in. It may have been removed from your account."].Value;
-                return RedirectToAction(nameof(Login), "Account", new { area = "User", returnUrl });
-            }
-
-            var user = assertion.User;
-            // Store the updated signature counter (detects cloned authenticators)
-            await _userManager.AddOrUpdatePasskeyAsync(user, assertion.Passkey);
-
-            if (!await _signInManager.CanSignInAsync(user))
-            {
-                TempData["ErrorMessage"] = _t["You need to confirm your email before you can log in."].Value;
-                return RedirectToAction(nameof(Login), "Account", new { area = "User", returnUrl });
-            }
-
-            if (await _userManager.IsLockedOutAsync(user))
-            {
-                if (IsLockedByAdministrator(await _userManager.GetLockoutEndDateAsync(user)))
-                {
-                    return RedirectToAction(nameof(Lockout), "Account", new { area = "User" });
-                }
-                // A lockout from failed password attempts protects against guessing. A passkey can't be
-                // guessed, so it still works - an attacker can't lock the owner out of their account.
-                await _userManager.SetLockoutEndDateAsync(user, null);
-            }
-            await _userManager.ResetAccessFailedCountAsync(user);
-
-            RecentAuthenticationService.FlagFreshSignIn(HttpContext);
-            await _signInManager.SignInWithClaimsAsync(user, isPersistent: false, [new Claim("amr", "pop")]);
-            _logger.LogInformation("User logged in with a passkey.");
-            return LocalRedirect(returnUrl);
-        }
-
         /// <summary>
         /// Emails the owner when this login attempt is the one that locked the account
         /// (not on every attempt made while it is already locked).
@@ -889,38 +536,12 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             }
         }
 
-        private const string UnlockTokenPurpose = "UnlockAccount";
-
         /// <summary>
         /// Locks set by an administrator last (practically) forever; failed-attempt lockouts last minutes.
         /// Only the latter can be lifted by a passkey or the unlock link.
         /// </summary>
         private static bool IsLockedByAdministrator(DateTimeOffset? lockoutEnd) =>
             lockoutEnd.HasValue && lockoutEnd.Value > DateTimeOffset.UtcNow.AddYears(1);
-
-        // ===========================================================================
-        // GET: /User/Account/Unlock  (link from the "account locked" email)
-        // ===========================================================================
-        [HttpGet]
-        public async Task<IActionResult> Unlock(string? userId, string? code)
-        {
-            var user = string.IsNullOrEmpty(userId) ? null : await _userManager.FindByIdAsync(userId);
-            if (user != null
-                && TokenEncoder.TryDecode(code, out var token)
-                && await _userManager.VerifyUserTokenAsync(user, TokenOptions.DefaultProvider, UnlockTokenPurpose, token)
-                && !IsLockedByAdministrator(await _userManager.GetLockoutEndDateAsync(user)))
-            {
-                await _userManager.SetLockoutEndDateAsync(user, null);
-                await _userManager.ResetAccessFailedCountAsync(user);
-                await _securityNotifier.NotifyAsync(user, SecurityEvent.AccountUnlocked);
-                this.StatusSuccess(_t["Your account is unlocked. You can log in now."]);
-            }
-            else
-            {
-                this.StatusError(_t["The unlock link is invalid or has expired."]);
-            }
-            return RedirectToAction(nameof(Login), "Account", new { area = "User" });
-        }
 
         private string? SanitizeReturnUrl(string? returnUrl)
         {
