@@ -75,6 +75,7 @@ public class AccountSecurityTests : IClassFixture<TestAppFactory>
         // Attacker registers the victim's address first and never confirms it
         using var attacker = _factory.CreateBrowser();
         await attacker.RegisterAsync(email, "Attacker-Pass-77!");
+        await _factory.Mailbox.WaitForAsync(email); // the attacker's (now useless) confirmation email
 
         // The real owner registers and confirms: the attacker's account is replaced
         using var victim = _factory.CreateBrowser();

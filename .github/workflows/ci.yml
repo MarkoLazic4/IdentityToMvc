@@ -39,3 +39,87 @@ jobs:
             echo "::error::A package with a high or critical vulnerability is referenced."
             exit 1
           fi
+
+  # The repository is also a "dotnet new" template: every package and some feature
+  # combinations must produce an app that builds and passes its tests.
+  template:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        options:
+          - "--tier basic"
+          - "--tier basic --tests --admin"
+          - "--tier basic --tests --two-factor --devices --lang en"
+          - "--tier basic --tests --passkeys --google --facebook --db sqlite"
+          - "--tier standard"
+          - "--tier standard --lang sr --db postgres"
+          - "--tier full"
+          - "--tier full --lang en --db sqlite --google"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Install the template from this commit
+        run: dotnet new install ./
+
+      - name: Create an app
+        run: dotnet new identitymvc -n SampleApp -o "$RUNNER_TEMP/SampleApp" ${{ matrix.options }}
+
+      - name: Build
+        working-directory: ${{ runner.temp }}/SampleApp
+        run: dotnet build --configuration Release
+
+      - name: Test
+        working-directory: ${{ runner.temp }}/SampleApp
+        run: |
+          if [ -d SampleApp.Tests ]; then
+            dotnet test --project SampleApp.Tests --no-build --configuration Release
+          else
+            echo "No tests in this package"
+          fi
+
+  # Runs a generated PostgreSQL app against a real server: migrations, registration, login.
+  postgres:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: [ "5432:5432" ]
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Create a full PostgreSQL app
+        run: |
+          dotnet new install ./
+          dotnet new identitymvc -n PgApp -o "$RUNNER_TEMP/PgApp" --tier full --db postgres --lang en
+
+      - name: Run it and sign up, confirm and log in
+        working-directory: ${{ runner.temp }}/PgApp/PgApp.Web
+        env:
+          ASPNETCORE_ENVIRONMENT: Development
+          ConnectionStrings__Default: Host=localhost;Database=pgapp;Username=postgres;Password=postgres
+          Security__CheckBreachedPasswords: "false"
+        run: |
+          dotnet dev-certs https
+          dotnet run --urls "https://localhost:5443" > app.log 2>&1 &
+          for i in $(seq 1 60); do curl -skf -o /dev/null https://localhost:5443/ && break; sleep 2; done
+          python3 "$GITHUB_WORKSPACE/tools/smoke_test.py" https://localhost:5443 \
+            /User/Account/Manage/Index /User/Account/Manage/Devices /User/Account/Manage/Activity \
+            /User/Account/Manage/TwoFactorAuthentication /User/Account/Manage/Passkeys
+          ! grep -q "Unhandled exception" app.log || (cat app.log; exit 1)

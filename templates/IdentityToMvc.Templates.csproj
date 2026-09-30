@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Packs this repository as a "dotnet new" template package:
+      dotnet pack templates/IdentityToMvc.Templates.csproj -o artifacts
+      dotnet new install artifacts/IdentityToMvc.Templates.<version>.nupkg
+    Publishing it (nuget.org or a private feed) is a separate, deliberate step.
+  -->
+  <PropertyGroup>
+    <PackageType>Template</PackageType>
+    <PackageId>IdentityToMvc.Templates</PackageId>
+    <Version>1.0.0</Version>
+    <Title>IdentityToMvc project templates</Title>
+    <Authors>Marko Lazić</Authors>
+    <Description>ASP.NET Core MVC with a complete, hardened account system (registration, 2FA, passkeys, devices, security activity, admin panel, Serbian/English). "dotnet new identitymvc --tier basic|standard|full" plus one switch per feature.</Description>
+    <PackageTags>dotnet-new;templates;aspnetcore;mvc;identity;authentication;passkeys;2fa</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/MarkoLazic4/IdentityToMvc</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/MarkoLazic4/IdentityToMvc</RepositoryUrl>
+
+    <TargetFramework>net10.0</TargetFramework>
+    <IncludeContentInPack>true</IncludeContentInPack>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <ContentTargetFolders>content</ContentTargetFolders>
+    <EnableDefaultItems>false</EnableDefaultItems>
+    <NoDefaultExcludes>true</NoDefaultExcludes>
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="../**/*"
+             Exclude="../**/bin/**;../**/obj/**;../.git/**;../.vs/**;../**/*.user;../**/*.db;../artifacts/**;../templates/**;../docs/**;../README.md;../README.sr.md;../.github/**;../**/appsettings.Local.json"
+             PackagePath="content/IdentityToMvc/" />
+  </ItemGroup>
+
+</Project>

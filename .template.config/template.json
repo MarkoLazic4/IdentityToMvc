@@ -314,6 +314,22 @@
       "datatype": "bool",
       "description": "If specified, skips the automatic restore of the project on create.",
       "defaultValue": "false"
+    },
+    "templateRepo": {
+      "type": "generated",
+      "generator": "constant",
+      "replaces": "TEMPLATE_REPO_URL",
+      "parameters": {
+        "value": "https://github.com/MarkoLazic4/IdentityToMvc"
+      }
+    },
+    "templateName": {
+      "type": "generated",
+      "generator": "constant",
+      "replaces": "TEMPLATE_NAME",
+      "parameters": {
+        "value": "IdentityToMvc"
+      }
     }
   },
   "sources": [
@@ -335,7 +351,8 @@
         "README.sr.md",
         ".github/**",
         "templates/**",
-        "IdentityToMvc.Web/appsettings.Local.json"
+        "IdentityToMvc.Web/appsettings.Local.json",
+        "tools/smoke_test.py"
       ],
       "modifiers": [
         {
