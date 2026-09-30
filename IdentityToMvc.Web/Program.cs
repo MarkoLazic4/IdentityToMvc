@@ -347,3 +347,6 @@ app.MapControllerRoute(
     .WithStaticAssets();
 
 app.Run();
+
+// Lets the integration tests (WebApplicationFactory<Program>) start the app
+public partial class Program { }
