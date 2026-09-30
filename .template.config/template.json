@@ -1,0 +1,585 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Marko Lazić",
+  "classifications": [
+    "Web",
+    "MVC",
+    "Identity",
+    "Authentication"
+  ],
+  "identity": "IdentityToMvc.Templates.Project",
+  "groupIdentity": "IdentityToMvc.Templates.Project",
+  "name": "ASP.NET Core MVC with Identity (IdentityToMvc)",
+  "description": "ASP.NET Core MVC app with a complete, hardened account system: registration, login, 2FA, passkeys, devices, security activity, admin panel and Serbian/English UI. Pick a package (basic, standard, full) and add features on top.",
+  "shortName": "identitymvc",
+  "sourceName": "IdentityToMvc",
+  "preferNameDirectory": true,
+  "tags": {
+    "language": "C#",
+    "type": "project"
+  },
+  "guids": [
+    "A21BA3AC-40C6-4FE4-A2C0-F6E230CC89BD",
+    "B4CA848B-603B-4D8A-BD97-BB96760B5E78",
+    "C6D12850-15DF-4212-8AB6-C7E3AE10C443",
+    "D16771BA-531A-4475-9295-B15923C8529D",
+    "F060084C-699A-4971-9EDC-C4669C3BDCA6"
+  ],
+  "symbols": {
+    "tier": {
+      "type": "parameter",
+      "datatype": "choice",
+      "defaultValue": "standard",
+      "displayName": "Package",
+      "description": "Which set of features to start from. The other options add features on top of it.",
+      "choices": [
+        {
+          "choice": "basic",
+          "displayName": "Basic",
+          "description": "Registration, email confirmation, login, forgot password, lockout and password change."
+        },
+        {
+          "choice": "standard",
+          "displayName": "Standard",
+          "description": "Basic + 2FA, devices, security activity, email change, personal data, security emails, breached-password check, sudo mode."
+        },
+        {
+          "choice": "full",
+          "displayName": "Full",
+          "description": "Standard + passkeys and the admin panel."
+        }
+      ]
+    },
+    "db": {
+      "type": "parameter",
+      "datatype": "choice",
+      "defaultValue": "sqlserver",
+      "displayName": "Database",
+      "description": "Database provider (the matching migrations are included).",
+      "choices": [
+        {
+          "choice": "sqlserver",
+          "displayName": "SQL Server"
+        },
+        {
+          "choice": "postgres",
+          "displayName": "PostgreSQL"
+        },
+        {
+          "choice": "sqlite",
+          "displayName": "SQLite"
+        }
+      ]
+    },
+    "lang": {
+      "type": "parameter",
+      "datatype": "choice",
+      "defaultValue": "both",
+      "displayName": "Language",
+      "description": "User interface language.",
+      "choices": [
+        {
+          "choice": "both",
+          "displayName": "Serbian + English",
+          "description": "Both, with a language switch (Serbian by default)."
+        },
+        {
+          "choice": "sr",
+          "displayName": "Serbian"
+        },
+        {
+          "choice": "en",
+          "displayName": "English"
+        }
+      ]
+    },
+    "optProfile": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "false",
+      "description": "Add the profile page (phone number).",
+      "displayName": "Profile page"
+    },
+    "optEmailChange": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "false",
+      "description": "Add changing the email address.",
+      "displayName": "Email change"
+    },
+    "optPersonalData": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "false",
+      "description": "Add personal data download and account deletion (GDPR).",
+      "displayName": "Personal data"
+    },
+    "optUnlockLink": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "false",
+      "description": "Add the unlock link in the \"account locked\" email.",
+      "displayName": "Unlock link"
+    },
+    "optBreachedPasswords": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "false",
+      "description": "Add the Have I Been Pwned breached-password check.",
+      "displayName": "Breached password check"
+    },
+    "optTwoFactor": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "false",
+      "description": "Add two-factor authentication (authenticator app + recovery codes).",
+      "displayName": "Two-factor authentication"
+    },
+    "optSudo": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "false",
+      "description": "Add sudo mode (password again before sensitive changes).",
+      "displayName": "Sudo mode"
+    },
+    "optPasskeys": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "false",
+      "description": "Add passkeys (fingerprint, face, device PIN).",
+      "displayName": "Passkeys"
+    },
+    "optGoogle": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "false",
+      "description": "Add Google login.",
+      "displayName": "Google login"
+    },
+    "optFacebook": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "false",
+      "description": "Add Facebook login.",
+      "displayName": "Facebook login"
+    },
+    "optNotifications": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "false",
+      "description": "Add security notification emails (password changed, new device...).",
+      "displayName": "Security emails"
+    },
+    "optDevices": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "false",
+      "description": "Add the Devices page (signed-in devices, sign out one or all).",
+      "displayName": "Devices page"
+    },
+    "optActivity": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "false",
+      "description": "Add the Security activity page.",
+      "displayName": "Security activity page"
+    },
+    "optAdmin": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "false",
+      "description": "Add the admin panel (users, roles, audit log).",
+      "displayName": "Admin panel"
+    },
+    "optTests": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "false",
+      "description": "Add the integration test project.",
+      "displayName": "Tests"
+    },
+    "Profile": {
+      "type": "computed",
+      "value": "((tier != \"basic\") || optProfile)"
+    },
+    "EmailChange": {
+      "type": "computed",
+      "value": "((tier != \"basic\") || optEmailChange)"
+    },
+    "PersonalData": {
+      "type": "computed",
+      "value": "((tier != \"basic\") || optPersonalData)"
+    },
+    "UnlockLink": {
+      "type": "computed",
+      "value": "((tier != \"basic\") || optUnlockLink)"
+    },
+    "BreachedPasswords": {
+      "type": "computed",
+      "value": "((tier != \"basic\") || optBreachedPasswords)"
+    },
+    "TwoFactor": {
+      "type": "computed",
+      "value": "((tier != \"basic\") || optTwoFactor)"
+    },
+    "Sudo": {
+      "type": "computed",
+      "value": "((tier != \"basic\") || optSudo)"
+    },
+    "Notifications": {
+      "type": "computed",
+      "value": "((tier != \"basic\") || optNotifications)"
+    },
+    "Devices": {
+      "type": "computed",
+      "value": "((tier != \"basic\") || optDevices)"
+    },
+    "Activity": {
+      "type": "computed",
+      "value": "((tier != \"basic\") || optActivity)"
+    },
+    "Tests": {
+      "type": "computed",
+      "value": "((tier != \"basic\") || optTests)"
+    },
+    "Passkeys": {
+      "type": "computed",
+      "value": "((tier == \"full\") || optPasskeys)"
+    },
+    "Admin": {
+      "type": "computed",
+      "value": "((tier == \"full\") || optAdmin)"
+    },
+    "Google": {
+      "type": "computed",
+      "value": "(optGoogle)"
+    },
+    "Facebook": {
+      "type": "computed",
+      "value": "(optFacebook)"
+    },
+    "ExternalLogins": {
+      "type": "computed",
+      "value": "(optGoogle || optFacebook)"
+    },
+    "LangSr": {
+      "type": "computed",
+      "value": "(lang != \"en\")"
+    },
+    "LangEn": {
+      "type": "computed",
+      "value": "(lang != \"sr\")"
+    },
+    "LangBoth": {
+      "type": "computed",
+      "value": "(lang == \"both\")"
+    },
+    "DbSqlServer": {
+      "type": "computed",
+      "value": "(db == \"sqlserver\")"
+    },
+    "DbPostgres": {
+      "type": "computed",
+      "value": "(db == \"postgres\")"
+    },
+    "DbSqlite": {
+      "type": "computed",
+      "value": "(db == \"sqlite\")"
+    },
+    "AdminRequiresMfa": {
+      "type": "computed",
+      "value": "(((tier == \"full\") || optAdmin) && (((tier != \"basic\") || optTwoFactor) || ((tier == \"full\") || optPasskeys)))"
+    },
+    "defaultCulture": {
+      "type": "generated",
+      "generator": "switch",
+      "replaces": "\"DefaultCulture\": \"sr-Latn-RS\"",
+      "parameters": {
+        "evaluator": "C++",
+        "datatype": "string",
+        "cases": [
+          {
+            "condition": "(lang == \"en\")",
+            "value": "\"DefaultCulture\": \"en\""
+          },
+          {
+            "condition": "(true)",
+            "value": "\"DefaultCulture\": \"sr-Latn-RS\""
+          }
+        ]
+      }
+    },
+    "skipRestore": {
+      "type": "parameter",
+      "datatype": "bool",
+      "description": "If specified, skips the automatic restore of the project on create.",
+      "defaultValue": "false"
+    },
+    "templateRepo": {
+      "type": "generated",
+      "generator": "constant",
+      "replaces": "TEMPLATE_REPO_URL",
+      "parameters": {
+        "value": "https://github.com/MarkoLazic4/IdentityToMvc"
+      }
+    },
+    "templateName": {
+      "type": "generated",
+      "generator": "constant",
+      "replaces": "TEMPLATE_NAME",
+      "parameters": {
+        "value": "IdentityToMvc"
+      }
+    }
+  },
+  "sources": [
+    {
+      "source": "./",
+      "target": "./",
+      "exclude": [
+        "**/[Bb]in/**",
+        "**/[Oo]bj/**",
+        ".template.config/**",
+        ".git/**",
+        ".vs/**",
+        "**/*.user",
+        "**/*.db",
+        "**/*.db-shm",
+        "**/*.db-wal",
+        "docs/**",
+        "README.md",
+        "README.sr.md",
+        ".github/**",
+        "templates/**",
+        "IdentityToMvc.Web/appsettings.Local.json",
+        "tools/smoke_test.py"
+      ],
+      "modifiers": [
+        {
+          "condition": "(!Profile)",
+          "exclude": [
+            "IdentityToMvc.Web/Areas/User/Controllers/ManageController.Profile.cs",
+            "IdentityToMvc.Web/Areas/User/Views/Manage/Index.cshtml",
+            "IdentityToMvc.Web/Areas/User/ViewModels/Manage/IndexViewModel.cs"
+          ]
+        },
+        {
+          "condition": "(!EmailChange)",
+          "exclude": [
+            "IdentityToMvc.Web/Areas/User/Controllers/ManageController.Email.cs",
+            "IdentityToMvc.Web/Areas/User/Views/Manage/Email.cshtml",
+            "IdentityToMvc.Web/Areas/User/Views/Manage/ConfirmEmailChange.cshtml",
+            "IdentityToMvc.Web/Areas/User/ViewModels/Manage/ChangeEmailViewModel.cs"
+          ]
+        },
+        {
+          "condition": "(!PersonalData)",
+          "exclude": [
+            "IdentityToMvc.Web/Areas/User/Controllers/ManageController.PersonalData.cs",
+            "IdentityToMvc.Web/Areas/User/Views/Manage/PersonalData.cshtml",
+            "IdentityToMvc.Web/Areas/User/Views/Manage/DeletePersonalData.cshtml",
+            "IdentityToMvc.Web/Areas/User/ViewModels/Manage/DeletePersonalDataViewModel.cs"
+          ]
+        },
+        {
+          "condition": "(!UnlockLink)",
+          "exclude": [
+            "IdentityToMvc.Web/Areas/User/Controllers/AccountController.UnlockLink.cs"
+          ]
+        },
+        {
+          "condition": "(!BreachedPasswords)",
+          "exclude": [
+            "IdentityToMvc.Web/Security/BreachedPasswordValidator.cs"
+          ]
+        },
+        {
+          "condition": "(!TwoFactor)",
+          "exclude": [
+            "IdentityToMvc.Web/Areas/User/Controllers/ManageController.TwoFactor.cs",
+            "IdentityToMvc.Web/Areas/User/Controllers/AccountController.TwoFactor.cs",
+            "IdentityToMvc.Web/Areas/User/Views/Manage/EnableAuthenticator.cshtml",
+            "IdentityToMvc.Web/Areas/User/Views/Manage/Disable2fa.cshtml",
+            "IdentityToMvc.Web/Areas/User/Views/Manage/ResetAuthenticator.cshtml",
+            "IdentityToMvc.Web/Areas/User/Views/Manage/GenerateRecoveryCodes.cshtml",
+            "IdentityToMvc.Web/Areas/User/Views/Manage/ShowRecoveryCodes.cshtml",
+            "IdentityToMvc.Web/Areas/User/Views/Manage/TwoFactorAuthentication.cshtml",
+            "IdentityToMvc.Web/Areas/User/Views/Account/LoginWith2fa.cshtml",
+            "IdentityToMvc.Web/Areas/User/Views/Account/LoginWithRecoveryCode.cshtml",
+            "IdentityToMvc.Web/Areas/User/ViewModels/Manage/EnableAuthenticatorViewModel.cs",
+            "IdentityToMvc.Web/Areas/User/ViewModels/Manage/TwoFactorAuthenticationViewModel.cs",
+            "IdentityToMvc.Web/Areas/User/ViewModels/Account/LoginWith2faViewModel.cs",
+            "IdentityToMvc.Web/Areas/User/ViewModels/Account/LoginWithRecoveryCodeViewModel.cs",
+            "IdentityToMvc.Web/Helpers/AuthenticatorHelper.cs",
+            "IdentityToMvc.Web/Security/ProtectedUserStore.cs",
+            "IdentityToMvc.Web/wwwroot/js/site.qrcode.js",
+            "IdentityToMvc.Web/wwwroot/lib/qrcodejs/**",
+            "IdentityToMvc.Tests/SecretsAtRestTests.cs"
+          ]
+        },
+        {
+          "condition": "(!Sudo)",
+          "exclude": [
+            "IdentityToMvc.Web/Areas/User/Controllers/ManageController.ConfirmIdentity.cs",
+            "IdentityToMvc.Web/Areas/User/Views/Manage/ConfirmIdentity.cshtml",
+            "IdentityToMvc.Web/Areas/User/ViewModels/Manage/ConfirmIdentityViewModel.cs"
+          ]
+        },
+        {
+          "condition": "(!Passkeys)",
+          "exclude": [
+            "IdentityToMvc.Web/Areas/User/Controllers/ManageController.Passkeys.cs",
+            "IdentityToMvc.Web/Areas/User/Controllers/AccountController.Passkeys.cs",
+            "IdentityToMvc.Web/Areas/User/Views/Manage/Passkeys.cshtml",
+            "IdentityToMvc.Web/Areas/User/ViewModels/Manage/PasskeysViewModel.cs",
+            "IdentityToMvc.Web/wwwroot/js/passkeys.js"
+          ]
+        },
+        {
+          "condition": "(!ExternalLogins)",
+          "exclude": [
+            "IdentityToMvc.Web/Areas/User/Controllers/AccountController.ExternalLogins.cs",
+            "IdentityToMvc.Web/Areas/User/Controllers/ManageController.ExternalLogins.cs",
+            "IdentityToMvc.Web/Areas/User/Views/Account/ExternalLogin.cshtml",
+            "IdentityToMvc.Web/Areas/User/Views/Manage/ExternalLogins.cshtml",
+            "IdentityToMvc.Web/Areas/User/Views/Shared/_ExternalLoginButtons.cshtml",
+            "IdentityToMvc.Web/Areas/User/ViewModels/Account/ExternalLoginViewModel.cs",
+            "IdentityToMvc.Web/Areas/User/ViewModels/Manage/ExternalLoginsViewModel.cs"
+          ]
+        },
+        {
+          "condition": "(!Devices)",
+          "exclude": [
+            "IdentityToMvc.Web/Areas/User/Controllers/ManageController.Devices.cs",
+            "IdentityToMvc.Web/Areas/User/Views/Manage/Devices.cshtml",
+            "IdentityToMvc.Web/Areas/User/ViewModels/Manage/DevicesViewModel.cs"
+          ]
+        },
+        {
+          "condition": "(!Activity)",
+          "exclude": [
+            "IdentityToMvc.Web/Areas/User/Controllers/ManageController.Activity.cs",
+            "IdentityToMvc.Web/Areas/User/Views/Manage/Activity.cshtml",
+            "IdentityToMvc.Web/Areas/User/ViewModels/Manage/ActivityViewModel.cs"
+          ]
+        },
+        {
+          "condition": "(!Admin)",
+          "exclude": [
+            "IdentityToMvc.Web/Areas/Admin/**",
+            "IdentityToMvc.Web/Security/AdminBootstrapper.cs",
+            "IdentityToMvc.Tests/AdminPanelTests.cs"
+          ]
+        },
+        {
+          "condition": "(!AdminRequiresMfa)",
+          "exclude": [
+            "IdentityToMvc.Web/Security/RequireAdminSecurityAttribute.cs"
+          ]
+        },
+        {
+          "condition": "(!LangSr)",
+          "exclude": [
+            "IdentityToMvc.Web/Resources/**",
+            "tools/**"
+          ]
+        },
+        {
+          "condition": "(!Tests)",
+          "exclude": [
+            "IdentityToMvc.Tests/**",
+            "global.json",
+            "IdentityToMvc.sln"
+          ]
+        },
+        {
+          "condition": "(!DbSqlServer)",
+          "exclude": [
+            "IdentityToMvc.Web/Data/Migrations/SqlServer/**",
+            "IdentityToMvc.Web/appsettings.Development.json"
+          ]
+        },
+        {
+          "condition": "(!DbPostgres)",
+          "exclude": [
+            "IdentityToMvc.Web/Data/Migrations/Postgres/**"
+          ]
+        },
+        {
+          "condition": "(!DbSqlite)",
+          "exclude": [
+            "IdentityToMvc.Web/Data/Migrations/Sqlite/**"
+          ]
+        }
+      ]
+    },
+    {
+      "source": ".template.config/content/common",
+      "target": "./"
+    },
+    {
+      "source": ".template.config/content/notests",
+      "target": "./",
+      "condition": "(!Tests)"
+    },
+    {
+      "source": ".template.config/content/postgres",
+      "target": "./",
+      "condition": "(DbPostgres)"
+    },
+    {
+      "source": ".template.config/content/sqlite",
+      "target": "./",
+      "condition": "(DbSqlite)"
+    }
+  ],
+  "SpecialCustomOperations": {
+    "**/*.cshtml": {
+      "operations": [
+        {
+          "type": "conditional",
+          "configuration": {
+            "if": [
+              "#if"
+            ],
+            "else": [
+              "#else"
+            ],
+            "elseif": [
+              "#elif"
+            ],
+            "endif": [
+              "#endif"
+            ],
+            "trim": true,
+            "wholeLine": true,
+            "evaluator": "C++"
+          }
+        }
+      ]
+    }
+  },
+  "primaryOutputs": [
+    {
+      "path": "IdentityToMvc.Web/IdentityToMvc.Web.csproj"
+    },
+    {
+      "path": "IdentityToMvc.Tests/IdentityToMvc.Tests.csproj",
+      "condition": "(Tests)"
+    }
+  ],
+  "postActions": [
+    {
+      "id": "restore",
+      "condition": "(!skipRestore)",
+      "description": "Restore NuGet packages required by this project.",
+      "manualInstructions": [
+        {
+          "text": "Run 'dotnet restore'"
+        }
+      ],
+      "actionId": "210D431B-A78B-4D2F-B762-4ED3E3EA9025",
+      "continueOnError": true
+    }
+  ]
+}

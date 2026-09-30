@@ -1,28 +1,29 @@
-﻿@{
-    ViewData["Title"] = "Recovery codes";
+﻿@model string[]
+@{
+    ViewData["Title"] = L["Recovery codes"].Value;
 }
 
 <partial name="_StatusMessage" model="@TempData["StatusMessage"] as string" />
-<h3>@ViewData["Title"]</h3>
+<h2 class="page-title">@L["Your recovery codes"]</h2>
+<p class="page-subtitle">@L["Each code can be used once to log in if you lose access to your authenticator app."]</p>
+
 <div class="alert alert-warning" role="alert">
-    <p>
-        <strong>Put these codes in a safe place.</strong>
-    </p>
-    <p>
-        If you lose your device and don't have the recovery codes you will lose access to your account.
-    </p>
-</div>
-<div class="row">
-    <div class="col-md-12">
-        @for (var row = 0; row < Model.RecoveryCodes.Length; row += 2)
-        {
-            <code class="recovery-code">@Model.RecoveryCodes[row]</code>
-
-            <text>&nbsp;</text>
-
-            <code class="recovery-code">@Model.RecoveryCodes[row + 1]</code>
-
-            <br />
-        }
+    <i class="bi bi-exclamation-triangle"></i>
+    <div>
+        <strong>@L["Save these codes now - they won't be shown again."]</strong>
+        <p>@L["If you lose your device and don't have the recovery codes you will lose access to your account."]</p>
     </div>
+</div>
+
+<div class="recovery-codes mb-3" id="recovery-codes" data-copy-text="@string.Join("\n", Model)">
+    @foreach (var code in Model)
+    {
+        <code class="recovery-code">@code</code>
+    }
+</div>
+
+<div class="d-flex flex-wrap gap-2">
+    <button type="button" class="btn btn-soft" data-copy-target="#recovery-codes"><i class="bi bi-clipboard"></i> @L["Copy"]</button>
+    <button type="button" class="btn btn-soft" data-download-target="#recovery-codes" data-filename="recovery-codes.txt"><i class="bi bi-download"></i> @L["Download"]</button>
+    <a class="btn btn-primary ms-auto" asp-area="User" asp-controller="Manage" asp-action="TwoFactorAuthentication">@L["I've saved them"]</a>
 </div>

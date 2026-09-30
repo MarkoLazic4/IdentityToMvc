@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace IdentityToMvc.Web.Areas.User.ViewModels.Manage
 {
@@ -9,16 +8,13 @@ namespace IdentityToMvc.Web.Areas.User.ViewModels.Manage
 
         public bool IsEmailConfirmed { get; set; }
 
-        [TempData]
-        public string? StatusMessage { get; set; }
-
         public InputModel Input { get; set; } = new();
 
 
         public class InputModel
         {
-            [Required]
-            [EmailAddress]
+            [Required(ErrorMessage = "The {0} field is required.")]
+            [EmailAddress(ErrorMessage = "The {0} field is not a valid e-mail address.")]
             [Display(Name = "New email")]
             public string NewEmail { get; set; } = string.Empty;
         }

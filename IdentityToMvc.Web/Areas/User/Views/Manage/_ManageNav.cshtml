@@ -1,54 +1,87 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @inject SignInManager<IdentityUser> SignInManager
+@inject Microsoft.Extensions.Options.IOptionsMonitor<SecurityOptions> SecurityOptions
 @{
     var hasExternalLogins = (await SignInManager.GetExternalAuthenticationSchemesAsync()).Any();
     var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
-    var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
-    var currentArea = ViewContext.RouteData.Values["area"]?.ToString() ?? "";
+    var options = SecurityOptions.CurrentValue;
 
-    // Lokalna funkcija koja capture-uje currentAction/controller/area
-    Func<string, string, string, string> NavActive = (area, controller, action) =>
-    {
-        if (!string.IsNullOrEmpty(area) && !string.Equals(area.ToLowerInvariant(), currentArea, StringComparison.OrdinalIgnoreCase))
-            return "";
-        if (!string.IsNullOrEmpty(controller) && !string.Equals(controller.ToLowerInvariant(), currentController, StringComparison.OrdinalIgnoreCase))
-            return "";
-        return string.Equals((action ?? "").ToLowerInvariant(), currentAction, StringComparison.OrdinalIgnoreCase) ? "active" : "";
-    };
+    // Pages that belong to a nav section, so sub-pages keep their section highlighted
+    string NavActive(params string[] actions) =>
+        actions.Any(a => string.Equals(a, currentAction, StringComparison.OrdinalIgnoreCase)) ? "active" : "";
 }
 
-<ul class="nav nav-pills flex-column">
-    <li class="nav-item">
-        <a asp-area="User" asp-controller="Manage" asp-action="Index" class="nav-link @NavActive("User", "Manage", "Index")" id="profile">
-            Profile
-        </a>
-    </li>
-    <li class="nav-item">
-        <a asp-area="User" asp-controller="Manage" asp-action="Email" class="nav-link @NavActive("User", "Manage", "Email")" id="email">
-            Email
-        </a>
-    </li>
-    <li class="nav-item">
-        <a asp-area="User" asp-controller="Manage" asp-action="ChangePassword" class="nav-link @NavActive("User", "Manage", "ChangePassword")" id="change-password">
-            Password
-        </a>
-    </li>
-    @if (hasExternalLogins)
-    {
-        <li id="external-logins" class="nav-item">
-            <a asp-area="User" asp-controller="Manage" asp-action="ExternalLogins" id="external-login" class="nav-link @NavActive("User", "Manage", "ExternalLogins")">
-                External logins
+<nav class="card manage-nav" aria-label="@L["Account settings"]">
+    <ul class="nav nav-pills flex-column gap-1">
+        @*#if (Profile)*@
+        <li class="nav-item">
+            <a asp-area="User" asp-controller="Manage" asp-action="Index" class="nav-link @NavActive("Index")" id="profile">
+                <i class="bi bi-person"></i> @L["Profile"]
             </a>
         </li>
-    }
-    <li class="nav-item">
-        <a asp-area="User" asp-controller="Manage" asp-action="TwoFactorAuthentication" class="nav-link @NavActive("User", "Manage", "TwoFactorAuthentication")" id="two-factor">
-            Two-factor authentication
-        </a>
-    </li>
-    <li class="nav-item">
-        <a asp-area="User" asp-controller="Manage" asp-action="PersonalData" class="nav-link @NavActive("User", "Manage", "PersonalData")" id="personal-data">
-            Personal data
-        </a>
-    </li>
-</ul>
+        @*#endif*@
+        @*#if (EmailChange)*@
+        <li class="nav-item">
+            <a asp-area="User" asp-controller="Manage" asp-action="Email" class="nav-link @NavActive("Email", "ChangeEmail", "SendVerificationEmail")" id="email">
+                <i class="bi bi-envelope"></i> @L["Email"]
+            </a>
+        </li>
+        @*#endif*@
+        <li class="nav-item">
+            <a asp-area="User" asp-controller="Manage" asp-action="ChangePassword" class="nav-link @NavActive("ChangePassword", "SetPassword")" id="change-password">
+                <i class="bi bi-key"></i> @L["Password"]
+            </a>
+        </li>
+        @*#if (ExternalLogins)*@
+        @if (hasExternalLogins)
+        {
+            <li id="external-logins" class="nav-item">
+                <a asp-area="User" asp-controller="Manage" asp-action="ExternalLogins" id="external-login" class="nav-link @NavActive("ExternalLogins")">
+                    <i class="bi bi-link-45deg"></i> @L["External logins"]
+                </a>
+            </li>
+        }
+        @*#endif*@
+        @*#if (TwoFactor)*@
+        @if (options.EnableTwoFactor)
+        {
+            <li class="nav-item">
+                <a asp-area="User" asp-controller="Manage" asp-action="TwoFactorAuthentication" class="nav-link @NavActive("TwoFactorAuthentication", "EnableAuthenticator", "Disable2fa", "ResetAuthenticator", "GenerateRecoveryCodes", "ShowRecoveryCodes")" id="two-factor">
+                    <i class="bi bi-shield-lock"></i> @L["Two-factor authentication"]
+                </a>
+            </li>
+        }
+        @*#endif*@
+        @*#if (Passkeys)*@
+        @if (options.EnablePasskeys)
+        {
+            <li class="nav-item">
+                <a asp-area="User" asp-controller="Manage" asp-action="Passkeys" class="nav-link @NavActive("Passkeys", "AddPasskey", "RemovePasskey")" id="passkeys">
+                    <i class="bi bi-fingerprint"></i> @L["Passkeys"]
+                </a>
+            </li>
+        }
+        @*#endif*@
+        @*#if (Devices)*@
+        <li class="nav-item">
+            <a asp-area="User" asp-controller="Manage" asp-action="Devices" class="nav-link @NavActive("Devices", "RevokeSession")" id="devices">
+                <i class="bi bi-laptop"></i> @L["Devices"]
+            </a>
+        </li>
+        @*#endif*@
+        @*#if (Activity)*@
+        <li class="nav-item">
+            <a asp-area="User" asp-controller="Manage" asp-action="Activity" class="nav-link @NavActive("Activity")" id="activity">
+                <i class="bi bi-clock-history"></i> @L["Security activity"]
+            </a>
+        </li>
+        @*#endif*@
+        @*#if (PersonalData)*@
+        <li class="nav-item">
+            <a asp-area="User" asp-controller="Manage" asp-action="PersonalData" class="nav-link @NavActive("PersonalData", "DeletePersonalData")" id="personal-data">
+                <i class="bi bi-file-earmark-person"></i> @L["Personal data"]
+            </a>
+        </li>
+        @*#endif*@
+    </ul>
+</nav>

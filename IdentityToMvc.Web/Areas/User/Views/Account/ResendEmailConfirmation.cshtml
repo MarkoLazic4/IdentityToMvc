@@ -1,23 +1,31 @@
 ﻿@model IdentityToMvc.Web.Areas.User.ViewModels.Account.ResendEmailConfirmationViewModel
 @{
-    ViewData["Title"] = "Resend email confirmation";
+    ViewData["Title"] = L["Resend email confirmation"].Value;
 }
 
-<h1>@ViewData["Title"]</h1>
-<h2>Enter your email.</h2>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-area="User" asp-controller="Account" asp-action="ResendEmailConfirmation" method="post">
-            @Html.AntiForgeryToken()
-            <div asp-validation-summary="All" class="text-danger" role="alert"></div>
-            <div class="form-floating mb-3">
-                <input asp-for="Input.Email" class="form-control" aria-required="true" placeholder="name@example.com" />
-                <label asp-for="Input.Email" class="form-label"></label>
+<div class="auth-wrapper">
+    <div class="card auth-card">
+        <div class="auth-header">
+            <span class="icon-badge"><i class="bi bi-envelope-arrow-up"></i></span>
+            <h1>@L["Resend confirmation"]</h1>
+            <p>@L["Enter your email and we'll send you a link to finish setting up your account."]</p>
+        </div>
+
+        <partial name="_StatusMessage" model="@TempData["StatusMessage"] as string" />
+
+        <form asp-area="User" asp-controller="Account" asp-action="ResendEmailConfirmation" method="post" novalidate>
+            <div asp-validation-summary="ModelOnly" role="alert"></div>
+            <div class="form-floating mb-4">
+                <input asp-for="Input.Email" class="form-control" autocomplete="email" aria-required="true" placeholder="name@example.com" autofocus />
+                <label asp-for="Input.Email"></label>
                 <span asp-validation-for="Input.Email" class="text-danger"></span>
             </div>
-            <button type="submit" class="w-100 btn btn-lg btn-primary">Resend</button>
+            <button type="submit" class="w-100 btn btn-lg btn-primary">@L["Resend link"]</button>
         </form>
+    </div>
+
+    <div class="auth-footer">
+        <a asp-area="User" asp-controller="Account" asp-action="Login"><i class="bi bi-arrow-left"></i> @L["Back to log in"]</a>
     </div>
 </div>
 

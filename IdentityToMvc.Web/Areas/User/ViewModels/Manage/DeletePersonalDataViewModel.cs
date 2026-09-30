@@ -11,8 +11,9 @@ namespace IdentityToMvc.Web.Areas.User.ViewModels.Manage
 
         public class InputModel
         {
-            [Required]
+            [Required(ErrorMessage = "The {0} field is required.")]
             [DataType(DataType.Password)]
+            [Display(Name = "Password")]
             public string Password { get; set; } = string.Empty;
         }
     }

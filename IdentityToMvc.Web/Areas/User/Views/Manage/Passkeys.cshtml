@@ -1,0 +1,68 @@
+﻿@model IdentityToMvc.Web.Areas.User.ViewModels.Manage.PasskeysViewModel
+@{
+    ViewData["Title"] = L["Passkeys"].Value;
+}
+
+<h2 class="page-title">@L["Passkeys"]</h2>
+<p class="page-subtitle">@L["Log in with your fingerprint, face or device PIN instead of a password. Passkeys can't be phished and never leave your device."]</p>
+<partial name="_StatusMessage" model="@TempData["StatusMessage"] as string" />
+
+<div class="alert alert-warning" role="alert" data-passkey-unsupported hidden>
+    <i class="bi bi-exclamation-triangle"></i>
+    <div>@L["This browser doesn't support passkeys."]</div>
+</div>
+
+@if (Model.Passkeys.Count == 0)
+{
+    <div class="text-center py-4 text-muted" id="no-passkeys">
+        <span class="icon-badge mb-3"><i class="bi bi-fingerprint"></i></span>
+        <p class="mb-0">@L["You don't have any passkeys yet."]</p>
+    </div>
+}
+else
+{
+    @foreach (var passkey in Model.Passkeys)
+    {
+        <div class="setting-row passkey-row">
+            <div class="d-flex gap-3 align-items-center min-w-0">
+                <span class="icon-badge"><i class="bi bi-key-fill"></i></span>
+                <div class="min-w-0">
+                    <h3 class="text-truncate passkey-name">@passkey.Name</h3>
+                    <p>
+                        @L["Added {0}", passkey.CreatedAt.ToLocalTime().ToString("d")]
+                        @if (passkey.IsBackedUp)
+                        {
+                            <span class="ms-2"><i class="bi bi-cloud-check"></i> @L["Synced"]</span>
+                        }
+                    </p>
+                </div>
+            </div>
+            <form asp-area="User" asp-controller="Manage" asp-action="RemovePasskey" method="post"
+                  data-confirm="@L["Remove the passkey \"{0}\"?", passkey.Name]">
+                <input type="hidden" name="id" value="@passkey.Id" />
+                <button type="submit" class="btn btn-outline-danger">@L["Remove"]</button>
+            </form>
+        </div>
+    }
+}
+
+@if (Model.Passkeys.Count < Model.MaxPasskeys)
+{
+    <form id="add-passkey-form" asp-area="User" asp-controller="Manage" asp-action="AddPasskey" method="post" class="mt-4 col-xl-8"
+          data-options-url="@Url.Action("PasskeyCreationOptions", "Manage", new { area = "User" })" data-passkey-supported>
+        <input type="hidden" name="credentialJson" />
+        <div class="input-group">
+            <input type="text" name="name" id="passkey-name" class="form-control" maxlength="50" placeholder="@L["Name, e.g. My laptop"]" aria-label="@L["Passkey name"]" />
+            <button type="submit" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i> @L["Add a passkey"]</button>
+        </div>
+        <div id="passkey-error" class="text-danger small mt-2" role="alert" hidden></div>
+    </form>
+}
+else
+{
+    <p class="text-muted mt-4">@L["You have reached the maximum of {0} passkeys.", Model.MaxPasskeys]</p>
+}
+
+@section Scripts {
+    <script src="~/js/passkeys.js" asp-append-version="true"></script>
+}

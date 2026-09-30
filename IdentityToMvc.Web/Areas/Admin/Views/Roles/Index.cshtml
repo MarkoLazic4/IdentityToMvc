@@ -1,0 +1,39 @@
+﻿@model RolesViewModel
+@{
+    ViewData["Title"] = L["Roles"].Value;
+}
+
+<h2 class="page-title">@L["Roles"]</h2>
+<p class="page-subtitle">@L["Protect your own pages with [Authorize(Roles = \"RoleName\")] and assign roles to users here."]</p>
+<partial name="_StatusMessage" model="@TempData["StatusMessage"] as string" />
+
+@foreach (var role in Model.Roles)
+{
+    <div class="setting-row">
+        <div class="d-flex gap-3 align-items-center">
+            <span class="icon-badge"><i class="bi bi-person-badge"></i></span>
+            <div>
+                <h3>@role.Name</h3>
+                <p>@L["{0} users", role.UserCount]</p>
+            </div>
+        </div>
+        @if (!role.IsProtected)
+        {
+            <form asp-area="Admin" asp-controller="Roles" asp-action="Delete" method="post" data-confirm="@L["Delete this role? Users lose it immediately."]">
+                <input type="hidden" name="name" value="@role.Name" />
+                <button type="submit" class="btn btn-outline-danger">@L["Delete"]</button>
+            </form>
+        }
+        else
+        {
+            <span class="small text-muted">@L["Built-in"]</span>
+        }
+    </div>
+}
+
+<form asp-area="Admin" asp-controller="Roles" asp-action="Create" method="post" class="mt-4 col-xl-8" id="create-role-form">
+    <div class="input-group">
+        <input type="text" name="name" id="new-role" class="form-control" maxlength="64" placeholder="@L["New role, e.g. Editor"]" aria-label="@L["New role"]" />
+        <button type="submit" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i> @L["Add role"]</button>
+    </div>
+</form>

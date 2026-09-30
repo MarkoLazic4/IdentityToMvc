@@ -1,6 +1,21 @@
 ﻿@{
-    ViewData["Title"] = "Privacy Policy";
+    ViewData["Title"] = L["Privacy Policy"].Value;
 }
-<h1>@ViewData["Title"]</h1>
 
-<p>Use this page to detail your site's privacy policy.</p>
+<div class="card p-4 p-md-5 mx-auto reading-width">
+    <span class="icon-badge mb-3"><i class="bi bi-shield-check"></i></span>
+    <h1 class="h2">@ViewData["Title"]</h1>
+    <p class="text-muted">@L["Use this page to detail your site's privacy policy."]</p>
+
+    <h2 class="h5 mt-4">@L["What we store"]</h2>
+    <p class="text-muted">
+        @L["Your email address, a hashed password, an optional phone number and the security settings you choose (such as two-factor authentication and linked external logins)."]
+        @L["For your security we also keep a log of sign-ins and account changes with the IP address and device, and a list of signed-in devices."]
+    </p>
+
+    <h2 class="h5 mt-4">@L["Your rights"]</h2>
+    <p class="text-muted mb-0">
+        @L["You can download or permanently delete your personal data at any time from"]
+        <a asp-area="User" asp-controller="Manage" asp-action="PersonalData">@L["Manage account"] &rarr; @L["Personal data"]</a>.
+    </p>
+</div>

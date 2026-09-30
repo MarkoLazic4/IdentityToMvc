@@ -1,0 +1,710 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Marko Lazić",
+  "classifications": [
+    "Web",
+    "MVC",
+    "Identity"
+  ],
+  "identity": "IdentityToMvc.Templates.Feature",
+  "name": "Add a feature to an IdentityToMvc app",
+  "description": "Copies the files of one feature (admin panel, passkeys, two-factor...) into an app created with \"dotnet new identitymvc\", plus ADD-<feature>.md with the code to add to the shared files. Run it in the solution folder with the same -n and options the app was created with.",
+  "shortName": "identitymvc-add",
+  "sourceName": "IdentityToMvc",
+  "tags": {
+    "language": "C#",
+    "type": "item"
+  },
+  "symbols": {
+    "tier": {
+      "type": "parameter",
+      "datatype": "choice",
+      "defaultValue": "standard",
+      "displayName": "Package",
+      "description": "Which set of features to start from. The other options add features on top of it.",
+      "choices": [
+        {
+          "choice": "basic",
+          "displayName": "Basic",
+          "description": "Registration, email confirmation, login, forgot password, lockout and password change."
+        },
+        {
+          "choice": "standard",
+          "displayName": "Standard",
+          "description": "Basic + 2FA, devices, security activity, email change, personal data, security emails, breached-password check, sudo mode."
+        },
+        {
+          "choice": "full",
+          "displayName": "Full",
+          "description": "Standard + passkeys and the admin panel."
+        }
+      ]
+    },
+    "db": {
+      "type": "parameter",
+      "datatype": "choice",
+      "defaultValue": "sqlserver",
+      "displayName": "Database",
+      "description": "Database provider (the matching migrations are included).",
+      "choices": [
+        {
+          "choice": "sqlserver",
+          "displayName": "SQL Server"
+        },
+        {
+          "choice": "postgres",
+          "displayName": "PostgreSQL"
+        },
+        {
+          "choice": "sqlite",
+          "displayName": "SQLite"
+        }
+      ]
+    },
+    "lang": {
+      "type": "parameter",
+      "datatype": "choice",
+      "defaultValue": "both",
+      "displayName": "Language",
+      "description": "User interface language.",
+      "choices": [
+        {
+          "choice": "both",
+          "displayName": "Serbian + English",
+          "description": "Both, with a language switch (Serbian by default)."
+        },
+        {
+          "choice": "sr",
+          "displayName": "Serbian"
+        },
+        {
+          "choice": "en",
+          "displayName": "English"
+        }
+      ]
+    },
+    "optProfile": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "false",
+      "description": "Add the profile page (phone number).",
+      "displayName": "Profile page"
+    },
+    "optEmailChange": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "false",
+      "description": "Add changing the email address.",
+      "displayName": "Email change"
+    },
+    "optPersonalData": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "false",
+      "description": "Add personal data download and account deletion (GDPR).",
+      "displayName": "Personal data"
+    },
+    "optUnlockLink": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "false",
+      "description": "Add the unlock link in the \"account locked\" email.",
+      "displayName": "Unlock link"
+    },
+    "optBreachedPasswords": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "false",
+      "description": "Add the Have I Been Pwned breached-password check.",
+      "displayName": "Breached password check"
+    },
+    "optTwoFactor": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "false",
+      "description": "Add two-factor authentication (authenticator app + recovery codes).",
+      "displayName": "Two-factor authentication"
+    },
+    "optSudo": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "false",
+      "description": "Add sudo mode (password again before sensitive changes).",
+      "displayName": "Sudo mode"
+    },
+    "optPasskeys": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "false",
+      "description": "Add passkeys (fingerprint, face, device PIN).",
+      "displayName": "Passkeys"
+    },
+    "optGoogle": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "false",
+      "description": "Add Google login.",
+      "displayName": "Google login"
+    },
+    "optFacebook": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "false",
+      "description": "Add Facebook login.",
+      "displayName": "Facebook login"
+    },
+    "optNotifications": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "false",
+      "description": "Add security notification emails (password changed, new device...).",
+      "displayName": "Security emails"
+    },
+    "optDevices": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "false",
+      "description": "Add the Devices page (signed-in devices, sign out one or all).",
+      "displayName": "Devices page"
+    },
+    "optActivity": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "false",
+      "description": "Add the Security activity page.",
+      "displayName": "Security activity page"
+    },
+    "optAdmin": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "false",
+      "description": "Add the admin panel (users, roles, audit log).",
+      "displayName": "Admin panel"
+    },
+    "optTests": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "false",
+      "description": "Add the integration test project.",
+      "displayName": "Tests"
+    },
+    "feature": {
+      "type": "parameter",
+      "datatype": "choice",
+      "isRequired": true,
+      "displayName": "Feature",
+      "description": "The feature to add to an app created from the identitymvc template.",
+      "choices": [
+        {
+          "choice": "profile",
+          "displayName": "Profile page"
+        },
+        {
+          "choice": "email-change",
+          "displayName": "Email change"
+        },
+        {
+          "choice": "personal-data",
+          "displayName": "Personal data (GDPR)"
+        },
+        {
+          "choice": "unlock-link",
+          "displayName": "Unlock link"
+        },
+        {
+          "choice": "breached-passwords",
+          "displayName": "Breached password check"
+        },
+        {
+          "choice": "two-factor",
+          "displayName": "Two-factor authentication"
+        },
+        {
+          "choice": "sudo",
+          "displayName": "Sudo mode"
+        },
+        {
+          "choice": "passkeys",
+          "displayName": "Passkeys"
+        },
+        {
+          "choice": "google",
+          "displayName": "Google login"
+        },
+        {
+          "choice": "facebook",
+          "displayName": "Facebook login"
+        },
+        {
+          "choice": "notifications",
+          "displayName": "Security emails"
+        },
+        {
+          "choice": "devices",
+          "displayName": "Devices page"
+        },
+        {
+          "choice": "activity",
+          "displayName": "Security activity page"
+        },
+        {
+          "choice": "admin",
+          "displayName": "Admin panel"
+        },
+        {
+          "choice": "tests",
+          "displayName": "Tests"
+        }
+      ]
+    },
+    "Profile": {
+      "type": "computed",
+      "value": "((tier != \"basic\") || (optProfile || feature == \"profile\"))"
+    },
+    "EmailChange": {
+      "type": "computed",
+      "value": "((tier != \"basic\") || (optEmailChange || feature == \"email-change\"))"
+    },
+    "PersonalData": {
+      "type": "computed",
+      "value": "((tier != \"basic\") || (optPersonalData || feature == \"personal-data\"))"
+    },
+    "UnlockLink": {
+      "type": "computed",
+      "value": "((tier != \"basic\") || (optUnlockLink || feature == \"unlock-link\"))"
+    },
+    "BreachedPasswords": {
+      "type": "computed",
+      "value": "((tier != \"basic\") || (optBreachedPasswords || feature == \"breached-passwords\"))"
+    },
+    "TwoFactor": {
+      "type": "computed",
+      "value": "((tier != \"basic\") || (optTwoFactor || feature == \"two-factor\"))"
+    },
+    "Sudo": {
+      "type": "computed",
+      "value": "((tier != \"basic\") || (optSudo || feature == \"sudo\"))"
+    },
+    "Notifications": {
+      "type": "computed",
+      "value": "((tier != \"basic\") || (optNotifications || feature == \"notifications\"))"
+    },
+    "Devices": {
+      "type": "computed",
+      "value": "((tier != \"basic\") || (optDevices || feature == \"devices\"))"
+    },
+    "Activity": {
+      "type": "computed",
+      "value": "((tier != \"basic\") || (optActivity || feature == \"activity\"))"
+    },
+    "Tests": {
+      "type": "computed",
+      "value": "((tier != \"basic\") || (optTests || feature == \"tests\"))"
+    },
+    "Passkeys": {
+      "type": "computed",
+      "value": "((tier == \"full\") || (optPasskeys || feature == \"passkeys\"))"
+    },
+    "Admin": {
+      "type": "computed",
+      "value": "((tier == \"full\") || (optAdmin || feature == \"admin\"))"
+    },
+    "Google": {
+      "type": "computed",
+      "value": "((optGoogle || feature == \"google\"))"
+    },
+    "Facebook": {
+      "type": "computed",
+      "value": "((optFacebook || feature == \"facebook\"))"
+    },
+    "ExternalLogins": {
+      "type": "computed",
+      "value": "((optGoogle || feature == \"google\") || (optFacebook || feature == \"facebook\"))"
+    },
+    "LangSr": {
+      "type": "computed",
+      "value": "(lang != \"en\")"
+    },
+    "LangEn": {
+      "type": "computed",
+      "value": "(lang != \"sr\")"
+    },
+    "LangBoth": {
+      "type": "computed",
+      "value": "(lang == \"both\")"
+    },
+    "DbSqlServer": {
+      "type": "computed",
+      "value": "(db == \"sqlserver\")"
+    },
+    "DbPostgres": {
+      "type": "computed",
+      "value": "(db == \"postgres\")"
+    },
+    "DbSqlite": {
+      "type": "computed",
+      "value": "(db == \"sqlite\")"
+    },
+    "AdminRequiresMfa": {
+      "type": "computed",
+      "value": "(((tier == \"full\") || (optAdmin || feature == \"admin\")) && (((tier != \"basic\") || (optTwoFactor || feature == \"two-factor\")) || ((tier == \"full\") || (optPasskeys || feature == \"passkeys\"))))"
+    },
+    "templateRepo": {
+      "type": "generated",
+      "generator": "constant",
+      "replaces": "TEMPLATE_REPO_URL",
+      "parameters": {
+        "value": "https://github.com/MarkoLazic4/IdentityToMvc"
+      }
+    },
+    "templateName": {
+      "type": "generated",
+      "generator": "constant",
+      "replaces": "TEMPLATE_NAME",
+      "parameters": {
+        "value": "IdentityToMvc"
+      }
+    }
+  },
+  "sources": [
+    {
+      "source": "../../",
+      "target": "./",
+      "include": [
+        "__nothing__"
+      ],
+      "exclude": [
+        "**/[Bb]in/**",
+        "**/[Oo]bj/**"
+      ],
+      "modifiers": [
+        {
+          "condition": "(feature == \"profile\" && Profile)",
+          "include": [
+            "IdentityToMvc.Web/Areas/User/Controllers/ManageController.Profile.cs",
+            "IdentityToMvc.Web/Areas/User/ViewModels/Manage/IndexViewModel.cs",
+            "IdentityToMvc.Web/Areas/User/Views/Manage/Index.cshtml"
+          ]
+        },
+        {
+          "condition": "(feature == \"email-change\" && EmailChange)",
+          "include": [
+            "IdentityToMvc.Web/Areas/User/Controllers/ManageController.Email.cs",
+            "IdentityToMvc.Web/Areas/User/ViewModels/Manage/ChangeEmailViewModel.cs",
+            "IdentityToMvc.Web/Areas/User/Views/Manage/ConfirmEmailChange.cshtml",
+            "IdentityToMvc.Web/Areas/User/Views/Manage/Email.cshtml"
+          ]
+        },
+        {
+          "condition": "(feature == \"personal-data\" && PersonalData)",
+          "include": [
+            "IdentityToMvc.Web/Areas/User/Controllers/ManageController.PersonalData.cs",
+            "IdentityToMvc.Web/Areas/User/ViewModels/Manage/DeletePersonalDataViewModel.cs",
+            "IdentityToMvc.Web/Areas/User/Views/Manage/DeletePersonalData.cshtml",
+            "IdentityToMvc.Web/Areas/User/Views/Manage/PersonalData.cshtml"
+          ]
+        },
+        {
+          "condition": "(feature == \"unlock-link\" && UnlockLink)",
+          "include": [
+            "IdentityToMvc.Web/Areas/User/Controllers/AccountController.UnlockLink.cs"
+          ]
+        },
+        {
+          "condition": "(feature == \"breached-passwords\" && BreachedPasswords)",
+          "include": [
+            "IdentityToMvc.Web/Security/BreachedPasswordValidator.cs"
+          ]
+        },
+        {
+          "condition": "(feature == \"two-factor\" && TwoFactor)",
+          "include": [
+            "IdentityToMvc.Web/Areas/User/Controllers/AccountController.TwoFactor.cs",
+            "IdentityToMvc.Web/Areas/User/Controllers/ManageController.TwoFactor.cs",
+            "IdentityToMvc.Web/Areas/User/ViewModels/Account/LoginWith2faViewModel.cs",
+            "IdentityToMvc.Web/Areas/User/ViewModels/Account/LoginWithRecoveryCodeViewModel.cs",
+            "IdentityToMvc.Web/Areas/User/ViewModels/Manage/EnableAuthenticatorViewModel.cs",
+            "IdentityToMvc.Web/Areas/User/ViewModels/Manage/TwoFactorAuthenticationViewModel.cs",
+            "IdentityToMvc.Web/Areas/User/Views/Account/LoginWith2fa.cshtml",
+            "IdentityToMvc.Web/Areas/User/Views/Account/LoginWithRecoveryCode.cshtml",
+            "IdentityToMvc.Web/Areas/User/Views/Manage/Disable2fa.cshtml",
+            "IdentityToMvc.Web/Areas/User/Views/Manage/EnableAuthenticator.cshtml",
+            "IdentityToMvc.Web/Areas/User/Views/Manage/GenerateRecoveryCodes.cshtml",
+            "IdentityToMvc.Web/Areas/User/Views/Manage/ResetAuthenticator.cshtml",
+            "IdentityToMvc.Web/Areas/User/Views/Manage/ShowRecoveryCodes.cshtml",
+            "IdentityToMvc.Web/Areas/User/Views/Manage/TwoFactorAuthentication.cshtml",
+            "IdentityToMvc.Web/Helpers/AuthenticatorHelper.cs",
+            "IdentityToMvc.Web/Security/ProtectedUserStore.cs",
+            "IdentityToMvc.Web/wwwroot/js/site.qrcode.js",
+            "IdentityToMvc.Web/wwwroot/lib/qrcodejs/**"
+          ]
+        },
+        {
+          "condition": "(feature == \"two-factor\" && TwoFactor && Tests)",
+          "include": [
+            "IdentityToMvc.Tests/SecretsAtRestTests.cs"
+          ]
+        },
+        {
+          "condition": "(feature == \"sudo\" && Sudo)",
+          "include": [
+            "IdentityToMvc.Web/Areas/User/Controllers/ManageController.ConfirmIdentity.cs",
+            "IdentityToMvc.Web/Areas/User/ViewModels/Manage/ConfirmIdentityViewModel.cs",
+            "IdentityToMvc.Web/Areas/User/Views/Manage/ConfirmIdentity.cshtml"
+          ]
+        },
+        {
+          "condition": "(feature == \"passkeys\" && Passkeys)",
+          "include": [
+            "IdentityToMvc.Web/Areas/User/Controllers/AccountController.Passkeys.cs",
+            "IdentityToMvc.Web/Areas/User/Controllers/ManageController.Passkeys.cs",
+            "IdentityToMvc.Web/Areas/User/ViewModels/Manage/PasskeysViewModel.cs",
+            "IdentityToMvc.Web/Areas/User/Views/Manage/Passkeys.cshtml",
+            "IdentityToMvc.Web/wwwroot/js/passkeys.js"
+          ]
+        },
+        {
+          "condition": "(feature == \"google\" && ExternalLogins && !optFacebook)",
+          "include": [
+            "IdentityToMvc.Web/Areas/User/Controllers/AccountController.ExternalLogins.cs",
+            "IdentityToMvc.Web/Areas/User/Controllers/ManageController.ExternalLogins.cs",
+            "IdentityToMvc.Web/Areas/User/ViewModels/Account/ExternalLoginViewModel.cs",
+            "IdentityToMvc.Web/Areas/User/ViewModels/Manage/ExternalLoginsViewModel.cs",
+            "IdentityToMvc.Web/Areas/User/Views/Account/ExternalLogin.cshtml",
+            "IdentityToMvc.Web/Areas/User/Views/Manage/ExternalLogins.cshtml",
+            "IdentityToMvc.Web/Areas/User/Views/Shared/_ExternalLoginButtons.cshtml"
+          ]
+        },
+        {
+          "condition": "(feature == \"facebook\" && ExternalLogins && !optGoogle)",
+          "include": [
+            "IdentityToMvc.Web/Areas/User/Controllers/AccountController.ExternalLogins.cs",
+            "IdentityToMvc.Web/Areas/User/Controllers/ManageController.ExternalLogins.cs",
+            "IdentityToMvc.Web/Areas/User/ViewModels/Account/ExternalLoginViewModel.cs",
+            "IdentityToMvc.Web/Areas/User/ViewModels/Manage/ExternalLoginsViewModel.cs",
+            "IdentityToMvc.Web/Areas/User/Views/Account/ExternalLogin.cshtml",
+            "IdentityToMvc.Web/Areas/User/Views/Manage/ExternalLogins.cshtml",
+            "IdentityToMvc.Web/Areas/User/Views/Shared/_ExternalLoginButtons.cshtml"
+          ]
+        },
+        {
+          "condition": "(feature == \"devices\" && Devices)",
+          "include": [
+            "IdentityToMvc.Web/Areas/User/Controllers/ManageController.Devices.cs",
+            "IdentityToMvc.Web/Areas/User/ViewModels/Manage/DevicesViewModel.cs",
+            "IdentityToMvc.Web/Areas/User/Views/Manage/Devices.cshtml"
+          ]
+        },
+        {
+          "condition": "(feature == \"activity\" && Activity)",
+          "include": [
+            "IdentityToMvc.Web/Areas/User/Controllers/ManageController.Activity.cs",
+            "IdentityToMvc.Web/Areas/User/ViewModels/Manage/ActivityViewModel.cs",
+            "IdentityToMvc.Web/Areas/User/Views/Manage/Activity.cshtml"
+          ]
+        },
+        {
+          "condition": "(feature == \"admin\" && Admin)",
+          "include": [
+            "IdentityToMvc.Web/Areas/Admin/**",
+            "IdentityToMvc.Web/Security/AdminBootstrapper.cs"
+          ]
+        },
+        {
+          "condition": "(feature == \"admin\" && Admin && Tests)",
+          "include": [
+            "IdentityToMvc.Tests/AdminPanelTests.cs"
+          ]
+        },
+        {
+          "condition": "(feature == \"admin\" && AdminRequiresMfa)",
+          "include": [
+            "IdentityToMvc.Web/Security/RequireAdminSecurityAttribute.cs"
+          ]
+        },
+        {
+          "condition": "(feature == \"tests\" && Tests)",
+          "include": [
+            "global.json"
+          ]
+        },
+        {
+          "condition": "(feature == \"tests\" && Tests && Tests)",
+          "include": [
+            "IdentityToMvc.Tests/**"
+          ]
+        },
+        {
+          "condition": "(feature == \"tests\" && !TwoFactor)",
+          "exclude": [
+            "IdentityToMvc.Tests/SecretsAtRestTests.cs"
+          ]
+        },
+        {
+          "condition": "(feature == \"tests\" && !Admin)",
+          "exclude": [
+            "IdentityToMvc.Tests/AdminPanelTests.cs"
+          ]
+        }
+      ]
+    },
+    {
+      "source": "./instructions",
+      "target": "./",
+      "include": [
+        "ADD-profile.md"
+      ],
+      "condition": "(feature == \"profile\")"
+    },
+    {
+      "source": "./instructions",
+      "target": "./",
+      "include": [
+        "ADD-email-change.md"
+      ],
+      "condition": "(feature == \"email-change\")"
+    },
+    {
+      "source": "./instructions",
+      "target": "./",
+      "include": [
+        "ADD-personal-data.md"
+      ],
+      "condition": "(feature == \"personal-data\")"
+    },
+    {
+      "source": "./instructions",
+      "target": "./",
+      "include": [
+        "ADD-unlock-link.md"
+      ],
+      "condition": "(feature == \"unlock-link\")"
+    },
+    {
+      "source": "./instructions",
+      "target": "./",
+      "include": [
+        "ADD-breached-passwords.md"
+      ],
+      "condition": "(feature == \"breached-passwords\")"
+    },
+    {
+      "source": "./instructions",
+      "target": "./",
+      "include": [
+        "ADD-two-factor.md"
+      ],
+      "condition": "(feature == \"two-factor\")"
+    },
+    {
+      "source": "./instructions",
+      "target": "./",
+      "include": [
+        "ADD-sudo.md"
+      ],
+      "condition": "(feature == \"sudo\")"
+    },
+    {
+      "source": "./instructions",
+      "target": "./",
+      "include": [
+        "ADD-passkeys.md"
+      ],
+      "condition": "(feature == \"passkeys\")"
+    },
+    {
+      "source": "./instructions",
+      "target": "./",
+      "include": [
+        "ADD-google.md"
+      ],
+      "condition": "(feature == \"google\")"
+    },
+    {
+      "source": "./instructions",
+      "target": "./",
+      "include": [
+        "ADD-facebook.md"
+      ],
+      "condition": "(feature == \"facebook\")"
+    },
+    {
+      "source": "./instructions",
+      "target": "./",
+      "include": [
+        "ADD-notifications.md"
+      ],
+      "condition": "(feature == \"notifications\")"
+    },
+    {
+      "source": "./instructions",
+      "target": "./",
+      "include": [
+        "ADD-devices.md"
+      ],
+      "condition": "(feature == \"devices\")"
+    },
+    {
+      "source": "./instructions",
+      "target": "./",
+      "include": [
+        "ADD-activity.md"
+      ],
+      "condition": "(feature == \"activity\")"
+    },
+    {
+      "source": "./instructions",
+      "target": "./",
+      "include": [
+        "ADD-admin.md"
+      ],
+      "condition": "(feature == \"admin\")"
+    },
+    {
+      "source": "./instructions",
+      "target": "./",
+      "include": [
+        "ADD-tests.md"
+      ],
+      "condition": "(feature == \"tests\")"
+    }
+  ],
+  "SpecialCustomOperations": {
+    "**/*.cshtml": {
+      "operations": [
+        {
+          "type": "conditional",
+          "configuration": {
+            "if": [
+              "#if"
+            ],
+            "else": [
+              "#else"
+            ],
+            "elseif": [
+              "#elif"
+            ],
+            "endif": [
+              "#endif"
+            ],
+            "trim": true,
+            "wholeLine": true,
+            "evaluator": "C++"
+          }
+        }
+      ]
+    }
+  },
+  "postActions": [
+    {
+      "description": "Finish the setup",
+      "actionId": "AC1156F7-BB77-4DB8-B28F-24EEBCCA1E5C",
+      "manualInstructions": [
+        {
+          "text": "Open ADD-<feature>.md in the solution folder and add the listed code to the shared files, then build."
+        }
+      ],
+      "continueOnError": true
+    }
+  ]
+}

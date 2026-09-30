@@ -1,0 +1,59 @@
+﻿@model IdentityToMvc.Web.Areas.User.ViewModels.Manage.DevicesViewModel
+@{
+    ViewData["Title"] = L["Devices"].Value;
+}
+
+<h2 class="page-title">@L["Devices"]</h2>
+<p class="page-subtitle">@L["Browsers and devices that are signed in to your account right now."]</p>
+<partial name="_StatusMessage" model="@TempData["StatusMessage"] as string" />
+
+@foreach (var device in Model.Devices)
+{
+    <div class="setting-row device-row">
+        <div class="d-flex gap-3 align-items-center min-w-0">
+            <span class="icon-badge"><i class="bi @(device.Device.Contains("iOS") || device.Device.Contains("Android") ? "bi-phone" : "bi-laptop")"></i></span>
+            <div class="min-w-0">
+                <h3 class="text-truncate">
+                    @device.Device
+                    @if (device.IsCurrent)
+                    {
+                        <span class="status-dot status-on ms-2">@L["This device"]</span>
+                    }
+                </h3>
+                <p>
+                    @L["Signed in {0}", device.CreatedAt.ToLocalTime().ToString("g")]
+                    &middot; @L["Last active {0}", device.LastSeenAt.ToLocalTime().ToString("g")]
+                    @if (!string.IsNullOrEmpty(device.IpAddress))
+                    {
+                        <text>&middot; @device.IpAddress</text>
+                    }
+                </p>
+            </div>
+        </div>
+        @if (!device.IsCurrent)
+        {
+            <form asp-area="User" asp-controller="Manage" asp-action="RevokeSession" method="post">
+                <input type="hidden" name="id" value="@device.Id" />
+                <button type="submit" class="btn btn-outline-danger">@L["Sign out"]</button>
+            </form>
+        }
+    </div>
+}
+
+@if (Model.Devices.Count == 0)
+{
+    <p class="text-muted">@L["No other devices are signed in."]</p>
+}
+
+<div class="danger-zone mt-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+            <h3 class="h6 mb-1">@L["Sign out of all other devices"]</h3>
+            <p class="small text-muted mb-0">@L["Ends every other session and forgets remembered 2FA browsers. You stay signed in here."]</p>
+        </div>
+        <form id="sign-out-everywhere-form" asp-area="User" asp-controller="Manage" asp-action="SignOutEverywhere" method="post"
+              data-confirm="@L["Sign out of all other devices?"]">
+            <button id="sign-out-everywhere" type="submit" class="btn btn-danger">@L["Sign out everywhere"]</button>
+        </form>
+    </div>
+</div>

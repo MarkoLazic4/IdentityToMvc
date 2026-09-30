@@ -1,0 +1,15 @@
+﻿@model string?
+@{
+    // Controllers set the message with this.StatusSuccess(...) / this.StatusError(...)
+    var isError = TempData[StatusMessageExtensions.IsErrorKey] as bool?
+        ?? (Model?.StartsWith("Error", StringComparison.OrdinalIgnoreCase) ?? false);
+}
+
+@if (!string.IsNullOrEmpty(Model))
+{
+    <div class="alert alert-@(isError ? "danger" : "success") alert-dismissible fade show" role="alert">
+        <i class="bi @(isError ? "bi-exclamation-circle-fill" : "bi-check-circle-fill")"></i>
+        <div class="flex-grow-1">@Model</div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@L["Close"]"></button>
+    </div>
+}

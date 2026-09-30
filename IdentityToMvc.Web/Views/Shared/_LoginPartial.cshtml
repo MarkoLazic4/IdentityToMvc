@@ -2,26 +2,55 @@
 
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
+@inject Microsoft.Extensions.Options.IOptionsMonitor<SecurityOptions> SecurityOptions
 
-<ul class="navbar-nav">
 @if (SignInManager.IsSignedIn(User))
 {
-    <li class="nav-item">
-        <a id="manage" class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Hello @UserManager.GetUserName(User)!</a>
-    </li>
-    <li class="nav-item">
-        <form id="logoutForm" class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
-            <button id="logout" type="submit" class="nav-link btn btn-link text-dark border-0">Logout</button>
-        </form>
-    </li>
+    var userName = UserManager.GetUserName(User) ?? "Account";
+    <div class="dropdown">
+        <button class="btn user-menu-toggle dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <span class="avatar" aria-hidden="true">@userName[..1].ToUpperInvariant()</span>
+            <span class="text-truncate user-name">@userName</span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+            <li>
+                <a id="manage" class="dropdown-item" asp-area="User" asp-controller="Manage" asp-action="Index" title="@L["Manage account"]">
+                    <i class="bi bi-person-gear me-2"></i>@L["Manage account"]
+                </a>
+            </li>
+            @*#if (TwoFactor)*@
+            @if (SecurityOptions.CurrentValue.EnableTwoFactor)
+            {
+                <li>
+                    <a class="dropdown-item" asp-area="User" asp-controller="Manage" asp-action="TwoFactorAuthentication">
+                        <i class="bi bi-shield-check me-2"></i>@L["Security"]
+                    </a>
+                </li>
+            }
+            @*#endif*@
+            @*#if (Admin)*@
+            @if (User.IsInRole(AdminBootstrapper.AdminRole))
+            {
+                <li>
+                    <a id="admin-panel" class="dropdown-item" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
+                        <i class="bi bi-speedometer2 me-2"></i>@L["Admin panel"]
+                    </a>
+                </li>
+            }
+            @*#endif*@
+            <li><hr class="dropdown-divider"></li>
+            <li>
+                <form id="logoutForm" method="post" asp-area="User" asp-controller="Account" asp-action="Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+                    <button id="logout" type="submit" class="dropdown-item text-danger">
+                        <i class="bi bi-box-arrow-right me-2"></i>@L["Log out"]
+                    </button>
+                </form>
+            </li>
+        </ul>
+    </div>
 }
 else
 {
-    <li class="nav-item">
-        <a class="nav-link text-dark" id="register" asp-area="Identity" asp-page="/Account/Register">Register</a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link text-dark" id="login" asp-area="Identity" asp-page="/Account/Login">Login</a>
-    </li>
+    <a class="btn btn-outline-primary" id="login" asp-area="User" asp-controller="Account" asp-action="Login">@L["Log in"]</a>
+    <a class="btn btn-primary" id="register" asp-area="User" asp-controller="Account" asp-action="Register">@L["Sign up"]</a>
 }
-</ul>

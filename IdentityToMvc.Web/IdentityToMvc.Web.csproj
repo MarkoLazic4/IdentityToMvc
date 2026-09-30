@@ -1,28 +1,66 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <!--#if (TemplateSourceOnly) -->
+  <!--
+    This repository is also a "dotnet new" template (see .template.config/template.json).
+    Optional features are wrapped in #if (Feature) blocks that the template removes when a feature
+    isn't chosen. Here every feature is switched on, so this project is the "full" package.
+  -->
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);Profile;EmailChange;PersonalData;UnlockLink;BreachedPasswords;TwoFactor;Sudo;Passkeys;ExternalLogins;Google;Facebook;Notifications;Devices;Activity;Admin;AdminRequiresMfa;LangSr;LangEn;LangBoth;DbSqlServer</DefineConstants>
+  </PropertyGroup>
+  <!--#endif -->
+
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.Facebook" Version="8.0.20" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="8.0.20" />
-    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.20" />
-    <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="8.0.20" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.9" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.9">
+    <PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" Version="10.0.12" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.12" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.12" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.11" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.9" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.9">
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.12">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.7" />
   </ItemGroup>
+
+  <!-- Database provider -->
+  <ItemGroup>
+    <!--#if (DbSqlServer) -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.12" />
+    <!--#endif -->
+    <!--#if (DbPostgres) -->
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+    <!--#endif -->
+    <!--#if (DbSqlite) -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.12" />
+    <!--#endif -->
+  </ItemGroup>
+
+  <!--#if (Google) -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="10.0.12" />
+  </ItemGroup>
+  <!--#endif -->
+  <!--#if (Facebook) -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Facebook" Version="10.0.12" />
+  </ItemGroup>
+  <!--#endif -->
+
+  <!--#if (TemplateSourceOnly) -->
+  <!-- Only the migrations of the chosen database are part of a generated project -->
+  <ItemGroup>
+    <Compile Remove="Data/Migrations/Postgres/**" />
+    <Compile Remove="Data/Migrations/Sqlite/**" />
+  </ItemGroup>
+  <!--#endif -->
 
 </Project>

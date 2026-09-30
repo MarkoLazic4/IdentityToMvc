@@ -1,24 +1,24 @@
-﻿@{
-    if (ViewData.TryGetValue("ParentLayout", out var parentLayout) && parentLayout != null)
-    {
-        Layout = parentLayout.ToString();
-    }
-    else
-    {
-        Layout = "~/Areas/User/Views/Shared/_Layout.cshtml";
-    }
+﻿@using Microsoft.AspNetCore.Identity
+@inject UserManager<IdentityUser> UserManager
+@{
+    Layout = "/Views/Shared/_Layout.cshtml";
+    var userName = UserManager.GetUserName(User) ?? "Account";
 }
 
-<h1>Manage your account</h1>
+<div class="manage-header">
+    <span class="avatar avatar-lg" aria-hidden="true">@userName[..1].ToUpperInvariant()</span>
+    <div class="min-w-0">
+        <h1>@L["Manage your account"]</h1>
+        <div class="text-muted text-truncate">@userName</div>
+    </div>
+</div>
 
-<div>
-    <h2>Change your account settings</h2>
-    <hr />
-    <div class="row">
-        <div class="col-md-3">
-            <partial name="_ManageNav" />
-        </div>
-        <div class="col-md-9">
+<div class="row g-4">
+    <div class="col-lg-3">
+        <partial name="_ManageNav" />
+    </div>
+    <div class="col-lg-9 min-w-0">
+        <div class="card manage-content">
             @RenderBody()
         </div>
     </div>
