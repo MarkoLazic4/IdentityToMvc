@@ -19,6 +19,8 @@ This project demonstrates how to translate the standard Identity RCL Pages into 
 |---------------------|----------------------------|
 | ![Authenticator setup](docs/screenshots/enable-authenticator.png) | ![Two-factor settings](docs/screenshots/two-factor-dark.png) |
   
+> 📘 **Detailed guide (Serbian)** - how everything works, which parts to reuse for which feature and how to switch features on/off: [docs/UPUTSTVO.md](docs/UPUTSTVO.md)
+
 ---
 
 ## Security
@@ -44,6 +46,10 @@ Configuration (`Security` section in `appsettings.json`):
 
 ```json
 "Security": {
+  "EnableTwoFactor": true,
+  "EnablePasskeys": true,
+  "RequireRecentAuthentication": true,
+  "EnableRateLimiting": true,
   "CheckBreachedPasswords": true,
   "SendSecurityNotifications": true,
   "MaxPasskeysPerUser": 10,

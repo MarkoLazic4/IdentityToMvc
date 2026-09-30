@@ -19,6 +19,8 @@ Projekat prikazuje kako prevesti standardne Identity RCL stranice u MVC controll
 |-----------------------------|------------------------------|
 | ![Authenticator](docs/screenshots/enable-authenticator.png) | ![2FA](docs/screenshots/two-factor-dark.png) |
   
+> 📘 **Detaljno uputstvo na srpskom** - kako sve radi, koji deo preneti za koju funkcionalnost i kako uključiti samo osnovno: [docs/UPUTSTVO.md](docs/UPUTSTVO.md)
+
 ---
 
 ## Bezbednost
@@ -44,6 +46,10 @@ Podešavanja (`Security` sekcija u `appsettings.json`):
 
 ```json
 "Security": {
+  "EnableTwoFactor": true,
+  "EnablePasskeys": true,
+  "RequireRecentAuthentication": true,
+  "EnableRateLimiting": true,
   "CheckBreachedPasswords": true,
   "SendSecurityNotifications": true,
   "MaxPasskeysPerUser": 10,

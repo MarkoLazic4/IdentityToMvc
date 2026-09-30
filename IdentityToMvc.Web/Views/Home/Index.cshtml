@@ -1,5 +1,6 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @inject SignInManager<IdentityUser> SignInManager
+@inject Microsoft.Extensions.Options.IOptionsMonitor<SecurityOptions> SecurityOptions
 @{
     ViewData["Title"] = "Home";
     var signedIn = SignInManager.IsSignedIn(User);
@@ -18,9 +19,12 @@
             <a class="btn btn-primary btn-lg px-4" asp-area="User" asp-controller="Manage" asp-action="Index">
                 <i class="bi bi-person-gear me-1"></i> Manage your account
             </a>
-            <a class="btn btn-outline-primary btn-lg px-4" asp-area="User" asp-controller="Manage" asp-action="TwoFactorAuthentication">
-                <i class="bi bi-shield-check me-1"></i> Security settings
-            </a>
+            @if (SecurityOptions.CurrentValue.EnableTwoFactor)
+            {
+                <a class="btn btn-outline-primary btn-lg px-4" asp-area="User" asp-controller="Manage" asp-action="TwoFactorAuthentication">
+                    <i class="bi bi-shield-check me-1"></i> Security settings
+                </a>
+            }
         }
         else
         {

@@ -145,15 +145,25 @@ builder.Services.Configure<CookieTempDataProviderOptions>(options =>
     options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
 });
 
-builder.Services.AddAuthentication().AddFacebook(options =>
+// External login providers are only added when their keys are configured, so the
+// "Log in with ..." buttons never show up for a provider that can't work.
+var authentication = builder.Services.AddAuthentication();
+if (!string.IsNullOrWhiteSpace(builder.Configuration["GoogleClientId"]))
 {
-    options.AppId = builder.Configuration["FacebookAppId"] ?? "xxxx";
-    options.AppSecret = builder.Configuration["FacebookAppSecret"] ?? "xxxx";
-}).AddGoogle(options =>
+    authentication.AddGoogle(options =>
+    {
+        options.ClientId = builder.Configuration["GoogleClientId"]!;
+        options.ClientSecret = builder.Configuration["GoogleClientSecret"]!;
+    });
+}
+if (!string.IsNullOrWhiteSpace(builder.Configuration["FacebookAppId"]))
 {
-    options.ClientId = builder.Configuration["GoogleClientId"] ?? "xxxx";
-    options.ClientSecret = builder.Configuration["GoogleClientSecret"] ?? "xxxx";
-});
+    authentication.AddFacebook(options =>
+    {
+        options.AppId = builder.Configuration["FacebookAppId"]!;
+        options.AppSecret = builder.Configuration["FacebookAppSecret"]!;
+    });
+}
 
 // ---------------------------------------------------------------------------
 // Email, notifications, breached password check, rate limiting
@@ -216,7 +226,10 @@ app.UseStatusCodePagesWithReExecute("/Home/StatusCode", "?code={0}");
 app.UseHttpsRedirection();
 app.UseRouting();
 
-app.UseRateLimiter();
+if (builder.Configuration.GetValue("Security:EnableRateLimiting", true))
+{
+    app.UseRateLimiter();
+}
 app.UseAuthentication();
 app.UseAuthorization();
 

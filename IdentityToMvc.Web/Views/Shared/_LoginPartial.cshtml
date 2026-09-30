@@ -2,6 +2,7 @@
 
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
+@inject Microsoft.Extensions.Options.IOptionsMonitor<SecurityOptions> SecurityOptions
 
 @if (SignInManager.IsSignedIn(User))
 {
@@ -17,11 +18,14 @@
                     <i class="bi bi-person-gear me-2"></i>Manage account
                 </a>
             </li>
-            <li>
-                <a class="dropdown-item" asp-area="User" asp-controller="Manage" asp-action="TwoFactorAuthentication">
-                    <i class="bi bi-shield-check me-2"></i>Security
-                </a>
-            </li>
+            @if (SecurityOptions.CurrentValue.EnableTwoFactor)
+            {
+                <li>
+                    <a class="dropdown-item" asp-area="User" asp-controller="Manage" asp-action="TwoFactorAuthentication">
+                        <i class="bi bi-shield-check me-2"></i>Security
+                    </a>
+                </li>
+            }
             <li><hr class="dropdown-divider"></li>
             <li>
                 <form id="logoutForm" method="post" asp-area="User" asp-controller="Account" asp-action="Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">

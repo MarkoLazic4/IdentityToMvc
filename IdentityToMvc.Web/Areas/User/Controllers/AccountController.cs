@@ -720,6 +720,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [DisableRateLimiting] // requested automatically on every login page view for passkey autofill
+        [FeatureGate(SecurityFeature.Passkeys)]
         public async Task<IActionResult> PasskeyRequestOptions()
         {
             // No user: the browser offers every discoverable passkey it has for this site
@@ -732,6 +733,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         // ===========================================================================
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [FeatureGate(SecurityFeature.Passkeys)]
         public async Task<IActionResult> LoginWithPasskey(string? credentialJson, string? returnUrl = null)
         {
             returnUrl = SanitizeReturnUrl(returnUrl) ?? DefaultUrl();

@@ -1,6 +1,8 @@
 ﻿@model IdentityToMvc.Web.Areas.User.ViewModels.Account.LoginViewModel
+@inject Microsoft.Extensions.Options.IOptionsMonitor<SecurityOptions> SecurityOptions
 @{
     ViewData["Title"] = "Log in";
+    var passkeysEnabled = SecurityOptions.CurrentValue.EnablePasskeys;
 }
 
 <div class="auth-wrapper">
@@ -17,7 +19,7 @@
             <input asp-for="ReturnUrl" type="hidden" />
             <div asp-validation-summary="ModelOnly" role="alert"></div>
             <div class="form-floating mb-3">
-                <input asp-for="Input.Email" class="form-control" autocomplete="username webauthn" aria-required="true" placeholder="name@example.com" autofocus />
+                <input asp-for="Input.Email" class="form-control" autocomplete="@(passkeysEnabled ? "username webauthn" : "username")" aria-required="true" placeholder="name@example.com" autofocus />
                 <label asp-for="Input.Email">Email</label>
                 <span asp-validation-for="Input.Email" class="text-danger"></span>
             </div>
@@ -36,15 +38,18 @@
             <button id="login-submit" type="submit" class="w-100 btn btn-lg btn-primary">Log in</button>
         </form>
 
-        <form id="passkey-login-form" asp-area="User" asp-controller="Account" asp-action="LoginWithPasskey" method="post"
-              data-options-url="@Url.Action("PasskeyRequestOptions", "Account", new { area = "User" })" data-passkey-supported>
-            <input type="hidden" name="credentialJson" />
-            <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
-            <button id="passkey-login-button" type="button" class="w-100 btn btn-lg btn-soft mt-2">
-                <i class="bi bi-fingerprint me-1"></i> Log in with a passkey
-            </button>
-            <div id="passkey-login-error" class="text-danger small mt-2" role="alert" hidden></div>
-        </form>
+        @if (passkeysEnabled)
+        {
+            <form id="passkey-login-form" asp-area="User" asp-controller="Account" asp-action="LoginWithPasskey" method="post"
+                  data-options-url="@Url.Action("PasskeyRequestOptions", "Account", new { area = "User" })" data-passkey-supported>
+                <input type="hidden" name="credentialJson" />
+                <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
+                <button id="passkey-login-button" type="button" class="w-100 btn btn-lg btn-soft mt-2">
+                    <i class="bi bi-fingerprint me-1"></i> Log in with a passkey
+                </button>
+                <div id="passkey-login-error" class="text-danger small mt-2" role="alert" hidden></div>
+            </form>
+        }
 
         <partial name="_ExternalLoginButtons" model='(Model.ExternalLogins, Model.ReturnUrl, "Log in")' />
     </div>
@@ -63,5 +68,8 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    <script src="~/js/passkeys.js" asp-append-version="true"></script>
+    @if (passkeysEnabled)
+    {
+        <script src="~/js/passkeys.js" asp-append-version="true"></script>
+    }
 }

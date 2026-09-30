@@ -151,8 +151,10 @@ namespace IdentityToMvc.Web.Security
             public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
             {
                 var httpContext = context.HttpContext;
+                var options = httpContext.RequestServices.GetRequiredService<Microsoft.Extensions.Options.IOptionsMonitor<SecurityOptions>>().CurrentValue;
                 var user = await _userManager.GetUserAsync(httpContext.User);
-                if (user == null
+                if (!options.RequireRecentAuthentication
+                    || user == null
                     || !await _userManager.HasPasswordAsync(user)
                     || await _recentAuthentication.IsRecentAsync(httpContext, user))
                 {

@@ -42,6 +42,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         // ===========================================================================
         [HttpGet]
         [RequireRecentAuthentication]
+        [FeatureGate(SecurityFeature.TwoFactor)]
         public async Task<IActionResult> EnableAuthenticator([FromServices] UrlEncoder urlEncoder)
         {
             var user = await _userManager.GetUserAsync(User);
@@ -65,6 +66,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [RequireRecentAuthentication]
+        [FeatureGate(SecurityFeature.TwoFactor)]
         public async Task<IActionResult> EnableAuthenticator([FromServices] UrlEncoder urlEncoder, EnableAuthenticatorViewModel model)
         {
             var user = await _userManager.GetUserAsync(User);
@@ -116,6 +118,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         // ===========================================================================
         [HttpGet]
         [RequireRecentAuthentication]
+        [FeatureGate(SecurityFeature.TwoFactor)]
         public async Task<IActionResult> Disable2fa()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -140,6 +143,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         [ValidateAntiForgeryToken]
         [ActionName("Disable2fa")]
         [RequireRecentAuthentication]
+        [FeatureGate(SecurityFeature.TwoFactor)]
         public async Task<IActionResult> Disable2faPost()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -166,6 +170,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         // ===========================================================================
         [HttpGet]
         [RequireRecentAuthentication]
+        [FeatureGate(SecurityFeature.TwoFactor)]
         public async Task<IActionResult> ResetAuthenticator()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -184,6 +189,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         [ValidateAntiForgeryToken]
         [ActionName("ResetAuthenticator")]
         [RequireRecentAuthentication]
+        [FeatureGate(SecurityFeature.TwoFactor)]
         public async Task<IActionResult> ResetAuthenticatorKey()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -209,6 +215,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         // ===========================================================================
         [HttpGet]
         [RequireRecentAuthentication]
+        [FeatureGate(SecurityFeature.TwoFactor)]
         public async Task<IActionResult> GenerateRecoveryCodes()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -234,6 +241,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         [ValidateAntiForgeryToken]
         [ActionName("GenerateRecoveryCodes")]
         [RequireRecentAuthentication]
+        [FeatureGate(SecurityFeature.TwoFactor)]
         public async Task<IActionResult> GenerateRecoveryCodesPost()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -263,6 +271,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         // GET: /User/Account/Manage/ShowRecoveryCodes
         // ===========================================================================
         [HttpGet]
+        [FeatureGate(SecurityFeature.TwoFactor)]
         public IActionResult ShowRecoveryCodes()
         {
             if (TempData["RecoveryCodes"] is not string[] recoveryCodes || recoveryCodes.Length == 0)
@@ -277,6 +286,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         // GET: /User/Account/Manage/TwoFactorAuthentication
         // ===========================================================================
         [HttpGet]
+        [FeatureGate(SecurityFeature.TwoFactor)]
         public async Task<IActionResult> TwoFactorAuthentication()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -299,6 +309,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         // ===========================================================================
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [FeatureGate(SecurityFeature.TwoFactor)]
         public async Task<IActionResult> ForgetBrowser()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -968,6 +979,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         // GET: /User/Account/Manage/Passkeys
         // ===========================================================================
         [HttpGet]
+        [FeatureGate(SecurityFeature.Passkeys)]
         public async Task<IActionResult> Passkeys([FromServices] IOptionsMonitor<SecurityOptions> securityOptions)
         {
             var user = await _userManager.GetUserAsync(User);
@@ -1001,6 +1013,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [RequireRecentAuthentication]
+        [FeatureGate(SecurityFeature.Passkeys)]
         public async Task<IActionResult> PasskeyCreationOptions()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -1025,6 +1038,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [RequireRecentAuthentication]
+        [FeatureGate(SecurityFeature.Passkeys)]
         public async Task<IActionResult> AddPasskey([FromServices] IOptionsMonitor<SecurityOptions> securityOptions,
             string? credentialJson, string? name)
         {
@@ -1075,6 +1089,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [RequireRecentAuthentication]
+        [FeatureGate(SecurityFeature.Passkeys)]
         public async Task<IActionResult> RemovePasskey(string id)
         {
             var user = await _userManager.GetUserAsync(User);
