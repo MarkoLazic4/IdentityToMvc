@@ -3,7 +3,7 @@
     ViewData["Title"] = "Manage your external logins";
 }
 
-<partial name="_StatusMessage" for="StatusMessage" />
+<partial name="_StatusMessage" model="@TempData["StatusMessage"] as string" />
 @if (Model.CurrentLogins?.Count > 0)
 {
     <h3>Registered Logins</h3>

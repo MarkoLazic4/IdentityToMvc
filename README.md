@@ -13,9 +13,10 @@ This project demonstrates how to translate the standard Identity RCL Pages into 
 ---
 
 ## Prerequisites
-- [.NET SDK 8.x]
-- Visual Studio 2022 (recommended) or VS Code + C# extension  
-- SQL Server / LocalDB ili SQLite (any EF Core-supported database)  
+- [.NET SDK 10.x](https://dotnet.microsoft.com/download/dotnet/10.0)
+- Visual Studio 2026 (recommended) or VS Code + C# Dev Kit  
+- SQL Server / LocalDB / SQL Express  
+- `dotnet-ef` tool: `dotnet tool install --global dotnet-ef`  
 - (Optional) SMTP server for email sending (Mailtrap, Papercut, or real SMTP)
 
 ---
@@ -26,17 +27,37 @@ This project demonstrates how to translate the standard Identity RCL Pages into 
 ```bash
 git clone https://github.com/MarkoLazic4/IdentityToMvc.git
 cd IdentityToMvc
-
-````
+```
 
 2. **Open the solution in Visual Studio / VS Code**
 
 3. **Configure appsettings.Local.json or use user-secrets**
 
+`appsettings.Local.json` (listed in `.gitignore`) overrides `appsettings.json`:
+
+```json
+{
+  "ConnectionStrings": {
+    "Default": "Server=(localdb)\\MSSQLLocalDB;Database=IdentityToMvc;Trusted_Connection=True;TrustServerCertificate=True"
+  },
+  "SMTP": {
+    "Host": "smtp.example.com",
+    "Port": 587,
+    "EnableSsl": true,
+    "Username": "user@example.com",
+    "Password": "your-password"
+  },
+  "GoogleClientId": "...",
+  "GoogleClientSecret": "...",
+  "FacebookAppId": "...",
+  "FacebookAppSecret": "..."
+}
+```
+
 4. **Create and apply migrations**
 
 ```bash
-cd src/IdentityToMvc.Web
+cd IdentityToMvc.Web
 dotnet ef migrations add InitialIdentitySchema -o Data/Migrations
 dotnet ef database update
 ```
@@ -48,7 +69,13 @@ Add-Migration InitialIdentitySchema -OutputDir Data/Migrations
 Update-Database
 ```
 5. **Run the application**
-   
+
+```bash
+dotnet run
+```
+
+In the `Development` environment the registration confirmation page shows the email confirmation link directly, so you can test without an SMTP server.
+
 # License & Contact
 
 * **License:** MIT

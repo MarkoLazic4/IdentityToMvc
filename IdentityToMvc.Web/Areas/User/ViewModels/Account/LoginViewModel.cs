@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 
 namespace IdentityToMvc.Web.Areas.User.ViewModels.Account
@@ -9,9 +8,6 @@ namespace IdentityToMvc.Web.Areas.User.ViewModels.Account
         public InputModel Input { get; set; } = new();
         public IList<AuthenticationScheme> ExternalLogins { get; set; } = new List<AuthenticationScheme>();
         public string? ReturnUrl { get; set; } = null;
-
-        [TempData]
-        public string ErrorMessage { get; set; } = string.Empty;
 
 
         public class InputModel

@@ -78,19 +78,19 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             {
                 ModelState.AddModelError("Input.Code", "Verification code is invalid.");
                 (model.SharedKey, model.AuthenticatorUri) = await AuthenticatorHelper.LoadSharedKeyAndQrCodeUriAsync(_userManager, urlEncoder, user);
-                return View();
+                return View(model);
             }
 
             await _userManager.SetTwoFactorEnabledAsync(user, true);
             var userId = await _userManager.GetUserIdAsync(user);
             _logger.LogInformation("User with ID '{UserId}' has enabled 2FA with an authenticator app.", userId);
 
-            model.StatusMessage = "Your authenticator app has been verified.";
+            TempData["StatusMessage"] = "Your authenticator app has been verified.";
 
             if (await _userManager.CountRecoveryCodesAsync(user) == 0)
             {
                 var recoveryCodes = await _userManager.GenerateNewTwoFactorRecoveryCodesAsync(user, 10);
-                model.RecoveryCodes = recoveryCodes?.ToArray();
+                TempData["RecoveryCodes"] = recoveryCodes?.ToArray();
                 return RedirectToAction(nameof(ShowRecoveryCodes), "Manage", new { area = "User" });
             }
             else
@@ -240,12 +240,12 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         [HttpGet]
         public IActionResult ShowRecoveryCodes()
         {
-            if (!TempData.TryGetValue("RecoveryCodes", out var raw) || raw == null || string.IsNullOrWhiteSpace(raw.ToString()))
+            if (TempData["RecoveryCodes"] is not string[] recoveryCodes || recoveryCodes.Length == 0)
             {
                 return RedirectToAction(nameof(TwoFactorAuthentication), "Manage", new { area = "User" });
             }
 
-            return View();
+            return View(recoveryCodes);
         }
 
         // ===========================================================================
@@ -340,13 +340,13 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
                 var setPhoneResult = await _userManager.SetPhoneNumberAsync(user, model.Input.PhoneNumber);
                 if (!setPhoneResult.Succeeded)
                 {
-                    model.StatusMessage = "Unexpected error when trying to set phone number.";
+                    TempData["StatusMessage"] = "Error: unexpected error when trying to set phone number.";
                     return RedirectToAction(nameof(Index), "Manage", new { area = "User" });
                 }
             }
 
             await _signInManager.RefreshSignInAsync(user);
-            model.StatusMessage = "Your profile has been updated";
+            TempData["StatusMessage"] = "Your profile has been updated";
             return RedirectToAction(nameof(Index), "Manage", new { area = "User" });
         }
 
@@ -608,7 +608,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
 
             await _signInManager.RefreshSignInAsync(user);
             _logger.LogInformation("User changed their password successfully.");
-            model.StatusMessage = "Your password has been changed.";
+            TempData["StatusMessage"] = "Your password has been changed.";
 
             return RedirectToAction(nameof(ChangePassword), "Manage", new { area = "User" });
         }
@@ -666,7 +666,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             }
 
             await _signInManager.RefreshSignInAsync(user);
-            model.StatusMessage = "Your password has been set.";
+            TempData["StatusMessage"] = "Your password has been set.";
 
             return RedirectToAction(nameof(SetPassword), "Manage", new { area = "User" });
         }
@@ -717,7 +717,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
                 model.Email = email;
                 model.IsEmailConfirmed = await _userManager.IsEmailConfirmedAsync(user);
                 model.Input.NewEmail = email ?? string.Empty;
-                return View(model);
+                return View(nameof(Email), model);
             }
 
             if (model.Input.NewEmail != email)
@@ -731,11 +731,11 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
                 await emailService.SendEmailAsync("identitytomvc@gmail.com", model.Input.NewEmail, "Confirm your email",
                     $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
 
-                model.StatusMessage = "Confirmation link to change email sent. Please check your email.";
+                TempData["StatusMessage"] = "Confirmation link to change email sent. Please check your email.";
                 return RedirectToAction(nameof(Email), "Manage", new { area = "User" });
             }
 
-            model.StatusMessage = "Your email is unchanged.";
+            TempData["StatusMessage"] = "Your email is unchanged.";
             return RedirectToAction(nameof(Email), "Manage", new { area = "User" });
         }
 
@@ -759,11 +759,17 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
                 model.Email = email;
                 model.IsEmailConfirmed = await _userManager.IsEmailConfirmedAsync(user);
                 model.Input.NewEmail = email ?? string.Empty;
-                return View(model);
+                return View(nameof(Email), model);
+            }
+
+            if (string.IsNullOrEmpty(email))
+            {
+                TempData["StatusMessage"] = "Error: your account has no email address.";
+                return RedirectToAction(nameof(Email), "Manage", new { area = "User" });
             }
 
             var userId = await _userManager.GetUserIdAsync(user);
-            
+
             var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
             code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
             var callbackUrl = Url.Action("ConfirmEmail", "Account",
@@ -772,7 +778,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             await emailService.SendEmailAsync("identitytomvc@gmail.com" , email, "Confirm your email",
                 $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
 
-            model.StatusMessage = "Verification email sent. Please check your email.";
+            TempData["StatusMessage"] = "Verification email sent. Please check your email.";
             return RedirectToAction(nameof(Email), "Manage", new { area = "User" });
         }
 
@@ -784,7 +790,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         {
             if (userId == null || email == null || code == null)
             {
-                return RedirectToPage("/Index");
+                return RedirectToAction("Index", "Home", new { area = "" });
             }
 
             var user = await _userManager.FindByIdAsync(userId);

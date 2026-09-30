@@ -4,7 +4,7 @@
     ViewData["Title"] = "Two-factor authentication (2FA)";
 }
 
-<partial name="_StatusMessage" for="StatusMessage" />
+<partial name="_StatusMessage" model="@TempData["StatusMessage"] as string" />
 <h3>@ViewData["Title"]</h3>
 @{
     var consentFeature = ViewContext.HttpContext.Features.Get<ITrackingConsentFeature>();

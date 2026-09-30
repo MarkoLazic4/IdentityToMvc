@@ -1,14 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace IdentityToMvc.Web.Areas.User.ViewModels.Manage
 {
     public class SetPasswordViewModel
     {
         public InputModel Input { get; set; } = new();
-
-        [TempData]
-        public string? StatusMessage { get; set; }
 
 
         public class InputModel

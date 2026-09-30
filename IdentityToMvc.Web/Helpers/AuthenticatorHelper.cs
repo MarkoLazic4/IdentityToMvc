@@ -33,7 +33,7 @@ namespace IdentityToMvc.Web.Helpers
             return (sharedKey: sharedKey, authenticatorUri: uri);
         }
 
-        private static string FormatKey(string unformattedKey)
+        private static string FormatKey(string? unformattedKey)
         {
             if (string.IsNullOrEmpty(unformattedKey)) 
                 return string.Empty;
@@ -53,7 +53,7 @@ namespace IdentityToMvc.Web.Helpers
             return result.ToString().ToLowerInvariant();
         }
 
-        private static string GenerateQrCodeUri(UrlEncoder urlEncoder, string email, string unformattedKey)
+        private static string GenerateQrCodeUri(UrlEncoder urlEncoder, string? email, string? unformattedKey)
         {
             return string.Format(
                 CultureInfo.InvariantCulture,

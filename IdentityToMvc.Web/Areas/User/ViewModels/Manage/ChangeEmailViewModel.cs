@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace IdentityToMvc.Web.Areas.User.ViewModels.Manage
 {
@@ -8,9 +7,6 @@ namespace IdentityToMvc.Web.Areas.User.ViewModels.Manage
         public string? Email { get; set; }
 
         public bool IsEmailConfirmed { get; set; }
-
-        [TempData]
-        public string? StatusMessage { get; set; }
 
         public InputModel Input { get; set; } = new();
 

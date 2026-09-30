@@ -6,10 +6,11 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var env = builder.Environment.EnvironmentName;
+// appsettings.json, appsettings.{Environment}.json, user secrets (Development),
+// environment variables and command-line args are already loaded by CreateBuilder.
+// appsettings.Local.json is layered on top for local overrides; environment variables
+// and command-line args are re-added so they keep the highest priority.
 builder.Configuration
-    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-    .AddJsonFile($"appsettings.{env}.json", optional: true, reloadOnChange: true)
     .AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true)
     .AddEnvironmentVariables()
     .AddCommandLine(args);
@@ -50,7 +51,7 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.ExpireTimeSpan = TimeSpan.FromHours(1);
 
     options.LoginPath = "/User/Account/Login";
-    options.LogoutPath = "User//Account/Logout";
+    options.LogoutPath = "/User/Account/Logout";
     options.AccessDeniedPath = "/User/Account/AccessDenied";
 });
 
@@ -81,21 +82,21 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseStaticFiles();
-
 app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapStaticAssets();
+
 app.MapControllerRoute(
     name: "areas",
-    pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
+    pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}")
+    .WithStaticAssets();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
-
-app.MapRazorPages();
+    pattern: "{controller=Home}/{action=Index}/{id?}")
+    .WithStaticAssets();
 
 app.Run();

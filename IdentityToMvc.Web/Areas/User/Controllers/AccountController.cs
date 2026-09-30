@@ -431,7 +431,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
             var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: false, bypassTwoFactor: true);
             if (result.Succeeded)
             {
-                _logger.LogInformation("{Name} logged in with {LoginProvider} provider.", info.Principal.Identity.Name, info.LoginProvider);
+                _logger.LogInformation("{Name} logged in with {LoginProvider} provider.", info.Principal.Identity?.Name, info.LoginProvider);
                 return LocalRedirect(returnUrl);
             }
             if (result.IsLockedOut)
@@ -443,12 +443,12 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
                 // If the user does not have an account, then ask the user to create an account.
                 var viewModel = new ExternalLoginViewModel();
                 viewModel.ReturnUrl = returnUrl;
-                viewModel.ProviderDisplayName = info.ProviderDisplayName;
+                viewModel.ProviderDisplayName = info.ProviderDisplayName ?? info.LoginProvider;
                 if (info.Principal.HasClaim(c => c.Type == ClaimTypes.Email))
                 {
                     viewModel.Input = new ExternalLoginViewModel.InputModel
                     {
-                        Email = info.Principal.FindFirstValue(ClaimTypes.Email)
+                        Email = info.Principal.FindFirstValue(ClaimTypes.Email) ?? string.Empty
                     };
                 }
                 return View("ExternalLogin", viewModel);
@@ -638,7 +638,7 @@ namespace IdentityToMvc.Web.Areas.User.Controllers
         // ===========================================================================
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ResetPassword([FromServices] IHostEnvironment env, ResetPasswordViewModel model)
+        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
         {
             if (!ModelState.IsValid)
                 return View(model);

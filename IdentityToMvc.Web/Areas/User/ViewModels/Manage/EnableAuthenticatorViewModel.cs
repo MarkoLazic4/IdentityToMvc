@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace IdentityToMvc.Web.Areas.User.ViewModels.Manage
 {
@@ -7,12 +6,6 @@ namespace IdentityToMvc.Web.Areas.User.ViewModels.Manage
     {
         public string SharedKey { get; set; } = string.Empty;
         public string AuthenticatorUri { get; set; } = string.Empty;
-
-        [TempData]
-        public string[]? RecoveryCodes { get; set; }
-
-        [TempData]
-        public string? StatusMessage { get; set; }
 
         public InputModel Input { get; set; } = new();
 
