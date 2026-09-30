@@ -4,6 +4,9 @@ Ovaj projekat je **gotov "modul" za prijavu korisnika** koji se može preneti u 
 ASP.NET Core MVC aplikaciju. Svaka aplikacija mora da zna *ko* je korisnik (autentifikacija) i
 *šta sme da radi* (autorizacija) - ovde je to već napravljeno, provereno i obezbeđeno.
 
+Najbrži put: nova aplikacija se pravi **jednom komandom** (`dotnet new identitymvc`), uz izbor paketa
+(osnovno, standardno, kompletno) i pojedinačnih funkcija - vidi [odeljak 7](#7-nova-aplikacija-jednom-komandom-šablon).
+
 Uputstvo je pisano tako da ga može pratiti i neko ko se ne bavi programiranjem svakodnevno.
 Stručni izrazi su objašnjeni u [rečniku](#1-rečnik) na početku.
 
@@ -15,7 +18,7 @@ Stručni izrazi su objašnjeni u [rečniku](#1-rečnik) na početku.
 4. [Put jednog klika - kako aplikacija obrađuje zahtev](#4-put-jednog-klika---kako-aplikacija-obrađuje-zahtev)
 5. [Funkcionalnosti jedna po jedna](#5-funkcionalnosti-jedna-po-jedna)
 6. [Paketi: osnovno, standardno, kompletno](#6-paketi-osnovno-standardno-kompletno)
-7. [Kako preneti sistem u novu aplikaciju](#7-kako-preneti-sistem-u-novu-aplikaciju)
+7. [Nova aplikacija jednom komandom (šablon)](#7-nova-aplikacija-jednom-komandom-šablon)
 8. [Autorizacija - kako zaštititi sopstvene stranice](#8-autorizacija---kako-zaštititi-sopstvene-stranice)
 9. [Sva podešavanja na jednom mestu](#9-sva-podešavanja-na-jednom-mestu)
 10. [Pre puštanja u rad (produkcija)](#10-pre-puštanja-u-rad-produkcija)
@@ -46,7 +49,7 @@ Stručni izrazi su objašnjeni u [rečniku](#1-rečnik) na početku.
 | **Middleware** | "Kontrolni punkt" kroz koji prolazi svaki zahtev (npr. punkt koji dodaje sigurnosna zaglavlja). |
 | **Filter / atribut** | Oznaka u uglastim zagradama iznad akcije, npr. `[Authorize]`. Kao nalepnica "samo za zaposlene" na vratima. |
 | **Baza podataka** | Mesto gde se trajno čuvaju korisnici. Ovde je to SQL Server. |
-| **Migracija** | "Recept" koji pravi ili menja tabele u bazi. Pravi se jednom komandom (vidi [odeljak 7](#7-kako-preneti-sistem-u-novu-aplikaciju)). |
+| **Migracija** | "Recept" koji pravi ili menja tabele u bazi. Gotove migracije su u `Data/Migrations`; nova se pravi komandom `dotnet ef migrations add <Ime>`. |
 | **Kolačić (cookie)** | Mala "propusnica" koju browser čuva i šalje uz svaki zahtev. Po njoj aplikacija zna da si prijavljen. |
 | **Sesija** | Period dok si prijavljen na jednom uređaju (jedan kolačić = jedna sesija). |
 | **Token** | Jednokratni tajni kod, najčešće u linku iz mejla ("klikni da potvrdiš mejl"). |
@@ -79,6 +82,9 @@ Stručni izrazi su objašnjeni u [rečniku](#1-rečnik) na početku.
 | **Šifrovanje u mirovanju** | Tajni podaci su šifrovani i dok stoje u bazi - ko ukrade kopiju baze, ne može da ih iskoristi. |
 | **Automatski test** | Mali program koji sam "klikće" kroz aplikaciju i proverava da li radi kako treba. |
 | **CI (Continuous Integration)** | GitHub posle svake izmene sam pokrene build i testove i javi ako nešto ne radi. |
+| **Šablon (template)** | "Kalup" za novu aplikaciju. Komanda `dotnet new identitymvc` od njega napravi gotov projekat sa tvojim imenom i izabranim funkcijama. |
+| **NuGet paket** | Spakovan kod koji se instalira jednom komandom. Šablon se može objaviti kao NuGet paket. |
+| **CLI / terminal** | Prozor u koji se kucaju komande (`dotnet ...`). U Visual Studio-u: *View → Terminal*. |
 | **Namespace** | "Prezime" koda - npr. `IdentityToMvc.Web`. Kad preuzimaš kod u novi projekat, obično ga menjaš. |
 
 ---
@@ -130,8 +136,10 @@ Sve je u folderu `IdentityToMvc.Web`.
 
 | Putanja | Uloga |
 |---------|-------|
-| `Controllers/AccountController.cs` | **Recepcija**: registracija, potvrda mejla, prijava (lozinka, 2FA, recovery kod, passkey, Google/Facebook), odjava, zaboravljena i reset lozinke, zaključan nalog. |
-| `Controllers/ManageController.cs` | **Kancelarija naloga**: profil, mejl, lozinka, 2FA, recovery kodovi, passkey-ovi, spoljne prijave, lični podaci, odjava sa svih uređaja, potvrda identiteta (sudo). |
+| `Controllers/AccountController.cs` | **Recepcija**: registracija, potvrda mejla, prijava lozinkom, odjava, zaboravljena i reset lozinke, zaključan nalog. |
+| `Controllers/AccountController.<Funkcija>.cs` | Delovi recepcije po funkcijama: `.TwoFactor` (2FA kod i recovery kod pri prijavi), `.Passkeys` (prijava passkey-om), `.ExternalLogins` (Google/Facebook), `.UnlockLink` (link za otključavanje). |
+| `Controllers/ManageController.cs` | **Kancelarija naloga**: zajednički deo + promena i postavljanje lozinke. |
+| `Controllers/ManageController.<Funkcija>.cs` | Ostale stranice naloga, svaka funkcija u svom fajlu: `.Profile`, `.Email`, `.TwoFactor`, `.Passkeys`, `.ExternalLogins`, `.PersonalData`, `.Devices`, `.Activity`, `.ConfirmIdentity` (sudo). |
 | `ViewModels/Account/*.cs` | "Formulari" za stranice recepcije (koja polja i pravila). |
 | `ViewModels/Manage/*.cs` | "Formulari" za stranice naloga. |
 | `Views/Account/*.cshtml` | Izgled stranica recepcije (Login, Register, ForgotPassword...). |
@@ -195,6 +203,7 @@ Sve je u folderu `IdentityToMvc.Web`.
 | `Data/ApplicationDbContext.cs` | Veza sa bazom (tabele korisnika, ključevi, `SecurityEvents`, `UserSessions`). |
 | `Data/SecurityEventRecord.cs` | Jedan red dnevnika: ko, šta, kada, sa koje IP adrese i uređaja. |
 | `Data/UserSession.cs` | Jedna prijava na jednom uređaju. |
+| `Data/Migrations/SqlServer`, `Postgres`, `Sqlite` | Gotove migracije ("recepti" za tabele) za svaku bazu. Nova aplikacija dobija samo one za izabranu bazu. |
 | `Controllers/HomeController.cs` | Početna, Privacy, stranice grešaka (404, 429...), promena jezika (`SetLanguage`). |
 | `Views/Shared/_StatusMessage.cshtml` | Zelena/crvena poruka ("Sačuvano" / "Greška") - koriste je i nalog i admin panel. |
 | `Views/Shared/_Layout.cshtml` | Zajednički okvir svih stranica. |
@@ -205,10 +214,16 @@ Sve je u folderu `IdentityToMvc.Web`.
 | `wwwroot/js/site.qrcode.js` | Crta QR kod za 2FA. |
 | `wwwroot/lib/` | Tuđe biblioteke: Bootstrap (izgled), Bootstrap Icons (ikonice), jQuery i validacija, qrcodejs. |
 
+> Kontroleri su podeljeni na više fajlova (C# `partial class`) upravo zato da **svaka funkcija bude u svom fajlu** -
+> šablon izbacuje ceo fajl kada funkcija nije izabrana, a ti odmah vidiš šta pripada čemu.
+
 Van foldera `IdentityToMvc.Web`:
 
 | Putanja | Uloga |
 |---------|-------|
+| `.template.config/` | Opis šablona `dotnet new identitymvc`: paketi, prekidači, koji fajlovi pripadaju kojoj funkciji. |
+| `templates/feature/` | Šablon `dotnet new identitymvc-add` (dodavanje funkcije u postojeću aplikaciju) i uputstva `ADD-<funkcija>.md`. Pravi se automatski skriptom `tools/build_feature_template.py`. |
+| `templates/IdentityToMvc.Templates.csproj` | Pakuje oba šablona u NuGet paket (za objavljivanje). |
 | `IdentityToMvc.Tests/` | Automatski testovi (vidi 5.22). |
 | `tools/extract_keys.py` | Pronalazi tekstove koji još nemaju srpski prevod. |
 | `.github/workflows/ci.yml` | CI: GitHub posle svake izmene sam proveri prevode, build i testove. |
@@ -290,6 +305,7 @@ Za svaku funkcionalnost piše: **šta korisnik vidi**, **kako radi iza scene**, 
   Zato vlasnik u mejlu dobija **link za otključavanje**, a prijava **passkey-om** radi i dok je nalog zaključan zbog
   pogrešnih lozinki.
 - **Zaključavanje od strane administratora** (admin panel) je trajno - ne skida ga ni link, ni passkey, ni reset lozinke.
+- **Fajlovi:** `AccountController.cs` (`Login`, `Lockout`, `NotifyIfJustLockedOutAsync`), `AccountController.UnlockLink.cs`.
 - **Podešavanje:** `Program.cs` → `options.Lockout.MaxFailedAccessAttempts = 3;` i `DefaultLockoutTimeSpan = TimeSpan.FromMinutes(10);`
 
 ### 5.4 Zaboravljena lozinka i reset
@@ -308,8 +324,8 @@ Za svaku funkcionalnost piše: **šta korisnik vidi**, **kako radi iza scene**, 
   prikazuje se `SetPassword`. Posle promene: ostale sesije se gase, stiže mejl upozorenja.
 - **Mejl** (`Manage/Email`): novi mejl dobija link za potvrdu; **stari mejl dobija upozorenje**. Mejl se menja tek
   kada se klikne link, i to samo ako je prijavljen isti korisnik koji je tražio promenu.
-- **Fajlovi:** `ManageController` (`Index`, `ChangePassword`, `SetPassword`, `Email`, `ChangeEmail`, `SendVerificationEmail`,
-  `ConfirmEmailChange`) i odgovarajući view-ovi u `Views/Manage`.
+- **Fajlovi:** `ManageController.cs` (lozinka), `ManageController.Profile.cs` (profil), `ManageController.Email.cs`
+  (promena mejla) i odgovarajući view-ovi u `Views/Manage`.
 
 ### 5.6 Dvofaktorska autentifikacija (2FA) i recovery kodovi
 
@@ -318,9 +334,7 @@ Za svaku funkcionalnost piše: **šta korisnik vidi**, **kako radi iza scene**, 
   Od tada se pri prijavi traži kod iz aplikacije. Opcija "Remember this device" preskače kod na tom uređaju.
 - **Iza scene:** `AuthenticatorHelper` pravi tajni ključ i adresu za QR kod; `site.qrcode.js` ga crta; Identity proverava
   kodove. Recovery kodovi važe po jednom.
-- **Fajlovi:** `ManageController` (`TwoFactorAuthentication`, `EnableAuthenticator`, `Disable2fa`, `ResetAuthenticator`,
-  `GenerateRecoveryCodes`, `ShowRecoveryCodes`, `ForgetBrowser`), `AccountController` (`LoginWith2fa`,
-  `LoginWithRecoveryCode`), view-ovi sa istim imenima, `Helpers/AuthenticatorHelper.cs`, `wwwroot/js/site.qrcode.js`,
+- **Fajlovi:** `ManageController.TwoFactor.cs`, `AccountController.TwoFactor.cs`, view-ovi sa istim imenima, `Helpers/AuthenticatorHelper.cs`, `wwwroot/js/site.qrcode.js`,
   `wwwroot/lib/qrcodejs`.
 - **Isključivanje:** `"EnableTwoFactor": false` u `appsettings.json`. Nestaju meni i stranice (vraćaju 404).
   *Napomena:* korisnici koji su 2FA već uključili i dalje moraju da unose kod pri prijavi.
@@ -335,8 +349,7 @@ Za svaku funkcionalnost piše: **šta korisnik vidi**, **kako radi iza scene**, 
   Pošto uređaj proverava otisak/PIN, passkey sam po sebi vredi kao lozinka + 2FA.
 - **Ograničenja:** najviše 10 passkey-ova po korisniku (`MaxPasskeysPerUser`). Ne može se obrisati poslednji način prijave.
 - **Zahtev:** radi samo preko **HTTPS-a** (ili na `localhost`).
-- **Fajlovi:** `ManageController` (`Passkeys`, `PasskeyCreationOptions`, `AddPasskey`, `RemovePasskey`),
-  `AccountController` (`PasskeyRequestOptions`, `LoginWithPasskey`), `Views/Manage/Passkeys.cshtml`,
+- **Fajlovi:** `ManageController.Passkeys.cs`, `AccountController.Passkeys.cs`, `Views/Manage/Passkeys.cshtml`,
   `ViewModels/Manage/PasskeysViewModel.cs`, `wwwroot/js/passkeys.js`, deo `Login.cshtml`.
   U `Program.cs`: `options.Stores.SchemaVersion = IdentitySchemaVersions.Version3;` i blok `Configure<IdentityPasskeyOptions>`.
 - **Isključivanje:** `"EnablePasskeys": false`.
@@ -350,8 +363,7 @@ Za svaku funkcionalnost piše: **šta korisnik vidi**, **kako radi iza scene**, 
 - **Bezbednost:** i posle Google prijave traži se 2FA ako ga korisnik ima; ne može se ukloniti poslednji način prijave.
   Nalog se pravi samo sa mejlom koji je **Google/Facebook potvrdio**, i spoljna prijava se **nikad sama ne povezuje** sa
   postojećim nalogom - vlasnik je povezuje sam, prijavljen, na stranici *External logins*.
-- **Fajlovi:** `AccountController` (`ExternalLogin`, `ExternalLoginCallback`, `ExternalLoginConfirmation`),
-  `ManageController` (`ExternalLogins`, `LinkLogin`, `LinkLoginCallback`, `RemoveExternalLogin`),
+- **Fajlovi:** `AccountController.ExternalLogins.cs`, `ManageController.ExternalLogins.cs`,
   `Views/Account/ExternalLogin.cshtml`, `Views/Manage/ExternalLogins.cshtml`, `Views/Shared/_ExternalLoginButtons.cshtml`.
 - **Drugi provajderi** (Microsoft, GitHub...): dodaju se u `Program.cs` na isti način kao Google (poseban paket).
   Ako dodaješ novi provajder, dodaj njegovu adresu i u `form-action` u `SecurityHeadersMiddleware.cs`.
@@ -360,7 +372,7 @@ Za svaku funkcionalnost piše: **šta korisnik vidi**, **kako radi iza scene**, 
 
 - **Korisnik vidi:** Manage → *Personal data* → "Download" (JSON fajl sa svim podacima) ili "Delete account"
   (traži lozinku i potvrdu).
-- **Fajlovi:** `ManageController` (`PersonalData`, `DownloadPersonalData`, `DeletePersonalData`), view-ovi sa istim imenima.
+- **Fajlovi:** `ManageController.PersonalData.cs`, view-ovi `PersonalData` i `DeletePersonalData`.
 - **Napomena:** ako tvoja aplikacija čuva i druge podatke o korisniku (porudžbine, komentare...), dopuni `DeletePersonalData`
   da briše i njih, a `DownloadPersonalData` da ih izvozi.
 
@@ -374,7 +386,7 @@ Za svaku funkcionalnost piše: **šta korisnik vidi**, **kako radi iza scene**, 
 - **Kako radi:** pri svakoj pravoj prijavi upisuje se šifrovani kolačić `__Host-IdentityToMvc.Reauth` koji važi 15 minuta.
   Akcije označene sa `[RequireRecentAuthentication]` proveravaju taj kolačić.
 - **Korisnici bez lozinke** (samo Google/Facebook/passkey) se ne pitaju.
-- **Fajlovi:** `Security/RecentAuthentication.cs`, `ManageController` (`ConfirmIdentity`), `Views/Manage/ConfirmIdentity.cshtml`,
+- **Fajlovi:** `Security/RecentAuthentication.cs`, `ManageController.ConfirmIdentity.cs`, `Views/Manage/ConfirmIdentity.cshtml`,
   `ViewModels/Manage/ConfirmIdentityViewModel.cs`.
 - **Isključivanje:** `"RequireRecentAuthentication": false`. **Dodavanje na tvoju stranicu:** stavi `[RequireRecentAuthentication]` iznad akcije.
 
@@ -389,7 +401,7 @@ Za svaku funkcionalnost piše: **šta korisnik vidi**, **kako radi iza scene**, 
 - **Mejl za novi uređaj:** kada se korisnik prijavi sa uređaja koji do sada nije koristio, dobija mejl
   (sa vremenom, IP adresom i uređajem). Prva prijava ikada ne šalje mejl.
 - **Fajlovi:** `Security/SessionService.cs`, `Security/DeviceDescriber.cs`, `Data/UserSession.cs`,
-  `ManageController` (`Devices`, `RevokeSession`, `SignOutEverywhere`), `Views/Manage/Devices.cshtml`, deo `Program.cs`
+  `ManageController.Devices.cs`, `Views/Manage/Devices.cshtml`, deo `Program.cs`
   (`OnSigningIn` i `OnValidatePrincipal` kod kolačića).
 - **Čišćenje:** sesije starije od `Security:SessionRetentionDays` (30 dana) brišu se automatski.
 - **Isto se automatski dešava** posle promene lozinke, reseta lozinke, uključivanja/isključivanja 2FA i sličnih izmena -
@@ -408,7 +420,7 @@ Za svaku funkcionalnost piše: **šta korisnik vidi**, **kako radi iza scene**, 
   promene), sa ikonicama i bojama (crveno = sumnjivo).
 - **Čišćenje:** zapisi stariji od `Security:AuditRetentionDays` (365 dana) brišu se automatski (`DataRetentionService`).
 - **Fajlovi:** `Security/SecurityNotifier.cs` (spisak događaja i tekstovi), `Data/SecurityEventRecord.cs`,
-  `ManageController` (`Activity`), `Views/Manage/Activity.cshtml`, `Services/EmailTemplates.cs` (`SecurityNotification`).
+  `ManageController.Activity.cs`, `Views/Manage/Activity.cshtml`, `Services/EmailTemplates.cs` (`SecurityNotification`).
 - **Isključivanje mejlova:** `"SendSecurityNotifications": false` (audit log ostaje).
 
 ### 5.13 Ograničenje broja zahteva (rate limiting)
@@ -496,7 +508,8 @@ Za svaku funkcionalnost piše: **šta korisnik vidi**, **kako radi iza scene**, 
      *Value* = srpski prevod.
 - **Novi jezik** (npr. nemački): napravi `SharedResource.de.resx` sa istim ključevima i dodaj jezik u
   `LocalizationSetup.cs` (spisak `SupportedCultures`) i dugme u `_Layout.cshtml`.
-- **Samo jedan jezik:** postavi `DefaultCulture` na željeni jezik i ukloni formu `language-form` iz `_Layout.cshtml`.
+- **Samo jedan jezik:** najlakše pri pravljenju aplikacije (`--lang sr` ili `--lang en`). U postojećoj aplikaciji:
+  postavi `DefaultCulture` na željeni jezik i ukloni formu `language-form` iz `_Layout.cshtml`.
 - **Fajlovi:** folder `Localization`, folder `Resources`, `HomeController.SetLanguage`, deo `_Layout.cshtml`,
   u `Program.cs` `AddLocalization`, `AddViewLocalization`, `AddDataAnnotationsLocalization` i `UseRequestLocalization`.
 
@@ -521,8 +534,8 @@ Za svaku funkcionalnost piše: **šta korisnik vidi**, **kako radi iza scene**, 
   administrator zaključa nalog, resetuje 2FA ili ga obriše.
 - **Fajlovi:** ceo folder `Areas/Admin`, `Security/AdminBootstrapper.cs`, `Security/RequireAdminSecurityAttribute.cs`,
   deo `_LoginPartial.cshtml` (link), u `Program.cs` poziv `AdminBootstrapper.InitializeAsync()`.
-- **Aplikacija bez admin panela:** obriši folder `Areas/Admin` i link `admin-panel` u `_LoginPartial.cshtml`
-  (ostalo može da ostane).
+- **Aplikacija bez admin panela:** napravi je bez `--admin` (paket `basic` ili `standard`); kasnije se dodaje sa
+  `dotnet new identitymvc-add --feature admin` (7.3).
 
 ### 5.21 Čuvanje podataka i čišćenje
 
@@ -547,122 +560,189 @@ Za svaku funkcionalnost piše: **šta korisnik vidi**, **kako radi iza scene**, 
 
 ## 6. Paketi: osnovno, standardno, kompletno
 
-Najjednostavniji način da prilagodiš sistem aplikaciji: **ne briši kod, već isključi funkcije u `appsettings.json`**.
-Isključene funkcije nestaju iz menija, a njihove adrese vraćaju "404".
+Postoje dva nivoa prilagođavanja:
 
-### Osnovni paket - interne i jednostavne aplikacije
+1. **Pri pravljenju aplikacije** (šablon, [odeljak 7](#7-nova-aplikacija-jednom-komandom-šablon)) biraš paket i funkcije -
+   kod funkcija koje ne izabereš **uopšte ne postoji** u novoj aplikaciji. Ovo je preporučeni način.
+2. **Kasnije, u `appsettings.json`**, funkcije koje aplikacija ima mogu privremeno da se isključe prekidačima
+   (npr. `"EnableTwoFactor": false`) - bez menjanja koda. Isključene funkcije nestaju iz menija, a adrese vraćaju "404".
 
-Registracija, potvrda mejla, prijava, odjava, zaboravljena lozinka, profil, promena lozinke i mejla, lični podaci,
-zaključavanje posle 3 promašaja, sigurnosna zaglavlja.
+### Šta sadrži koji paket
 
-```json
-"Security": {
-  "EnableTwoFactor": false,
-  "EnablePasskeys": false,
-  "RequireRecentAuthentication": false,
-  "EnableRateLimiting": false,
-  "CheckBreachedPasswords": false,
-  "SendSecurityNotifications": false
-}
-```
+O = osnovno (`--tier basic`), S = standardno (`--tier standard`, podrazumevano), K = kompletno (`--tier full`).
+Poslednja kolona je **prekidač** kojim se funkcija dodaje na bilo koji paket (npr. `--tier basic --admin`).
 
-### Standardni paket - većina javnih aplikacija (preporuka)
+| Funkcija | O | S | K | Prekidač |
+|----------|:-:|:-:|:-:|----------|
+| Registracija, potvrda mejla, ponovno slanje potvrde | ✅ | ✅ | ✅ | - |
+| Prijava i odjava, "Zapamti me" | ✅ | ✅ | ✅ | - |
+| Zaboravljena lozinka i reset | ✅ | ✅ | ✅ | - |
+| Zaključavanje posle 3 pogrešne lozinke | ✅ | ✅ | ✅ | - |
+| Promena lozinke | ✅ | ✅ | ✅ | - |
+| Link za otključavanje u mejlu (5.3) | - | ✅ | ✅ | `--unlock-link` |
+| Profil - broj telefona (5.5) | - | ✅ | ✅ | `--profile` |
+| Promena mejla (5.5) | - | ✅ | ✅ | `--email-change` |
+| Lični podaci: preuzimanje i brisanje naloga (5.9) | - | ✅ | ✅ | `--personal-data` |
+| Provera procurelih lozinki (5.14) | - | ✅ | ✅ | `--breached-passwords` |
+| 2FA, recovery kodovi, "zapamti ovaj uređaj", šifrovane 2FA tajne (5.6) | - | ✅ | ✅ | `--two-factor` |
+| Sudo mode (5.10) | - | ✅ | ✅ | `--sudo` |
+| Bezbednosni mejlovi, mejl za novi uređaj (5.12) | - | ✅ | ✅ | `--notifications` |
+| Uređaji i odjava sa svih uređaja (5.11) | - | ✅ | ✅ | `--devices` |
+| Stranica "Bezbednosna aktivnost" (5.12) | - | ✅ | ✅ | `--activity` |
+| Automatski testovi (5.22) | - | ✅ | ✅ | `--tests` |
+| Passkeys (5.7) | - | - | ✅ | `--passkeys` |
+| Admin panel (5.20); uz 2FA ili passkeys - admin mora da ih koristi | - | - | ✅ | `--admin` |
+| Google prijava (5.8) | - | - | - | `--google` |
+| Facebook prijava (5.8) | - | - | - | `--facebook` |
+| Jezik: srpski + engleski / srpski / engleski (5.19) | izbor | izbor | izbor | `--lang both\|sr\|en` |
+| Baza: SQL Server / PostgreSQL / SQLite | izbor | izbor | izbor | `--db sqlserver\|postgres\|sqlite` |
 
-Sve iz osnovnog + 2FA, recovery kodovi, rate limiting, provera procurelih lozinki, mejl upozorenja.
+- **Osnovno** - interni alati, prototipovi, mali sajtovi: korisnik u nalogu vidi samo *Lozinka*.
+- **Standardno** - većina javnih aplikacija (preporuka).
+- **Kompletno** - aplikacije sa novcem, zdravstvenim ili poslovnim podacima.
 
-```json
-"Security": {
-  "EnableTwoFactor": true,
-  "EnablePasskeys": false,
-  "RequireRecentAuthentication": false,
-  "EnableRateLimiting": true,
-  "CheckBreachedPasswords": true,
-  "SendSecurityNotifications": true
-}
-```
+> Za javne aplikacije u Srbiji i EU brisanje i preuzimanje ličnih podataka je praktično zakonska obaveza - uz osnovni
+> paket dodaj `--personal-data`.
 
-### Kompletni paket - aplikacije sa novcem, zdravstvenim ili poslovnim podacima
+### Šta je uvek uključeno
 
-Sve funkcije uključene (ovo je podrazumevano stanje).
+Ove zaštite nemaju ekrane i ne smetaju korisniku, pa su u svakom paketu:
 
-```json
-"Security": {
-  "EnableTwoFactor": true,
-  "EnablePasskeys": true,
-  "RequireRecentAuthentication": true,
-  "EnableRateLimiting": true,
-  "CheckBreachedPasswords": true,
-  "SendSecurityNotifications": true
-}
-```
+| Zaštita | Napomena |
+|---------|----------|
+| Sigurnosna zaglavlja i CSP (5.15) | Pravila u `SecurityHeadersMiddleware.cs`. |
+| `__Host-` kolačići, zaštita formi (antiforgery) | Zahtevaju HTTPS - što je ionako obavezno. |
+| Jak heš lozinke, pravila lozinke (5.14) | Nevidljivo korisniku. |
+| Bez otkrivanja naloga: isti odgovori, isto vreme prijave, mejlovi u pozadini | 5.1, 5.2 |
+| Zaštita od preuzimanja naloga unapred (5.1) | |
+| Ograničenje broja zahteva (5.13) | Može da se isključi u `appsettings.json`. |
+| Dnevnik događaja i evidencija sesija u bazi | Služe i za "odjavu" koja stvarno važi odmah; stranice za njih su posebne funkcije. |
+| Data Protection ključevi u bazi (5.17) | |
 
-### Šta je uvek uključeno (ne može se isključiti prekidačem)
+### Prekidači u `appsettings.json` (sekcija `Security`)
 
-| Funkcija | Zašto je uvek uključena / kako se ipak menja |
-|----------|---------------------------------------------|
-| Zaključavanje posle promašaja | Osnovna zaštita. Broj pokušaja se menja u `Program.cs`. |
-| Sigurnosna zaglavlja i CSP | Nemaju cenu za korisnika. Pravila se menjaju u `SecurityHeadersMiddleware.cs`. |
-| `__Host-` kolačići | Zahtevaju HTTPS - što je ionako obavezno za produkciju. |
-| Jak heš lozinke | Nevidljiv korisniku. |
-| Google/Facebook | Uključuju se samo upisivanjem ključeva (vidi 5.8). |
-| Potvrda mejla | Menja se u `Program.cs` (vidi 5.1). |
-
-### Admin panel i jezici u paketima
-
-- **Admin panel** je koristan u svakom paketu - dovoljno je ne upisati nijedan mejl u `Admin:Emails` ako ti ne treba
-  (niko neće imati pristup). Za potpuno uklanjanje vidi 5.20.
-- **Jezici:** za aplikaciju samo na srpskom ili samo na engleskom vidi 5.19 ("Samo jedan jezik").
-
-### Kada ipak ukloniti kod?
-
-Samo ako baš ne želiš da kod postoji u projektu. Za svaku funkciju u [odeljku 5](#5-funkcionalnosti-jedna-po-jedna) piše
-koje akcije, view-ovi i fajlovi joj pripadaju. Postupak: obriši view-ove i fajlove te funkcije, obriši njene akcije iz
-kontrolera, obriši njen red u `_ManageNav.cshtml` i registraciju u `Program.cs`, pa pokreni **Build** - Visual Studio će
-podvući sve što je još upućeno na obrisani kod.
+Za funkcije koje aplikacija ima: `EnableTwoFactor`, `EnablePasskeys`, `RequireRecentAuthentication` (sudo),
+`EnableRateLimiting`, `CheckBreachedPasswords`, `SendSecurityNotifications`, `RequireTwoFactorForAdmins`.
+Svi su podrazumevano `true`; vidi i [odeljak 9](#9-sva-podešavanja-na-jednom-mestu).
 
 ---
 
-## 7. Kako preneti sistem u novu aplikaciju
+## 7. Nova aplikacija jednom komandom (šablon)
 
-### Opcija A (preporučeno): nova aplikacija počinje od ovog projekta
+Ovaj repozitorijum je istovremeno i **`dotnet new` šablon**. Umesto kopiranja i preimenovanja fajlova, nova aplikacija
+se pravi jednom komandom - sa tvojim imenom, izabranim paketom, bazom i jezikom.
 
-Ovo je najlakše i najsigurnije - dobijaš sve provereno i odmah radi.
+### 7.1 Instalacija šablona (jednom na računaru)
 
-1. **Kopiraj ceo repozitorijum** u novi folder (ili na GitHub-u napravi fork; ako repozitorijum označiš kao
-   *Template repository* u Settings, dobijaš i dugme *Use this template*).
-2. **Promeni ime aplikacije.** U Visual Studio-u: *Edit → Find and Replace → Replace in Files* (`Ctrl+Shift+H`):
-   - `IdentityToMvc.Web` → `TvojaAplikacija.Web` (namespace u svim `.cs` i `.cshtml` fajlovima);
-   - preimenuj fajlove `IdentityToMvc.sln` i `IdentityToMvc.Web.csproj` i folder `IdentityToMvc.Web`;
-   - tekst `IdentityToMvc` se pojavljuje još na ovim mestima - promeni ga u ime tvoje aplikacije:
-     - `Program.cs`: imena kolačića (`__Host-IdentityToMvc.Auth`, `.Xsrf`, `.TempData`) i `SetApplicationName("IdentityToMvc")`;
-     - `Security/RecentAuthentication.cs`: kolačić `__Host-IdentityToMvc.Reauth`;
-     - `Localization/LocalizationSetup.cs`: kolačić `__Host-IdentityToMvc.Culture`;
-     - `Helpers/AuthenticatorHelper.cs`: ime koje se prikazuje u aplikaciji na telefonu;
-     - `appsettings.json`: `FromName` u SMTP sekciji;
-     - `Views/Shared/_Layout.cshtml`: naslov i ime u gornjoj traci, link ka GitHub-u u podnožju.
-3. **Podesi bazu** u `appsettings.Local.json`:
-   ```json
-   {
-     "ConnectionStrings": {
-       "Default": "Server=(localdb)\\MSSQLLocalDB;Database=TvojaAplikacija;Trusted_Connection=True;TrustServerCertificate=True"
-     }
-   }
-   ```
-4. **Napravi bazu** (jednom). U terminalu, u folderu projekta:
-   ```bash
-   dotnet tool install --global dotnet-ef      # samo prvi put na računaru
-   dotnet ef migrations add InitialIdentitySchema -o Data/Migrations
-   dotnet ef database update
-   ```
-   Ili u Visual Studio-u (*Tools → NuGet Package Manager → Package Manager Console*):
-   `Add-Migration InitialIdentitySchema -OutputDir Data/Migrations`, pa `Update-Database`.
-5. **Podesi mejl** (SMTP sekcija, vidi 5.16), **upiši svoj mejl u `Admin:Emails`** (5.20) i **izaberi paket** (odeljak 6).
-6. **Pokreni** (`F5` u Visual Studio-u ili `dotnet run`) i otvori `https://localhost:.../User/Account/Register`.
-7. **Dodaj svoje stranice** (novi kontroleri u folderu `Controllers`, view-ovi u `Views`) i zaštiti ih (odeljak 8).
+Dok šablon nije objavljen (vidi 7.5), instalira se iz repozitorijuma:
 
-### Opcija B: dodavanje u postojeću aplikaciju
+```bash
+git clone https://github.com/MarkoLazic4/IdentityToMvc.git
+dotnet new install ./IdentityToMvc
+```
 
-Ako već imaš aplikaciju i želiš da joj dodaš ovaj sistem:
+Kada bude objavljen na NuGet-u, dovoljno je: `dotnet new install IdentityToMvc.Templates`.
+
+Posle instalacije postoje dva šablona:
+
+| Šablon | Čemu služi |
+|--------|------------|
+| `identitymvc` | Pravi **novu aplikaciju**. |
+| `identitymvc-add` | Dodaje **jednu funkciju** u aplikaciju koja je već napravljena (vidi 7.3). |
+
+U Visual Studio-u se šablon pojavljuje u *File → New → Project* kao **"ASP.NET Core MVC with Identity (IdentityToMvc)"**,
+sa padajućim menijima za paket, bazu, jezik i funkcije.
+
+### 7.2 Pravljenje aplikacije
+
+```bash
+dotnet new identitymvc -n Alat --tier basic --lang sr
+dotnet new identitymvc -n Prodavnica --tier standard --google --db postgres
+dotnet new identitymvc -n Klinika --tier full --lang both
+dotnet new identitymvc -n Portal --tier basic --admin --personal-data --tests
+```
+
+- `-n` - ime aplikacije. Od njega nastaju folder, projekti (`Prodavnica.Web`, `Prodavnica.Tests`), namespace, imena
+  kolačića, ime u aplikaciji za 2FA, ime baze - **ništa ne treba ručno preimenovati**.
+- `--tier` - paket (`basic`, `standard`, `full`); bez njega je `standard`.
+- `--db` - baza (`sqlserver`, `postgres`, `sqlite`); bez njega je `sqlserver`.
+- `--lang` - jezik (`both`, `sr`, `en`); bez njega su oba, srpski podrazumevano.
+- ostali prekidači **dodaju** funkcije na paket (tabela u [odeljku 6](#6-paketi-osnovno-standardno-kompletno)).
+  Da bi funkcija izostala, izaberi manji paket i dodaj samo ono što ti treba.
+
+Spisak svih opcija: `dotnet new identitymvc --help`.
+
+**Šta dobijaš:** rešenje sa projektom `<Ime>.Web` (i `<Ime>.Tests` ako su testovi uključeni), `README.md` sa spiskom
+funkcija koje aplikacija ima i GitHub Actions proverom (`.github/workflows/ci.yml`).
+
+**Pokretanje:**
+
+1. Podesi mejl (SMTP sekcija, vidi 5.16). U Development-u stranica "Proveri mejl" sama prikazuje link za potvrdu,
+   pa sve može da se isproba i bez mejl servera.
+2. Proveri adresu baze u `<Ime>.Web/appsettings.Development.json` (SQL Server LocalDB, PostgreSQL na `localhost` ili
+   SQLite fajl pored aplikacije).
+3. `cd <Ime>.Web` i `dotnet run` (ili `F5` u Visual Studio-u). **Baza se sama napravi** iz gotovih migracija
+   (`Data/Migrations`) - nije potrebna komanda `dotnet ef`.
+4. Ako aplikacija ima admin panel: upiši svoj mejl u `Admin:Emails` (5.20).
+5. Dodaj svoje stranice i zaštiti ih ([odeljak 8](#8-autorizacija---kako-zaštititi-sopstvene-stranice)).
+
+### 7.3 Dodavanje funkcije kasnije (`identitymvc-add`)
+
+Ako si napravio osnovnu aplikaciju, a kasnije ti zatreba npr. admin panel - ne moraš ništa da kopiraš ručno.
+U folderu rešenja (tamo gde je `.sln`) pokreni:
+
+```bash
+dotnet new identitymvc-add --feature admin -n Portal --tier basic --personal-data --tests
+```
+
+- `--feature` - funkcija koja se dodaje: `profile`, `email-change`, `personal-data`, `unlock-link`,
+  `breached-passwords`, `two-factor`, `sudo`, `passkeys`, `google`, `facebook`, `notifications`, `devices`,
+  `activity`, `admin`, `tests`;
+- `-n` i ostale opcije - **iste kao kada je aplikacija pravljena** (po njima šablon zna kako izgleda tvoja aplikacija,
+  npr. da li admin panel treba da prikazuje 2FA).
+
+Komanda:
+
+1. **fizički iskopira fajlove** te funkcije u projekat (kontrolere, view-ove, ViewModel-e, skripte, testove);
+2. napravi fajl **`ADD-<funkcija>.md`** sa spiskom koda koji treba dodati u zajedničke fajlove (`Program.cs`,
+   meni, `appsettings.json`...). Svaki korak kaže u koji fajl, iznad ili ispod koje linije, i šta da nalepiš.
+   Korak označen *"Only if your app has ..."* preskoči ako tvoja aplikacija nema tu funkciju.
+
+Posle toga: **Build**, pa (ako imaš testove) `dotnet test`. Kada završiš, `ADD-<funkcija>.md` možeš da obrišeš.
+
+> Ovo je isto kao Microsoft-ov "scaffold" za Identity: dobijaš prave fajlove koje posle menjaš kako hoćeš.
+> CI ovog repozitorijuma za svaku funkciju automatski prati njen `ADD-<funkcija>.md` na osnovnoj aplikaciji i proverava
+> da se sve kompajlira i da testovi prolaze.
+
+### 7.4 Nova verzija šablona
+
+- Kada se šablon ažurira: `git pull` pa ponovo `dotnet new install ./IdentityToMvc --force`
+  (ili `dotnet new update` kada bude na NuGet-u).
+- **Već napravljene aplikacije se ne menjaju same** - one su tvoj kod. Ako nova verzija donese bezbednosnu ispravku,
+  opis u [odeljku 13](#13-šta-je-novo-u-ovoj-verziji) kaže koji fajl i šta da promeniš.
+
+### 7.5 Objavljivanje šablona (kada odlučiš)
+
+Šablon je spreman za pakovanje; objavljivanje je poseban, namerni korak:
+
+```bash
+dotnet pack templates/IdentityToMvc.Templates.csproj -o artifacts
+```
+
+Nastaje `artifacts/IdentityToMvc.Templates.1.0.0.nupkg` sa oba šablona. Zatim, zavisno od toga ko sme da ga koristi:
+
+| Gde | Ko može da ga koristi | Kako se objavljuje |
+|-----|-----------------------|--------------------|
+| **nuget.org** (javno) | Bilo ko | `dotnet nuget push artifacts/*.nupkg --api-key <ključ> --source https://api.nuget.org/v3/index.json` (ključ se pravi na nuget.org) |
+| **GitHub Packages** (privatno) | Ti i ljudi kojima daš pristup | `dotnet nuget push ... --source https://nuget.pkg.github.com/MarkoLazic4/index.json` (GitHub token) |
+| **Samo repozitorijum** | Ko ima pristup repozitorijumu | Ništa - instalira se sa `dotnet new install ./IdentityToMvc` |
+
+Pre svake nove verzije povećaj `<Version>` u `templates/IdentityToMvc.Templates.csproj`.
+
+### 7.6 Aplikacija koja nije napravljena šablonom
+
+Ako već imaš aplikaciju i želiš da joj dodaš ovaj sistem, najlakše je da napraviš novu aplikaciju šablonom sa istim
+imenom u privremenom folderu, pa odatle prekopiraš fajlove. Ručni postupak:
 
 1. **Paketi** - u `.csproj` svoje aplikacije dodaj iste `PackageReference` stavke kao u `IdentityToMvc.Web.csproj`
    (Identity.EntityFrameworkCore, EntityFrameworkCore.SqlServer, DataProtection.EntityFrameworkCore, Google/Facebook ako ih koristiš...).
@@ -690,7 +770,8 @@ Ako već imaš aplikaciju i želiš da joj dodaš ovaj sistem:
 5. **`_ViewImports.cshtml`** - dodaj `@using TvojaAplikacija.Security`, `@using TvojaAplikacija.Localization` i
    `@inject IHtmlLocalizer<SharedResource> L` (prekopiraj iz `_ViewImports.cshtml` ovog projekta).
 6. **appsettings.json** - prenesi sekcije `SMTP`, `Security`, `Admin` i `Localization`.
-7. **Migracija baze** - kao u opciji A, korak 4.
+7. **Migracije baze** - prekopiraj `Data/Migrations/<tvoja baza>` (ili, ako već imaš svoje migracije, napravi novu:
+   `dotnet ef migrations add IdentityToMvc`).
 8. **Pokreni Build** i ispravi namespace-ove koje Visual Studio podvuče.
 
 ---
@@ -748,7 +829,8 @@ traži ponovo (vidi 5.10).
 
 | Podešavanje | Značenje | Podrazumevano |
 |-------------|----------|---------------|
-| `ConnectionStrings:Default` | Adresa baze | - |
+| `ConnectionStrings:Default` | Adresa baze (u Development-u u `appsettings.Development.json`, u produkciji kao tajna/promenljiva `ConnectionStrings__Default`) | - |
+| `Database:ApplyMigrationsOnStartup` | Aplikacija pri pokretanju sama napravi/ažurira bazu | `true` u Development-u, inače `false` |
 | `SMTP:Host`, `Port`, `EnableSsl` | Mejl server | -, 587, true |
 | `SMTP:Username`, `Password` | Nalog za mejl server | - |
 | `SMTP:From`, `FromName` | Pošiljalac mejlova | - , IdentityToMvc |
@@ -794,9 +876,7 @@ Vrednosti koje se menjaju u kodu (`Program.cs`, osim ako nije drugačije naveden
 - [ ] Lozinke i ključevi su u **tajnim podešavanjima** servera (environment variables, Azure Key Vault...), ne u `appsettings.json`.
   Primer imena promenljive: `SMTP__Password`, `ConnectionStrings__Default` (dve donje crte umesto dvotačke).
 - [ ] **SMTP radi** - pošalji sebi test (registracija ili "Forgot password").
-- [ ] Napravljena je **nova migracija** posle preuzimanja ove verzije (nove tabele `SecurityEvents` i `UserSessions`):
-  `dotnet ef migrations add SecurityEventsAndSessions -o Data/Migrations`.
-- [ ] Migracija je primenjena na produkcionu bazu (`dotnet ef database update` ili SQL skripta: `dotnet ef migrations script`).
+- [ ] Migracije su primenjene na produkcionu bazu (`dotnet ef database update` ili SQL skripta: `dotnet ef migrations script`).
 - [ ] Ako postoji reverse proxy - upisan je u `Security:KnownProxies`.
 - [ ] Ako se koriste passkey-ovi na više poddomena - podešen `Security:PasskeyServerDomain`.
 - [ ] Google/Facebook: u njihovim konzolama upisana je adresa povratka `https://tvojsajt/signin-google` odnosno `/signin-facebook`.
@@ -828,6 +908,10 @@ Vrednosti koje se menjaju u kodu (`Program.cs`, osim ako nije drugačije naveden
 | Neki tekst je na engleskom iako je izabran srpski | Tekst nema prevod. Pokreni `python3 tools/extract_keys.py` i dodaj prevod u `SharedResource.sr-Latn.resx` (5.19). |
 | Greška "Invalid object name 'SecurityEvents'" ili "'UserSessions'" | Nova migracija nije napravljena/primenjena (odeljak 10). |
 | Korisnik je odjavljen odmah posle prijave na drugom mestu | Neko je na stranici *Devices* ugasio tu sesiju ili je administrator odjavio korisnika - pogledaj *Security activity*. |
+| `dotnet new identitymvc-add` javlja da bi promenio postojeće fajlove | Funkcija (ili njen deo) već postoji u aplikaciji. Proveri da li si pokrenuo komandu sa istim opcijama kao pri pravljenju aplikacije. |
+| Build greške posle `identitymvc-add` | Nisu dodati svi koraci iz `ADD-<funkcija>.md`, ili je dodat korak "Only if ..." za funkciju koju aplikacija nema. |
+| Greška "The model for context has pending changes" ili dupla tabela | Stare, ručno pravljene migracije iz ranije verzije su pored novih gotovih. Obriši svoje stare migracije (i bazu na razvojnom računaru) i ostavi `Data/Migrations/<baza>`. |
+| `dotnet new identitymvc` ne postoji | Šablon nije instaliran - vidi 7.1. |
 | Build prijavljuje greške posle prenosa koda | Najčešće namespace - zameni `IdentityToMvc.Web` imenom svog projekta u svim fajlovima. |
 
 ---
@@ -852,7 +936,7 @@ Posle prenosa u novu aplikaciju prođi ovu listu (traje oko 10 minuta):
 14. Manage → *Security activity* → vidiš prijave i pogrešne lozinke iz koraka 2.
 15. Prijavi se kao administrator (mejl iz `Admin:Emails`, sa 2FA) → *Admin panel* → nađi probni nalog → zaključaj ga →
     probni korisnik ne može da se prijavi; otključaj ga.
-16. U terminalu: `dotnet test --project IdentityToMvc.Tests` → svi testovi prolaze.
+16. U terminalu: `dotnet test --project <Ime>.Tests` → svi testovi prolaze.
 
 Ako sve prolazi - sistem je spreman, a ti možeš da se posvetiš stvarnoj funkcionalnosti svoje aplikacije.
 
@@ -869,12 +953,18 @@ Ako sve prolazi - sistem je spreman, a ti možeš da se posvetiš stvarnoj funkc
 | Otkrivanje naloga pri registraciji | Da vidi grešku "mejl je zauzet". | Isti odgovor za sve, vlasnik dobija mejl (5.1). |
 | 2FA tajne u bazi kao običan tekst | Sa kopijom baze da pravi važeće 2FA kodove. | Šifrovanje i heširanje (5.17). |
 | Zloupotreba zaključavanja | Da stalno drži tuđi nalog zaključanim. | Link za otključavanje i prijava passkey-om (5.3). |
+| Reset lozinke skidao je i zaključavanje administratora | Korisnik kog je administrator zaključao mogao je sam da se "otključa" preko "Forgot password". | Reset lozinke skida samo zaključavanje zbog pogrešnih lozinki (`AccountController.cs`, akcija `ResetPassword`). |
+
+**Šablon:** nova aplikacija jednom komandom (`dotnet new identitymvc`) sa izborom paketa, baze (SQL Server, PostgreSQL,
+SQLite), jezika i funkcija; kasnije dodavanje funkcije (`dotnet new identitymvc-add`); gotove migracije; NuGet paket
+spreman za objavljivanje (odeljak 7).
 
 **Nove mogućnosti:** uređaji i odjava pojedinačnog uređaja (5.11), bezbednosna aktivnost i dnevnik u bazi (5.12),
 mejl pri prijavi sa novog uređaja (5.11), lokalizacija srpski/engleski (5.19), admin panel (5.20), automatsko čišćenje
 starih podataka (5.21), automatski testovi i CI (5.22), šifrovanje ključeva sertifikatom (5.17).
 
-**Posle preuzimanja ove verzije obavezno:** napravi i primeni novu migraciju (odeljak 10) i upiši svoj mejl u `Admin:Emails`.
+**Posle preuzimanja ove verzije:** ako si ranije sam pravio migracije, obriši ih - repozitorijum sada ima gotove
+(`Data/Migrations/SqlServer`), a u Development-u se baza sama ažurira. Upiši svoj mejl u `Admin:Emails`.
 
 **Preostali rizik (poznat i prihvaćen):** ako napadač registruje tuđi mejl, vlasnik dobije mejl za potvrdu. Ako vlasnik
 klikne taj link u roku od 3 sata, **potvrdiće nalog koji je napravio napadač** (sa napadačevom lozinkom). Zato mejl za

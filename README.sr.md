@@ -35,6 +35,43 @@ Projekat prikazuje kako prevesti standardne Identity RCL stranice u MVC controll
 
 ---
 
+## Korišćenje kao šablon
+
+Ovaj repozitorijum je i `dotnet new` šablon: svaka nova aplikacija dobija ceo sistem naloga, preimenovan na ime
+aplikacije, samo sa funkcijama koje izabereš.
+
+```bash
+git clone https://github.com/MarkoLazic4/IdentityToMvc.git
+dotnet new install ./IdentityToMvc            # jednom (kasnije: dotnet new install IdentityToMvc.Templates)
+
+dotnet new identitymvc -n Alat       --tier basic --lang sr
+dotnet new identitymvc -n Prodavnica --tier standard --google --db postgres
+dotnet new identitymvc -n Klinika    --tier full --lang both
+dotnet new identitymvc -n Portal     --tier basic --admin --personal-data --tests
+```
+
+| Paket | Šta dobijaš |
+|-------|-------------|
+| `--tier basic` | Registracija, potvrda mejla, prijava, zaboravljena lozinka, zaključavanje, promena lozinke |
+| `--tier standard` (podrazumevano) | basic + 2FA, uređaji, bezbednosna aktivnost, promena mejla, lični podaci, bezbednosni mejlovi, provera procurelih lozinki, sudo mode, link za otključavanje, testovi |
+| `--tier full` | standard + passkeys i admin panel |
+
+Prekidači dodaju funkcije na bilo koji paket: `--profile --email-change --personal-data --unlock-link --breached-passwords
+--two-factor --sudo --passkeys --google --facebook --notifications --devices --activity --admin --tests`.
+`--db sqlserver|postgres|sqlite` (migracije su uključene i u Development-u se primenjuju same) i `--lang both|sr|en`.
+
+**Dodavanje funkcije kasnije** - kopira fajlove funkcije u postojeću aplikaciju i napravi `ADD-<funkcija>.md` sa kodom
+koji treba dodati u zajedničke fajlove (pokreće se u folderu rešenja, sa opcijama sa kojima je aplikacija napravljena):
+
+```bash
+dotnet new identitymvc-add --feature admin -n Portal --tier basic --personal-data --tests
+```
+
+**Pakovanje / objavljivanje:** `dotnet pack templates/IdentityToMvc.Templates.csproj -o artifacts` pravi NuGet paket sa
+oba šablona; objavljivanje na nuget.org ili privatni feed je poseban korak (uputstvo, odeljak 7).
+
+---
+
 ## Bezbednost
 
 Pored podrazumevanih Identity podešavanja, aplikacija dodaje:
@@ -85,8 +122,8 @@ Podešavanja (`Security` sekcija u `appsettings.json`):
 }
 ```
 
-> Passkeys zahtevaju HTTPS (ili `localhost`). Posle ovih izmena napravi novu migraciju - šema sada
-> sadrži tabele za passkeys, Data Protection ključeve, `SecurityEvents` i `UserSessions`.
+> Passkeys zahtevaju HTTPS (ili `localhost`). Uključene migracije prave tabele za passkeys, Data Protection ključeve,
+> `SecurityEvents` i `UserSessions`.
 
 ![Passkeys](docs/screenshots/passkeys.png)
 
@@ -95,7 +132,7 @@ Podešavanja (`Security` sekcija u `appsettings.json`):
 ## Preduslovi
 - [.NET SDK 10.x](https://dotnet.microsoft.com/download/dotnet/10.0)
 - Visual Studio 2026 (preporučeno) ili VS Code + C# Dev Kit  
-- SQL Server / LocalDB / SQL Express  
+- SQL Server / LocalDB / SQL Express (ili PostgreSQL / SQLite za aplikacije napravljene šablonom)  
 - `dotnet-ef` alat: `dotnet tool install --global dotnet-ef`  
 - (Opcionalno) SMTP server za slanje mailova (Mailtrap, Papercut ili pravi SMTP)
 
@@ -136,20 +173,10 @@ cd IdentityToMvc
 }
 ```
 
-4. **Kreiraj i primeni migracije**
+4. **Baza** - migracije su uključene (`Data/Migrations/SqlServer`) i u `Development` okruženju aplikacija pri
+   pokretanju sama pravi/ažurira bazu. Van Development-a ih primeni sa `dotnet ef database update`.
+   *Prelaziš sa starije verzije u kojoj si sam pravio migracije? Obriši ih (i lokalnu bazu).*
 
-```bash
-cd IdentityToMvc.Web
-dotnet ef migrations add InitialIdentitySchema -o Data/Migrations
-dotnet ef database update
-```
-
-**ILI (Visual Studio — Package Manager Console)**
-
-```powershell
-Add-Migration InitialIdentitySchema -OutputDir Data/Migrations
-Update-Database
-```
 5. **Pokreni aplikaciju**
 
 ```bash

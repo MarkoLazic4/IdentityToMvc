@@ -35,6 +35,43 @@ This project demonstrates how to translate the standard Identity RCL Pages into 
 
 ---
 
+## Use it as a template
+
+This repository is also a `dotnet new` template: every new app starts with the whole account system, renamed to your
+app, with only the features you pick.
+
+```bash
+git clone https://github.com/MarkoLazic4/IdentityToMvc.git
+dotnet new install ./IdentityToMvc            # once (later: dotnet new install IdentityToMvc.Templates)
+
+dotnet new identitymvc -n Tool   --tier basic --lang sr
+dotnet new identitymvc -n Shop   --tier standard --google --db postgres
+dotnet new identitymvc -n Clinic --tier full --lang both
+dotnet new identitymvc -n Portal --tier basic --admin --personal-data --tests
+```
+
+| Package | What you get |
+|---------|--------------|
+| `--tier basic` | Registration, email confirmation, login, forgot password, lockout, password change |
+| `--tier standard` (default) | basic + 2FA, devices, security activity, email change, personal data, security emails, breached-password check, sudo mode, unlock link, tests |
+| `--tier full` | standard + passkeys and the admin panel |
+
+Feature switches add to any package: `--profile --email-change --personal-data --unlock-link --breached-passwords
+--two-factor --sudo --passkeys --google --facebook --notifications --devices --activity --admin --tests`.
+`--db sqlserver|postgres|sqlite` (migrations included, applied automatically in Development) and `--lang both|sr|en`.
+
+**Add a feature later** - copies the feature's files into an existing app and writes `ADD-<feature>.md` with the code
+to add to the shared files (run it in the solution folder with the options the app was created with):
+
+```bash
+dotnet new identitymvc-add --feature admin -n Portal --tier basic --personal-data --tests
+```
+
+**Package / publish:** `dotnet pack templates/IdentityToMvc.Templates.csproj -o artifacts` builds a NuGet template package
+with both templates; pushing it to nuget.org or a private feed is a separate step (see the guide, section 7).
+
+---
+
 ## Security
 
 On top of ASP.NET Core Identity's defaults the app adds:
@@ -85,8 +122,8 @@ Configuration (`Security` section in `appsettings.json`):
 }
 ```
 
-> Passkeys require HTTPS (or `localhost`). After pulling these changes, create a new migration - the
-> schema now includes the passkeys, Data Protection keys, `SecurityEvents` and `UserSessions` tables.
+> Passkeys require HTTPS (or `localhost`). The included migrations create the passkeys, Data Protection keys,
+> `SecurityEvents` and `UserSessions` tables.
 
 ![Passkeys](docs/screenshots/passkeys.png)
 
@@ -95,7 +132,7 @@ Configuration (`Security` section in `appsettings.json`):
 ## Prerequisites
 - [.NET SDK 10.x](https://dotnet.microsoft.com/download/dotnet/10.0)
 - Visual Studio 2026 (recommended) or VS Code + C# Dev Kit  
-- SQL Server / LocalDB / SQL Express  
+- SQL Server / LocalDB / SQL Express (or PostgreSQL / SQLite for apps made with the template)  
 - `dotnet-ef` tool: `dotnet tool install --global dotnet-ef`  
 - (Optional) SMTP server for email sending (Mailtrap, Papercut, or real SMTP)
 
@@ -136,20 +173,10 @@ cd IdentityToMvc
 }
 ```
 
-4. **Create and apply migrations**
+4. **Database** - the migrations are included (`Data/Migrations/SqlServer`) and in the `Development` environment the
+   app creates/upgrades the database on startup. Elsewhere apply them with `dotnet ef database update`.
+   *Upgrading from an older version where you created your own migrations? Delete them (and the local database).*
 
-```bash
-cd IdentityToMvc.Web
-dotnet ef migrations add InitialIdentitySchema -o Data/Migrations
-dotnet ef database update
-```
-
-**OR (Visual Studio — Package Manager Console)**
-
-```powershell
-Add-Migration InitialIdentitySchema -OutputDir Data/Migrations
-Update-Database
-```
 5. **Run the application**
 
 ```bash
