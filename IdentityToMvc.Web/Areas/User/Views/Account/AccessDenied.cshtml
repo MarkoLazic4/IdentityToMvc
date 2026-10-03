@@ -1,8 +1,10 @@
 ﻿@{
-    ViewData["Title"] = "Access denied";
+    ViewData["Title"] = L["Access denied"].Value;
 }
 
-<header>
-    <h1 class="text-danger">@ViewData["Title"]</h1>
-    <p class="text-danger">You do not have access to this resource.</p>
-</header>
+<div class="card status-page">
+    <span class="icon-badge icon-badge-danger"><i class="bi bi-slash-circle"></i></span>
+    <h1>@L["Access denied"]</h1>
+    <p>@L["You do not have access to this resource."]</p>
+    <a class="btn btn-primary" asp-area="" asp-controller="Home" asp-action="Index">@L["Back to home"]</a>
+</div>

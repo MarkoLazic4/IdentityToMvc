@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 
 namespace IdentityToMvc.Web.Areas.User.ViewModels.Account
@@ -10,21 +9,20 @@ namespace IdentityToMvc.Web.Areas.User.ViewModels.Account
         public IList<AuthenticationScheme> ExternalLogins { get; set; } = new List<AuthenticationScheme>();
         public string? ReturnUrl { get; set; } = null;
 
-        [TempData]
-        public string ErrorMessage { get; set; } = string.Empty;
-
 
         public class InputModel
         {
-            [Required]
-            [EmailAddress]
+            [Required(ErrorMessage = "The {0} field is required.")]
+            [EmailAddress(ErrorMessage = "The {0} field is not a valid e-mail address.")]
+            [Display(Name = "Email")]
             public string Email { get; set; } = string.Empty;
 
-            [Required]
+            [Required(ErrorMessage = "The {0} field is required.")]
             [DataType(DataType.Password)]
+            [Display(Name = "Password")]
             public string Password { get; set; } = string.Empty;
 
-            [Display(Name = "Remember me?")]
+            [Display(Name = "Remember me")]
             public bool RememberMe { get; set; }
         }
     }

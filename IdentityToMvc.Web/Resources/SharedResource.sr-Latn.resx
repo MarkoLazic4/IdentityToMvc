@@ -1,0 +1,517 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Serbian (Latin) translations. The key (name) is the English text used in the code and views. -->
+<!-- Run tools/extract_keys.py to list texts that still need a translation. -->
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="2fa has been disabled. You can reenable 2fa when you setup an authenticator app" xml:space="preserve"><value>Dvofaktorska autentifikacija je isključena. Možete je ponovo uključiti kada podesite aplikaciju za autentifikaciju.</value></data>
+  <data name="[BindProperty] Input classes live on as strongly typed view models with the same validation." xml:space="preserve"><value>[BindProperty] Input klase nastavljaju da žive kao strogo tipizirani view modeli sa istom validacijom.</value></data>
+  <data name="A new passkey was registered for your account." xml:space="preserve"><value>Za vaš nalog je registrovan novi passkey.</value></data>
+  <data name="A passkey was removed from your account." xml:space="preserve"><value>Sa vašeg naloga je uklonjen passkey.</value></data>
+  <data name="A password was added to your account" xml:space="preserve"><value>Vašem nalogu je dodata lozinka</value></data>
+  <data name="A password was added to your account, so it can now be used to log in." xml:space="preserve"><value>Vašem nalogu je dodata lozinka, pa sada može da se koristi za prijavu.</value></data>
+  <data name="A security-relevant change was made to your account." xml:space="preserve"><value>Na vašem nalogu je napravljena bezbednosno važna izmena.</value></data>
+  <data name="A user with this login already exists." xml:space="preserve"><value>Korisnik sa ovom prijavom već postoji.</value></data>
+  <data name="Access denied" xml:space="preserve"><value>Pristup odbijen</value></data>
+  <data name="Account settings" xml:space="preserve"><value>Podešavanja naloga</value></data>
+  <data name="Account temporarily locked" xml:space="preserve"><value>Nalog je privremeno zaključan</value></data>
+  <data name="Account unlocked" xml:space="preserve"><value>Nalog je otključan</value></data>
+  <data name="Actions" xml:space="preserve"><value>Akcije</value></data>
+  <data name="Activate account" xml:space="preserve"><value>Aktiviraj nalog</value></data>
+  <data name="Active devices" xml:space="preserve"><value>Aktivni uređaji</value></data>
+  <data name="Active now" xml:space="preserve"><value>Aktivni sada</value></data>
+  <data name="Add a passkey" xml:space="preserve"><value>Dodaj passkey</value></data>
+  <data name="Add a second step to your login with an authenticator app." xml:space="preserve"><value>Dodajte drugi korak prijavi pomoću aplikacije za autentifikaciju.</value></data>
+  <data name="Add another service" xml:space="preserve"><value>Dodaj još jedan servis</value></data>
+  <data name="Add authenticator app" xml:space="preserve"><value>Dodaj aplikaciju za autentifikaciju</value></data>
+  <data name="Add role" xml:space="preserve"><value>Dodaj ulogu</value></data>
+  <data name="Added {0}" xml:space="preserve"><value>Dodat {0}</value></data>
+  <data name="Admin panel" xml:space="preserve"><value>Admin panel</value></data>
+  <data name="Administrators must turn on two-factor authentication or add a passkey before using the admin panel." xml:space="preserve"><value>Administratori moraju da uključe dvofaktorsku autentifikaciju ili dodaju passkey pre korišćenja admin panela.</value></data>
+  <data name="All events" xml:space="preserve"><value>Svi događaji</value></data>
+  <data name="All other devices were signed out." xml:space="preserve"><value>Svi ostali uređaji su odjavljeni.</value></data>
+  <data name="All other sessions of your account were signed out." xml:space="preserve"><value>Sve ostale sesije vašeg naloga su odjavljene.</value></data>
+  <data name="All users" xml:space="preserve"><value>Svi korisnici</value></data>
+  <data name="Already have an account?" xml:space="preserve"><value>Već imate nalog?</value></data>
+  <data name="An account with this email already exists. Log in with it, then connect the provider under Manage account." xml:space="preserve"><value>Nalog sa ovom email adresom već postoji. Prijavite se njime, a zatim povežite servis u odeljku Upravljanje nalogom.</value></data>
+  <data name="An administrator changed the roles of your account." xml:space="preserve"><value>Administrator je promenio uloge vašeg naloga.</value></data>
+  <data name="An administrator locked your account. You can't log in until it is unlocked." xml:space="preserve"><value>Administrator je zaključao vaš nalog. Ne možete se prijaviti dok ne bude otključan.</value></data>
+  <data name="An administrator permanently deleted your account." xml:space="preserve"><value>Administrator je trajno obrisao vaš nalog.</value></data>
+  <data name="An administrator reset your two-factor authentication" xml:space="preserve"><value>Administrator je resetovao vašu dvofaktorsku autentifikaciju</value></data>
+  <data name="An administrator signed you out of all devices" xml:space="preserve"><value>Administrator vas je odjavio sa svih uređaja</value></data>
+  <data name="An administrator signed your account out of all devices." xml:space="preserve"><value>Administrator je odjavio vaš nalog sa svih uređaja.</value></data>
+  <data name="An administrator turned off two-factor authentication and reset your authenticator key. Set it up again as soon as possible." xml:space="preserve"><value>Administrator je isključio dvofaktorsku autentifikaciju i resetovao ključ za aplikaciju za autentifikaciju. Podesite je ponovo što pre.</value></data>
+  <data name="An administrator unlocked your account. You can log in again." xml:space="preserve"><value>Administrator je otključao vaš nalog. Možete ponovo da se prijavite.</value></data>
+  <data name="An authenticator app is configured for your account." xml:space="preserve"><value>Za vaš nalog je podešena aplikacija za autentifikaciju.</value></data>
+  <data name="An error occurred while processing your request. Please try again in a moment." xml:space="preserve"><value>Došlo je do greške pri obradi zahteva. Pokušajte ponovo za trenutak.</value></data>
+  <data name="An external login provider was linked to your account." xml:space="preserve"><value>Sa vašim nalogom je povezan spoljni servis za prijavu.</value></data>
+  <data name="An external login provider was removed from your account." xml:space="preserve"><value>Sa vašeg naloga je uklonjen spoljni servis za prijavu.</value></data>
+  <data name="An unexpected error occurred while processing your request." xml:space="preserve"><value>Došlo je do neočekivane greške pri obradi zahteva.</value></data>
+  <data name="An unknown failure has occurred." xml:space="preserve"><value>Došlo je do nepoznate greške.</value></data>
+  <data name="Are you sure you want to permanently delete your account?" xml:space="preserve"><value>Da li ste sigurni da želite trajno da obrišete nalog?</value></data>
+  <data name="ASP.NET Core Identity on MVC" xml:space="preserve"><value>ASP.NET Core Identity na MVC-u</value></data>
+  <data name="Associate your {0} account" xml:space="preserve"><value>Povežite svoj {0} nalog</value></data>
+  <data name="At least 8 characters with upper- and lowercase letters, a digit and a symbol." xml:space="preserve"><value>Najmanje 8 znakova, sa velikim i malim slovima, cifrom i simbolom.</value></data>
+  <data name="Audit log" xml:space="preserve"><value>Audit log</value></data>
+  <data name="Authenticator app" xml:space="preserve"><value>Aplikacija za autentifikaciju</value></data>
+  <data name="Authenticator apps with QR code setup, remembered browsers and one-time recovery codes." xml:space="preserve"><value>Aplikacije za autentifikaciju sa podešavanjem preko QR koda, zapamćenim browserima i jednokratnim rezervnim kodovima.</value></data>
+  <data name="Authenticator code" xml:space="preserve"><value>Kod iz aplikacije</value></data>
+  <data name="Authenticator key reset" xml:space="preserve"><value>Ključ za autentifikaciju je resetovan</value></data>
+  <data name="Back to email settings" xml:space="preserve"><value>Nazad na podešavanja emaila</value></data>
+  <data name="Back to home" xml:space="preserve"><value>Nazad na početnu</value></data>
+  <data name="Back to log in" xml:space="preserve"><value>Nazad na prijavu</value></data>
+  <data name="Bad request" xml:space="preserve"><value>Neispravan zahtev</value></data>
+  <data name="Bound properties become view models" xml:space="preserve"><value>Povezana svojstva postaju view modeli</value></data>
+  <data name="Browsers and devices that are signed in to your account right now." xml:space="preserve"><value>Browseri i uređaji koji su trenutno prijavljeni na vaš nalog.</value></data>
+  <data name="Built-in" xml:space="preserve"><value>Ugrađena</value></data>
+  <data name="by administrator {0}" xml:space="preserve"><value>administrator {0}</value></data>
+  <data name="Cancel" xml:space="preserve"><value>Otkaži</value></data>
+  <data name="Change email" xml:space="preserve"><value>Promeni email</value></data>
+  <data name="Change password" xml:space="preserve"><value>Promena lozinke</value></data>
+  <data name="Check your email" xml:space="preserve"><value>Proverite email</value></data>
+  <data name="Choose a new password" xml:space="preserve"><value>Izaberite novu lozinku</value></data>
+  <data name="Choose a password to confirm your email address and activate your account. If you didn't create an account, you can ignore this email." xml:space="preserve"><value>Izaberite lozinku da biste potvrdili email adresu i aktivirali nalog. Ako niste napravili nalog, slobodno zanemarite ovaj email.</value></data>
+  <data name="Choose password" xml:space="preserve"><value>Izaberi lozinku</value></data>
+  <data name="Close" xml:space="preserve"><value>Zatvori</value></data>
+  <data name="Configure authenticator app" xml:space="preserve"><value>Podešavanje aplikacije za autentifikaciju</value></data>
+  <data name="Confirm email" xml:space="preserve"><value>Potvrda emaila</value></data>
+  <data name="Confirm email change" xml:space="preserve"><value>Potvrda promene emaila</value></data>
+  <data name="Confirm it's you" xml:space="preserve"><value>Potvrdite da ste to vi</value></data>
+  <data name="Confirm my account" xml:space="preserve"><value>Potvrdi moj nalog</value></data>
+  <data name="Confirm new email" xml:space="preserve"><value>Potvrdi novi email</value></data>
+  <data name="Confirm new password" xml:space="preserve"><value>Potvrdite novu lozinku</value></data>
+  <data name="Confirm password" xml:space="preserve"><value>Potvrdite lozinku</value></data>
+  <data name="Confirm with your password" xml:space="preserve"><value>Potvrdite lozinkom</value></data>
+  <data name="Confirm your email" xml:space="preserve"><value>Potvrdite email adresu</value></data>
+  <data name="Confirm your new email" xml:space="preserve"><value>Potvrdite novu email adresu</value></data>
+  <data name="Confirmation failed" xml:space="preserve"><value>Potvrda nije uspela</value></data>
+  <data name="Confirmation link to change email sent. Please check your email." xml:space="preserve"><value>Poslat je link za potvrdu promene emaila. Proverite poštu.</value></data>
+  <data name="Connected" xml:space="preserve"><value>Povezano</value></data>
+  <data name="Continue" xml:space="preserve"><value>Nastavi</value></data>
+  <data name="Copied" xml:space="preserve"><value>Kopirano</value></data>
+  <data name="Copy" xml:space="preserve"><value>Kopiraj</value></data>
+  <data name="Could not start the passkey request." xml:space="preserve"><value>Zahtev za passkey nije mogao da počne.</value></data>
+  <data name="Create account" xml:space="preserve"><value>Napravi nalog</value></data>
+  <data name="Create an account" xml:space="preserve"><value>Napravite nalog</value></data>
+  <data name="Create your account" xml:space="preserve"><value>Napravite nalog</value></data>
+  <data name="Current email" xml:space="preserve"><value>Trenutni email</value></data>
+  <data name="Current password" xml:space="preserve"><value>Trenutna lozinka</value></data>
+  <data name="Delete" xml:space="preserve"><value>Obriši</value></data>
+  <data name="Delete account" xml:space="preserve"><value>Brisanje naloga</value></data>
+  <data name="Delete data and close my account" xml:space="preserve"><value>Obriši podatke i zatvori nalog</value></data>
+  <data name="Delete this role? Users lose it immediately." xml:space="preserve"><value>Obrisati ovu ulogu? Korisnici je odmah gube.</value></data>
+  <data name="Deleting this data will permanently remove your account, and this cannot be recovered." xml:space="preserve"><value>Brisanjem ovih podataka nalog se trajno uklanja i ne može se vratiti.</value></data>
+  <data name="Development mode." xml:space="preserve"><value>Razvojni režim.</value></data>
+  <data name="Device" xml:space="preserve"><value>Uređaj</value></data>
+  <data name="Device signed out" xml:space="preserve"><value>Uređaj je odjavljen</value></data>
+  <data name="Devices" xml:space="preserve"><value>Uređaji</value></data>
+  <data name="Devices &amp; activity" xml:space="preserve"><value>Uređaji i aktivnost</value></data>
+  <data name="Didn't get the confirmation email?" xml:space="preserve"><value>Niste dobili email za potvrdu?</value></data>
+  <data name="Disable 2FA" xml:space="preserve"><value>Isključi 2FA</value></data>
+  <data name="Disable two-factor authentication" xml:space="preserve"><value>Isključivanje dvofaktorske autentifikacije</value></data>
+  <data name="Disabled" xml:space="preserve"><value>Isključeno</value></data>
+  <data name="Disabling 2FA does not change the key used in your authenticator app." xml:space="preserve"><value>Isključivanje 2FA ne menja ključ u aplikaciji za autentifikaciju.</value></data>
+  <data name="Don't have an account?" xml:space="preserve"><value>Nemate nalog?</value></data>
+  <data name="Download" xml:space="preserve"><value>Preuzmi</value></data>
+  <data name="Download your data" xml:space="preserve"><value>Preuzmite svoje podatke</value></data>
+  <data name="Each code can be used once to log in if you lose access to your authenticator app." xml:space="preserve"><value>Svaki kod može jednom da se iskoristi za prijavu ako izgubite pristup aplikaciji za autentifikaciju.</value></data>
+  <data name="Each Razor Page handler maps to a GET/POST action on AccountController or ManageController." xml:space="preserve"><value>Svaki Razor Page handler postaje GET/POST akcija u AccountController-u ili ManageController-u.</value></data>
+  <data name="Each recovery code can only be used once." xml:space="preserve"><value>Svaki rezervni kod može da se iskoristi samo jednom.</value></data>
+  <data name="Email" xml:space="preserve"><value>Email</value></data>
+  <data name="Email '{0}' is already taken." xml:space="preserve"><value>Email '{0}' je već zauzet.</value></data>
+  <data name="Email '{0}' is invalid." xml:space="preserve"><value>Email '{0}' nije ispravan.</value></data>
+  <data name="Email change failed" xml:space="preserve"><value>Promena emaila nije uspela</value></data>
+  <data name="Email change requested" xml:space="preserve"><value>Zatražena je promena emaila</value></data>
+  <data name="Email changed" xml:space="preserve"><value>Email je promenjen</value></data>
+  <data name="Email confirmed" xml:space="preserve"><value>Email je potvrđen</value></data>
+  <data name="Email confirmed by an administrator" xml:space="preserve"><value>Administrator je potvrdio email</value></data>
+  <data name="Email or IP address" xml:space="preserve"><value>Email ili IP adresa</value></data>
+  <data name="Emails may not be delivered locally, so here is the link that was sent:" xml:space="preserve"><value>Lokalno se mejlovi možda ne isporučuju, pa je ovde link koji je poslat:</value></data>
+  <data name="Enable two-factor authentication before generating recovery codes." xml:space="preserve"><value>Uključite dvofaktorsku autentifikaciju pre generisanja rezervnih kodova.</value></data>
+  <data name="Enabled" xml:space="preserve"><value>Uključeno</value></data>
+  <data name="Ends every other session and forgets remembered 2FA browsers. You stay signed in here." xml:space="preserve"><value>Završava sve ostale sesije i zaboravlja zapamćene 2FA browsere. Ovde ostajete prijavljeni.</value></data>
+  <data name="Enter the 6-digit code from your authenticator app." xml:space="preserve"><value>Unesite šestocifreni kod iz aplikacije za autentifikaciju.</value></data>
+  <data name="Enter the verification code" xml:space="preserve"><value>Unesite verifikacioni kod</value></data>
+  <data name="Enter your email and we'll send you a link to finish setting up your account." xml:space="preserve"><value>Unesite email i poslaćemo vam link da završite podešavanje naloga.</value></data>
+  <data name="Enter your email and we'll send you a link to reset it." xml:space="preserve"><value>Unesite email i poslaćemo vam link za postavljanje nove lozinke.</value></data>
+  <data name="Error" xml:space="preserve"><value>Greška</value></data>
+  <data name="Error changing email." xml:space="preserve"><value>Greška pri promeni emaila.</value></data>
+  <data name="Error changing email. The link may have expired or the address is already in use." xml:space="preserve"><value>Email nije promenjen. Link je možda istekao ili je adresa već u upotrebi.</value></data>
+  <data name="Error changing user name." xml:space="preserve"><value>Greška pri promeni korisničkog imena.</value></data>
+  <data name="Error from external provider: {0}" xml:space="preserve"><value>Greška spoljnog servisa: {0}</value></data>
+  <data name="Error loading external login information during confirmation." xml:space="preserve"><value>Greška pri učitavanju podataka spoljne prijave tokom potvrde.</value></data>
+  <data name="Error loading external login information." xml:space="preserve"><value>Greška pri učitavanju podataka spoljne prijave.</value></data>
+  <data name="Event" xml:space="preserve"><value>Događaj</value></data>
+  <data name="Every flow from the default Identity UI, as controllers, view models and Razor views." xml:space="preserve"><value>Svaki tok iz podrazumevanog Identity UI-ja, kao kontroleri, view modeli i Razor view-ovi.</value></data>
+  <data name="Every security-relevant event on every account." xml:space="preserve"><value>Svaki bezbednosno važan događaj na svakom nalogu.</value></data>
+  <data name="Everything Identity ships with" xml:space="preserve"><value>Sve što Identity nudi</value></data>
+  <data name="External logins" xml:space="preserve"><value>Spoljne prijave</value></data>
+  <data name="Failed attempts" xml:space="preserve"><value>Neuspešni pokušaji</value></data>
+  <data name="Failed login attempt" xml:space="preserve"><value>Neuspešan pokušaj prijave</value></data>
+  <data name="Failed logins" xml:space="preserve"><value>Neuspešne prijave</value></data>
+  <data name="Fair" xml:space="preserve"><value>Srednja</value></data>
+  <data name="Filter" xml:space="preserve"><value>Filtriraj</value></data>
+  <data name="Finish setting up your account" xml:space="preserve"><value>Završite podešavanje naloga</value></data>
+  <data name="Finish sign up" xml:space="preserve"><value>Završi registraciju</value></data>
+  <data name="Finish signing up" xml:space="preserve"><value>Završetak registracije</value></data>
+  <data name="For example Microsoft Authenticator or Google Authenticator:" xml:space="preserve"><value>Na primer Microsoft Authenticator ili Google Authenticator:</value></data>
+  <data name="For your security we also keep a log of sign-ins and account changes with the IP address and device, and a list of signed-in devices." xml:space="preserve"><value>Radi vaše bezbednosti čuvamo i evidenciju prijava i izmena naloga sa IP adresom i uređajem, kao i listu prijavljenih uređaja.</value></data>
+  <data name="Forget this browser" xml:space="preserve"><value>Zaboravi ovaj browser</value></data>
+  <data name="Forgot password?" xml:space="preserve"><value>Zaboravljena lozinka?</value></data>
+  <data name="Forgot your password?" xml:space="preserve"><value>Zaboravili ste lozinku?</value></data>
+  <data name="Forgot your password? {0}" xml:space="preserve"><value>Zaboravili ste lozinku? {0}</value></data>
+  <data name="Generate a new key for your authenticator app." xml:space="preserve"><value>Generišite novi ključ za aplikaciju za autentifikaciju.</value></data>
+  <data name="Generate a new set of recovery codes" xml:space="preserve"><value>Generišite nove rezervne kodove</value></data>
+  <data name="Generate new codes" xml:space="preserve"><value>Generiši nove kodove</value></data>
+  <data name="Generate new recovery codes" xml:space="preserve"><value>Generisanje novih rezervnih kodova</value></data>
+  <data name="Generate recovery codes" xml:space="preserve"><value>Generiši rezervne kodove</value></data>
+  <data name="Generating new recovery codes does not change the key used in your authenticator app." xml:space="preserve"><value>Generisanje novih rezervnih kodova ne menja ključ u aplikaciji za autentifikaciju.</value></data>
+  <data name="Get a JSON file with everything stored about your account." xml:space="preserve"><value>Preuzmite JSON fajl sa svim podacima o vašem nalogu.</value></data>
+  <data name="Go to log in" xml:space="preserve"><value>Idi na prijavu</value></data>
+  <data name="Good" xml:space="preserve"><value>Dobra</value></data>
+  <data name="Hide password" xml:space="preserve"><value>Sakrij lozinku</value></data>
+  <data name="Home" xml:space="preserve"><value>Početna</value></data>
+  <data name="How the migration works" xml:space="preserve"><value>Kako radi migracija</value></data>
+  <data name="I've saved them" xml:space="preserve"><value>Sačuvao/la sam ih</value></data>
+  <data name="Identity, rebuilt the" xml:space="preserve"><value>Identity, preuređen na</value></data>
+  <data name="If an account with a confirmed email exists for that address, we've sent a link to reset your password." xml:space="preserve"><value>Ako za tu adresu postoji nalog sa potvrđenim emailom, poslali smo link za postavljanje nove lozinke.</value></data>
+  <data name="If an unconfirmed account exists for that address, a verification email has been sent." xml:space="preserve"><value>Ako za tu adresu postoji nepotvrđen nalog, poslat je email za potvrdu.</value></data>
+  <data name="If the button doesn't work, copy this link into your browser:" xml:space="preserve"><value>Ako dugme ne radi, kopirajte ovaj link u browser:</value></data>
+  <data name="If this wasn't you, reset your password immediately and review your two-factor authentication settings." xml:space="preserve"><value>Ako to niste bili vi, odmah promenite lozinku i proverite podešavanja dvofaktorske autentifikacije.</value></data>
+  <data name="If you lose your device and don't have the recovery codes you will lose access to your account." xml:space="preserve"><value>Ako izgubite uređaj, a nemate rezervne kodove, izgubićete pristup nalogu.</value></data>
+  <data name="Incorrect password." xml:space="preserve"><value>Pogrešna lozinka.</value></data>
+  <data name="Install an authenticator app" xml:space="preserve"><value>Instalirajte aplikaciju za autentifikaciju</value></data>
+  <data name="Invalid authenticator code." xml:space="preserve"><value>Neispravan kod iz aplikacije.</value></data>
+  <data name="Invalid login attempt. If you just registered, make sure you have confirmed your email." xml:space="preserve"><value>Neuspešna prijava. Ako ste se upravo registrovali, proverite da li ste potvrdili email.</value></data>
+  <data name="Invalid recovery code entered." xml:space="preserve"><value>Unet je neispravan rezervni kod.</value></data>
+  <data name="Invalid token." xml:space="preserve"><value>Neispravan token.</value></data>
+  <data name="IP address" xml:space="preserve"><value>IP adresa</value></data>
+  <data name="It only takes a minute." xml:space="preserve"><value>Potrebno je samo minut.</value></data>
+  <data name="Last 24 hours" xml:space="preserve"><value>Poslednja 24 sata</value></data>
+  <data name="Last active" xml:space="preserve"><value>Poslednja aktivnost</value></data>
+  <data name="Last active {0}" xml:space="preserve"><value>Poslednja aktivnost {0}</value></data>
+  <data name='Local and external logins, "remember me" and lockout after repeated failed attempts.' xml:space="preserve"><value>Lokalne i spoljne prijave, „zapamti me“ i zaključavanje posle ponovljenih neuspešnih pokušaja.</value></data>
+  <data name="Lock account" xml:space="preserve"><value>Zaključaj nalog</value></data>
+  <data name="Lock this account and sign it out everywhere?" xml:space="preserve"><value>Zaključati ovaj nalog i odjaviti ga svuda?</value></data>
+  <data name="Locked" xml:space="preserve"><value>Zaključan</value></data>
+  <data name="Locked by an administrator" xml:space="preserve"><value>Zaključao administrator</value></data>
+  <data name="Locked now" xml:space="preserve"><value>Trenutno zaključani</value></data>
+  <data name="Locked out" xml:space="preserve"><value>Zaključano</value></data>
+  <data name="Lockout is not enabled for this user." xml:space="preserve"><value>Zaključavanje nije omogućeno za ovog korisnika.</value></data>
+  <data name="Lockouts" xml:space="preserve"><value>Zaključavanja</value></data>
+  <data name="Log in" xml:space="preserve"><value>Prijavi se</value></data>
+  <data name="Log in to your account to continue." xml:space="preserve"><value>Prijavite se na svoj nalog da biste nastavili.</value></data>
+  <data name="Log in with a passkey" xml:space="preserve"><value>Prijava passkey-om</value></data>
+  <data name="Log in with the account that requested the email change and open the link again." xml:space="preserve"><value>Prijavite se nalogom koji je zatražio promenu emaila i ponovo otvorite link.</value></data>
+  <data name="Log in with your fingerprint, face or device PIN instead of a password. Passkeys can't be phished and never leave your device." xml:space="preserve"><value>Prijavljujte se otiskom prsta, licem ili PIN-om uređaja umesto lozinkom. Passkey se ne može ukrasti phishingom i nikad ne napušta vaš uređaj.</value></data>
+  <data name="Log in with {0}" xml:space="preserve"><value>Prijava preko servisa {0}</value></data>
+  <data name="Log out" xml:space="preserve"><value>Odjavi se</value></data>
+  <data name="Login &amp; lockout" xml:space="preserve"><value>Prijava i zaključavanje</value></data>
+  <data name="Login method removed" xml:space="preserve"><value>Način prijave je uklonjen</value></data>
+  <data name="Lost access to your device?" xml:space="preserve"><value>Izgubili ste pristup uređaju?</value></data>
+  <data name="Manage account" xml:space="preserve"><value>Upravljanje nalogom</value></data>
+  <data name="Manage Email" xml:space="preserve"><value>Upravljanje emailom</value></data>
+  <data name="Manage users and roles, lock accounts and follow every security event in the audit log." xml:space="preserve"><value>Upravljajte korisnicima i ulogama, zaključavajte naloge i pratite svaki bezbednosni događaj u audit logu.</value></data>
+  <data name="Manage your account" xml:space="preserve"><value>Upravljanje nalogom</value></data>
+  <data name="Mark email as confirmed" xml:space="preserve"><value>Označi email kao potvrđen</value></data>
+  <data name="Markup moves to the User area and routes through standard MVC tag helpers." xml:space="preserve"><value>HTML prelazi u User oblast i koristi standardne MVC tag helpere.</value></data>
+  <data name="MVC way" xml:space="preserve"><value>MVC način</value></data>
+  <data name="Name, e.g. My laptop" xml:space="preserve"><value>Naziv, npr. Moj laptop</value></data>
+  <data name="New email" xml:space="preserve"><value>Novi email</value></data>
+  <data name="New login method added" xml:space="preserve"><value>Dodat je novi način prijave</value></data>
+  <data name="New passkey added" xml:space="preserve"><value>Dodat je novi passkey</value></data>
+  <data name="New password" xml:space="preserve"><value>Nova lozinka</value></data>
+  <data name="New recovery codes generated" xml:space="preserve"><value>Generisani su novi rezervni kodovi</value></data>
+  <data name="New role" xml:space="preserve"><value>Nova uloga</value></data>
+  <data name="New role, e.g. Editor" xml:space="preserve"><value>Nova uloga, npr. Urednik</value></data>
+  <data name="New sign-in to your account" xml:space="preserve"><value>Nova prijava na vaš nalog</value></data>
+  <data name="New two-factor recovery codes were generated. Your old codes no longer work." xml:space="preserve"><value>Generisani su novi rezervni kodovi za dvofaktorsku autentifikaciju. Stari kodovi više ne važe.</value></data>
+  <data name="No" xml:space="preserve"><value>Ne</value></data>
+  <data name="No activity yet." xml:space="preserve"><value>Još nema aktivnosti.</value></data>
+  <data name="No events match." xml:space="preserve"><value>Nijedan događaj ne odgovara.</value></data>
+  <data name="No other devices are signed in." xml:space="preserve"><value>Nijedan drugi uređaj nije prijavljen.</value></data>
+  <data name="Not verified" xml:space="preserve"><value>Nije potvrđen</value></data>
+  <data name="Off" xml:space="preserve"><value>Isključeno</value></data>
+  <data name="On" xml:space="preserve"><value>Uključeno</value></data>
+  <data name="Open audit log" xml:space="preserve"><value>Otvori audit log</value></data>
+  <data name="Optimistic concurrency failure, object has been modified." xml:space="preserve"><value>Podaci su u međuvremenu izmenjeni. Pokušajte ponovo.</value></data>
+  <data name="or continue with" xml:space="preserve"><value>ili nastavite preko</value></data>
+  <data name="Or enter this key manually - spaces and casing don't matter." xml:space="preserve"><value>Ili ručno unesite ovaj ključ - razmaci i velika/mala slova nisu bitni.</value></data>
+  <data name="Overview" xml:space="preserve"><value>Pregled</value></data>
+  <data name="Page not found" xml:space="preserve"><value>Stranica nije pronađena</value></data>
+  <data name="PageModels become controllers" xml:space="preserve"><value>PageModel-i postaju kontroleri</value></data>
+  <data name="Pages" xml:space="preserve"><value>Stranice</value></data>
+  <data name="Pages become views" xml:space="preserve"><value>Stranice postaju view-ovi</value></data>
+  <data name='Passkey "{0}" was added. You can now use it to log in.' xml:space="preserve"><value>Passkey „{0}“ je dodat. Sada možete njime da se prijavljujete.</value></data>
+  <data name="Passkey name" xml:space="preserve"><value>Naziv passkey-a</value></data>
+  <data name="Passkey removed" xml:space="preserve"><value>Passkey je uklonjen</value></data>
+  <data name="Passkeys" xml:space="preserve"><value>Passkey-ovi</value></data>
+  <data name="Password" xml:space="preserve"><value>Lozinka</value></data>
+  <data name="Password reset" xml:space="preserve"><value>Lozinka je promenjena</value></data>
+  <data name="Passwordless, phishing-resistant login with a fingerprint, face or device PIN." xml:space="preserve"><value>Prijava bez lozinke, otporna na phishing - otiskom prsta, licem ili PIN-om uređaja.</value></data>
+  <data name="Passwords must be at least {0} characters." xml:space="preserve"><value>Lozinka mora imati najmanje {0} znakova.</value></data>
+  <data name="Passwords must have at least one digit ('0'-'9')." xml:space="preserve"><value>Lozinka mora imati bar jednu cifru ('0'-'9').</value></data>
+  <data name="Passwords must have at least one lowercase ('a'-'z')." xml:space="preserve"><value>Lozinka mora imati bar jedno malo slovo ('a'-'z').</value></data>
+  <data name="Passwords must have at least one non alphanumeric character." xml:space="preserve"><value>Lozinka mora imati bar jedan simbol (znak koji nije slovo ni cifra).</value></data>
+  <data name="Passwords must have at least one uppercase ('A'-'Z')." xml:space="preserve"><value>Lozinka mora imati bar jedno veliko slovo ('A'-'Z').</value></data>
+  <data name="Passwords must use at least {0} different characters." xml:space="preserve"><value>Lozinka mora sadržati najmanje {0} različitih znakova.</value></data>
+  <data name="Permanently delete this account?" xml:space="preserve"><value>Trajno obrisati ovaj nalog?</value></data>
+  <data name="Permanently removes the account and its personal data. The user gets an email." xml:space="preserve"><value>Trajno uklanja nalog i njegove lične podatke. Korisnik dobija email.</value></data>
+  <data name="Permanently removes your account and all of its data. This cannot be undone." xml:space="preserve"><value>Trajno uklanja vaš nalog i sve njegove podatke. Ovo se ne može poništiti.</value></data>
+  <data name="Personal data" xml:space="preserve"><value>Lični podaci</value></data>
+  <data name="Phone number" xml:space="preserve"><value>Broj telefona</value></data>
+  <data name="Privacy" xml:space="preserve"><value>Privatnost</value></data>
+  <data name="Privacy and cookie policy have not been accepted." xml:space="preserve"><value>Politika privatnosti i kolačića nije prihvaćena.</value></data>
+  <data name="Privacy Policy" xml:space="preserve"><value>Politika privatnosti</value></data>
+  <data name="Profile" xml:space="preserve"><value>Profil</value></data>
+  <data name='Protect your own pages with [Authorize(Roles = "RoleName")] and assign roles to users here.' xml:space="preserve"><value>Zaštitite svoje stranice sa [Authorize(Roles = "NazivUloge")] i ovde dodeljujte uloge korisnicima.</value></data>
+  <data name="Put these codes in a safe place." xml:space="preserve"><value>Čuvajte ove kodove na sigurnom mestu.</value></data>
+  <data name="QR code for your authenticator app" xml:space="preserve"><value>QR kod za aplikaciju za autentifikaciju</value></data>
+  <data name="Recent activity" xml:space="preserve"><value>Nedavna aktivnost</value></data>
+  <data name="Recent security events" xml:space="preserve"><value>Nedavni bezbednosni događaji</value></data>
+  <data name="Recent sign-ins and changes to your account. If you don't recognise something, change your password." xml:space="preserve"><value>Nedavne prijave i izmene na vašem nalogu. Ako nešto ne prepoznajete, promenite lozinku.</value></data>
+  <data name="Recovery code" xml:space="preserve"><value>Rezervni kod</value></data>
+  <data name="Recovery code redemption failed." xml:space="preserve"><value>Rezervni kod nije prihvaćen.</value></data>
+  <data name="Recovery code verification" xml:space="preserve"><value>Prijava rezervnim kodom</value></data>
+  <data name="Recovery codes" xml:space="preserve"><value>Rezervni kodovi</value></data>
+  <data name="Registration" xml:space="preserve"><value>Registracija</value></data>
+  <data name="Remember me" xml:space="preserve"><value>Zapamti me</value></data>
+  <data name="Remember this device" xml:space="preserve"><value>Zapamti ovaj uređaj</value></data>
+  <data name="Remove" xml:space="preserve"><value>Ukloni</value></data>
+  <data name='Remove the passkey "{0}"?' xml:space="preserve"><value>Ukloniti passkey „{0}“?</value></data>
+  <data name="Request ID:" xml:space="preserve"><value>ID zahteva:</value></data>
+  <data name="Resend confirmation" xml:space="preserve"><value>Ponovno slanje potvrde</value></data>
+  <data name="Resend email" xml:space="preserve"><value>Pošalji ponovo</value></data>
+  <data name="Resend email confirmation" xml:space="preserve"><value>Ponovno slanje potvrde emaila</value></data>
+  <data name="Resend it" xml:space="preserve"><value>Pošaljite ponovo</value></data>
+  <data name="Resend link" xml:space="preserve"><value>Pošalji link</value></data>
+  <data name="Reset 2FA" xml:space="preserve"><value>Resetuj 2FA</value></data>
+  <data name="Reset authenticator key" xml:space="preserve"><value>Resetovanje ključa za autentifikaciju</value></data>
+  <data name="Reset key" xml:space="preserve"><value>Resetuj ključ</value></data>
+  <data name="Reset password" xml:space="preserve"><value>Postavi novu lozinku</value></data>
+  <data name="Reset your authenticator key" xml:space="preserve"><value>Resetujte ključ za autentifikaciju</value></data>
+  <data name="Reset your password" xml:space="preserve"><value>Postavite novu lozinku</value></data>
+  <data name="Role name '{0}' is already taken." xml:space="preserve"><value>Uloga '{0}' već postoji.</value></data>
+  <data name="Role name '{0}' is invalid." xml:space="preserve"><value>Naziv uloge '{0}' nije ispravan.</value></data>
+  <data name="Role names can contain letters, digits, spaces, '-' and '_' (up to 64 characters)." xml:space="preserve"><value>Naziv uloge može sadržati slova, cifre, razmake, '-' i '_' (najviše 64 znaka).</value></data>
+  <data name="Roles" xml:space="preserve"><value>Uloge</value></data>
+  <data name="Save changes" xml:space="preserve"><value>Sačuvaj izmene</value></data>
+  <data name="Save roles" xml:space="preserve"><value>Sačuvaj uloge</value></data>
+  <data name="Save these codes now - they won't be shown again." xml:space="preserve"><value>Sačuvajte ove kodove odmah - neće biti ponovo prikazani.</value></data>
+  <data name="Scan the QR code" xml:space="preserve"><value>Skenirajte QR kod</value></data>
+  <data name="Search by email" xml:space="preserve"><value>Pretraga po emailu</value></data>
+  <data name="Security" xml:space="preserve"><value>Bezbednost</value></data>
+  <data name="Security activity" xml:space="preserve"><value>Bezbednosna aktivnost</value></data>
+  <data name="Security alert" xml:space="preserve"><value>Bezbednosno upozorenje</value></data>
+  <data name="Security settings" xml:space="preserve"><value>Bezbednosna podešavanja</value></data>
+  <data name="See where you're signed in, sign out a single device and review your security history." xml:space="preserve"><value>Pogledajte gde ste prijavljeni, odjavite pojedinačni uređaj i pregledajte bezbednosnu istoriju.</value></data>
+  <data name="Send a new link" xml:space="preserve"><value>Pošalji novi link</value></data>
+  <data name="Send reset link" xml:space="preserve"><value>Pošalji link</value></data>
+  <data name="Send verification email" xml:space="preserve"><value>Pošalji email za potvrdu</value></data>
+  <data name="Services you can use to log in to your account." xml:space="preserve"><value>Servisi preko kojih možete da se prijavite na nalog.</value></data>
+  <data name="sessions in the last hour" xml:space="preserve"><value>sesija u poslednjih sat vremena</value></data>
+  <data name="Set a password" xml:space="preserve"><value>Postavite lozinku</value></data>
+  <data name="Set a password to remove" xml:space="preserve"><value>Postavite lozinku da biste uklonili</value></data>
+  <data name="Set password" xml:space="preserve"><value>Postavi lozinku</value></data>
+  <data name="Set up again" xml:space="preserve"><value>Podesi ponovo</value></data>
+  <data name="Show password" xml:space="preserve"><value>Prikaži lozinku</value></data>
+  <data name="Sign out" xml:space="preserve"><value>Odjavi</value></data>
+  <data name="Sign out everywhere" xml:space="preserve"><value>Odjavi svuda</value></data>
+  <data name="Sign out of all other devices" xml:space="preserve"><value>Odjava sa svih ostalih uređaja</value></data>
+  <data name="Sign out of all other devices?" xml:space="preserve"><value>Odjaviti se sa svih ostalih uređaja?</value></data>
+  <data name="Sign up" xml:space="preserve"><value>Registruj se</value></data>
+  <data name="Sign up with email confirmation, resend confirmation and a password strength hint." xml:space="preserve"><value>Registracija sa potvrdom emaila, ponovnim slanjem potvrde i pokazateljem jačine lozinke.</value></data>
+  <data name="Sign up with {0}" xml:space="preserve"><value>Registracija preko servisa {0}</value></data>
+  <data name="Sign-ins" xml:space="preserve"><value>Prijave</value></data>
+  <data name="Signed in {0}" xml:space="preserve"><value>Prijavljen {0}</value></data>
+  <data name="Signed out of all devices" xml:space="preserve"><value>Odjava sa svih uređaja</value></data>
+  <data name="Skip to content" xml:space="preserve"><value>Preskoči na sadržaj</value></data>
+  <data name="Someone asked to change the email address of your account. It will only change once the new address is confirmed." xml:space="preserve"><value>Neko je zatražio promenu email adrese vašeg naloga. Ona će se promeniti tek kada nova adresa bude potvrđena.</value></data>
+  <data name="Someone just tried to create an account with this email address, but you already have one. If it was you, log in or reset your password. If it wasn't you, you can ignore this email - nothing was changed." xml:space="preserve"><value>Neko je upravo pokušao da napravi nalog sa ovom email adresom, ali vi već imate nalog. Ako ste to bili vi, prijavite se ili postavite novu lozinku. Ako niste, slobodno zanemarite ovaj email - ništa nije promenjeno.</value></data>
+  <data name="Something went wrong" xml:space="preserve"><value>Nešto nije u redu</value></data>
+  <data name="Something went wrong with the passkey request." xml:space="preserve"><value>Došlo je do greške pri radu sa passkey-om.</value></data>
+  <data name="Status" xml:space="preserve"><value>Status</value></data>
+  <data name="Strong" xml:space="preserve"><value>Jaka</value></data>
+  <data name="Synced" xml:space="preserve"><value>Sinhronizovan</value></data>
+  <data name="Temporarily locked" xml:space="preserve"><value>Privremeno zaključan</value></data>
+  <data name="Thank you for confirming your email change." xml:space="preserve"><value>Hvala što ste potvrdili promenu emaila.</value></data>
+  <data name="Thank you for confirming your email. You can now log in." xml:space="preserve"><value>Hvala što ste potvrdili email. Sada možete da se prijavite.</value></data>
+  <data name="Thanks for signing up! Please confirm your email address to activate your account. If you didn't create an account, ignore this email and don't click the button." xml:space="preserve"><value>Hvala na registraciji! Potvrdite email adresu da biste aktivirali nalog. Ako niste napravili nalog, zanemarite ovaj email i nemojte kliknuti dugme.</value></data>
+  <data name="That device is no longer signed in." xml:space="preserve"><value>Taj uređaj više nije prijavljen.</value></data>
+  <data name="The account could not be deleted." xml:space="preserve"><value>Nalog nije mogao da se obriše.</value></data>
+  <data name="The account was locked and signed out of all devices." xml:space="preserve"><value>Nalog je zaključan i odjavljen sa svih uređaja.</value></data>
+  <data name="The account was unlocked." xml:space="preserve"><value>Nalog je otključan.</value></data>
+  <data name="The account {0} was deleted." xml:space="preserve"><value>Nalog {0} je obrisan.</value></data>
+  <data name="The address you log in with and receive account emails at." xml:space="preserve"><value>Adresa kojom se prijavljujete i na koju stižu mejlovi naloga.</value></data>
+  <data name="The Admin role can't be deleted." xml:space="preserve"><value>Uloga Admin ne može da se obriše.</value></data>
+  <data name="The authenticator app key for your account was reset and two-factor authentication was turned off." xml:space="preserve"><value>Ključ za aplikaciju za autentifikaciju je resetovan i dvofaktorska autentifikacija je isključena.</value></data>
+  <data name="The complete ASP.NET Core Identity UI - registration, login, two-factor authentication and account management - migrated from Razor Pages to plain MVC controllers and views." xml:space="preserve"><value>Kompletan ASP.NET Core Identity UI - registracija, prijava, dvofaktorska autentifikacija i upravljanje nalogom - prebačen sa Razor Pages na obične MVC kontrolere i view-ove.</value></data>
+  <data name="The confirmation email could not be sent. Please try again later." xml:space="preserve"><value>Email za potvrdu nije mogao da se pošalje. Pokušajte kasnije.</value></data>
+  <data name="The confirmation link is invalid or has expired." xml:space="preserve"><value>Link za potvrdu nije ispravan ili je istekao.</value></data>
+  <data name="The current browser has been forgotten. When you login again from this browser you will be prompted for your 2fa code." xml:space="preserve"><value>Ovaj browser je zaboravljen. Pri sledećoj prijavi sa njega biće zatražen 2FA kod.</value></data>
+  <data name="The device was signed out." xml:space="preserve"><value>Uređaj je odjavljen.</value></data>
+  <data name="The email address of your account was changed. This address will no longer receive account emails." xml:space="preserve"><value>Email adresa vašeg naloga je promenjena. Na ovu adresu više neće stizati mejlovi naloga.</value></data>
+  <data name="The email address was marked as confirmed." xml:space="preserve"><value>Email adresa je označena kao potvrđena.</value></data>
+  <data name="The external login was added." xml:space="preserve"><value>Spoljna prijava je dodata.</value></data>
+  <data name="The external login was not added. External logins can only be associated with one account." xml:space="preserve"><value>Spoljna prijava nije dodata. Spoljna prijava može biti povezana samo sa jednim nalogom.</value></data>
+  <data name="The external login was not removed." xml:space="preserve"><value>Spoljna prijava nije uklonjena.</value></data>
+  <data name="The external login was removed." xml:space="preserve"><value>Spoljna prijava je uklonjena.</value></data>
+  <data name="The new password and confirmation password do not match." xml:space="preserve"><value>Nova lozinka i potvrda se ne poklapaju.</value></data>
+  <data name="The page you are looking for doesn't exist or has been moved." xml:space="preserve"><value>Stranica koju tražite ne postoji ili je premeštena.</value></data>
+  <data name="The passkey could not be saved." xml:space="preserve"><value>Passkey nije mogao da se sačuva.</value></data>
+  <data name="The passkey could not be verified. Please try again." xml:space="preserve"><value>Passkey nije mogao da se proveri. Pokušajte ponovo.</value></data>
+  <data name="The passkey registration was cancelled." xml:space="preserve"><value>Registracija passkey-a je otkazana.</value></data>
+  <data name="The passkey request was cancelled or timed out." xml:space="preserve"><value>Zahtev za passkey je otkazan ili je isteklo vreme.</value></data>
+  <data name="The passkey sign-in was cancelled." xml:space="preserve"><value>Prijava passkey-om je otkazana.</value></data>
+  <data name="The passkey was not found." xml:space="preserve"><value>Passkey nije pronađen.</value></data>
+  <data name="The passkey was removed." xml:space="preserve"><value>Passkey je uklonjen.</value></data>
+  <data name="The password and confirmation password do not match." xml:space="preserve"><value>Lozinka i potvrda se ne poklapaju.</value></data>
+  <data name="The password for your account was just changed." xml:space="preserve"><value>Lozinka vašeg naloga je upravo promenjena.</value></data>
+  <data name="The password for your account was reset using a password reset link." xml:space="preserve"><value>Lozinka vašeg naloga je promenjena preko linka za novu lozinku.</value></data>
+  <data name="The password reset link is invalid or has expired, or the email doesn't match. Please request a new link." xml:space="preserve"><value>Link za novu lozinku nije ispravan ili je istekao, ili se email ne poklapa. Zatražite novi link.</value></data>
+  <data name="The password reset link is invalid. Please request a new one." xml:space="preserve"><value>Link za novu lozinku nije ispravan. Zatražite novi.</value></data>
+  <data name="The request could not be understood by the server." xml:space="preserve"><value>Server nije mogao da razume zahtev.</value></data>
+  <data name="The role {0} was created." xml:space="preserve"><value>Uloga {0} je napravljena.</value></data>
+  <data name="The role {0} was deleted." xml:space="preserve"><value>Uloga {0} je obrisana.</value></data>
+  <data name="The roles were updated." xml:space="preserve"><value>Uloge su ažurirane.</value></data>
+  <data name="The same Identity services, a different presentation layer." xml:space="preserve"><value>Isti Identity servisi, drugačiji prikazni sloj.</value></data>
+  <data name="The state of your users' accounts at a glance." xml:space="preserve"><value>Stanje korisničkih naloga na jednom mestu.</value></data>
+  <data name="The unlock link is invalid or has expired." xml:space="preserve"><value>Link za otključavanje nije ispravan ili je istekao.</value></data>
+  <data name="The user was signed out of all devices." xml:space="preserve"><value>Korisnik je odjavljen sa svih uređaja.</value></data>
+  <data name="The verification email could not be sent. Please try again later." xml:space="preserve"><value>Email za potvrdu nije mogao da se pošalje. Pokušajte kasnije.</value></data>
+  <data name="The {0} field is not a valid e-mail address." xml:space="preserve"><value>Polje {0} ne sadrži ispravnu email adresu.</value></data>
+  <data name="The {0} field is not a valid phone number." xml:space="preserve"><value>Polje {0} ne sadrži ispravan broj telefona.</value></data>
+  <data name="The {0} field is required." xml:space="preserve"><value>Polje {0} je obavezno.</value></data>
+  <data name="The {0} must be at least {2} and at max {1} characters long." xml:space="preserve"><value>Polje {0} mora imati najmanje {2} i najviše {1} znakova.</value></data>
+  <data name="There must always be at least one administrator." xml:space="preserve"><value>Uvek mora postojati bar jedan administrator.</value></data>
+  <data name="This action only disables 2FA." xml:space="preserve"><value>Ova radnja samo isključuje 2FA.</value></data>
+  <data name="This browser doesn't support passkeys." xml:space="preserve"><value>Ovaj browser ne podržava passkey.</value></data>
+  <data name="This browser is remembered" xml:space="preserve"><value>Ovaj browser je zapamćen</value></data>
+  <data name="This device" xml:space="preserve"><value>Ovaj uređaj</value></data>
+  <data name="This device already has a passkey for your account." xml:space="preserve"><value>Ovaj uređaj već ima passkey za vaš nalog.</value></data>
+  <data name="This disables 2FA until you verify your authenticator app again. If you don't finish the setup you may lose access to your account." xml:space="preserve"><value>Ovim se isključuje 2FA dok ponovo ne potvrdite aplikaciju za autentifikaciju. Ako ne završite podešavanje, možete izgubiti pristup nalogu.</value></data>
+  <data name="This is you" xml:space="preserve"><value>Ovo ste vi</value></data>
+  <data name="This login won't be remembered until you use an authenticator code or disable 2FA and log in again." xml:space="preserve"><value>Ova prijava neće biti zapamćena dok ne upotrebite kod iz aplikacije ili ne isključite 2FA i ponovo se prijavite.</value></data>
+  <data name="This passkey couldn't be used to log in. It may have been removed from your account." xml:space="preserve"><value>Ovim passkey-om nije moguća prijava. Možda je uklonjen sa vašeg naloga.</value></data>
+  <data name="This password has appeared in a data breach and can't be used. Please choose a different one." xml:space="preserve"><value>Ova lozinka se pojavila u procurelim podacima i ne može se koristiti. Izaberite drugu.</value></data>
+  <data name="This permanently removes your account and all of its data." xml:space="preserve"><value>Ovim se trajno uklanja vaš nalog i svi njegovi podaci.</value></data>
+  <data name="Three quick steps to turn on two-factor authentication." xml:space="preserve"><value>Tri brza koraka do dvofaktorske autentifikacije.</value></data>
+  <data name="Toggle dark mode" xml:space="preserve"><value>Uključi/isključi tamnu temu</value></data>
+  <data name="Toggle navigation" xml:space="preserve"><value>Prikaži/sakrij meni</value></data>
+  <data name="Too many failed attempts. For your security this account has been locked - please try again in a few minutes, use a passkey, or use the unlock link we emailed you." xml:space="preserve"><value>Previše neuspešnih pokušaja. Radi vaše bezbednosti nalog je zaključan - pokušajte ponovo za nekoliko minuta, prijavite se passkey-om ili iskoristite link za otključavanje koji smo vam poslali.</value></data>
+  <data name="Too many failed attempts. For your security this account has been locked - please try again in a few minutes or use a passkey." xml:space="preserve"><value>Previše neuspešnih pokušaja. Radi vaše bezbednosti nalog je zaključan - pokušajte ponovo za nekoliko minuta ili se prijavite passkey-om.</value></data>
+  <data name="Too many failed attempts. For your security this account has been locked - please try again in a few minutes or use the unlock link we emailed you." xml:space="preserve"><value>Previše neuspešnih pokušaja. Radi vaše bezbednosti nalog je zaključan - pokušajte ponovo za nekoliko minuta ili iskoristite link za otključavanje koji smo vam poslali.</value></data>
+  <data name="Too many failed attempts. For your security this account has been locked - please try again in a few minutes." xml:space="preserve"><value>Previše neuspešnih pokušaja. Radi vaše bezbednosti nalog je zaključan - pokušajte ponovo za nekoliko minuta.</value></data>
+  <data name="Too many requests" xml:space="preserve"><value>Previše zahteva</value></data>
+  <data name="Too weak" xml:space="preserve"><value>Preslaba</value></data>
+  <data name="Turn off two-factor authentication for this user?" xml:space="preserve"><value>Isključiti dvofaktorsku autentifikaciju za ovog korisnika?</value></data>
+  <data name="Two-factor" xml:space="preserve"><value>Dvofaktorska</value></data>
+  <data name="Two-factor authentication" xml:space="preserve"><value>Dvofaktorska autentifikacija</value></data>
+  <data name="Two-factor authentication (2FA)" xml:space="preserve"><value>Dvofaktorska autentifikacija (2FA)</value></data>
+  <data name="Two-factor authentication disabled" xml:space="preserve"><value>Dvofaktorska autentifikacija je isključena</value></data>
+  <data name="Two-factor authentication enabled" xml:space="preserve"><value>Dvofaktorska autentifikacija je uključena</value></data>
+  <data name="Two-factor authentication is not enabled." xml:space="preserve"><value>Dvofaktorska autentifikacija nije uključena.</value></data>
+  <data name="Two-factor authentication was turned off and the authenticator key was reset." xml:space="preserve"><value>Dvofaktorska autentifikacija je isključena i ključ je resetovan.</value></data>
+  <data name="Two-factor authentication was turned off for your account." xml:space="preserve"><value>Dvofaktorska autentifikacija je isključena za vaš nalog.</value></data>
+  <data name="Two-factor authentication was turned on for your account." xml:space="preserve"><value>Dvofaktorska autentifikacija je uključena za vaš nalog.</value></data>
+  <data name="Unconfirmed" xml:space="preserve"><value>Nepotvrđen</value></data>
+  <data name="Unexpected error occurred deleting your account." xml:space="preserve"><value>Neočekivana greška pri brisanju naloga.</value></data>
+  <data name="Unexpected error occurred disabling 2FA." xml:space="preserve"><value>Neočekivana greška pri isključivanju 2FA.</value></data>
+  <data name="Unexpected error occurred loading external login info." xml:space="preserve"><value>Neočekivana greška pri učitavanju podataka spoljne prijave.</value></data>
+  <data name="Unexpected error when trying to set phone number." xml:space="preserve"><value>Neočekivana greška pri čuvanju broja telefona.</value></data>
+  <data name="Unlock" xml:space="preserve"><value>Otključaj</value></data>
+  <data name="Unlock account" xml:space="preserve"><value>Otključaj nalog</value></data>
+  <data name="Unlock your account" xml:space="preserve"><value>Otključajte nalog</value></data>
+  <data name="Update password" xml:space="preserve"><value>Promeni lozinku</value></data>
+  <data name="use 8+ characters with upper- and lowercase letters, a digit and a symbol." xml:space="preserve"><value>koristite 8+ znakova sa velikim i malim slovima, cifrom i simbolom.</value></data>
+  <data name="Use a recovery code" xml:space="preserve"><value>Upotrebite rezervni kod</value></data>
+  <data name="Use a strong password you don't use anywhere else." xml:space="preserve"><value>Koristite jaku lozinku koju ne koristite nigde drugde.</value></data>
+  <data name="Use an app like Microsoft or Google Authenticator to generate codes." xml:space="preserve"><value>Koristite aplikaciju kao što su Microsoft ili Google Authenticator za generisanje kodova.</value></data>
+  <data name="Use Log out to end the session on this device." xml:space="preserve"><value>Za kraj sesije na ovom uređaju koristite Odjavu.</value></data>
+  <data name="Use this page to detail your site's privacy policy." xml:space="preserve"><value>Na ovoj stranici opišite politiku privatnosti vašeg sajta.</value></data>
+  <data name="User already has a password set." xml:space="preserve"><value>Korisnik već ima postavljenu lozinku.</value></data>
+  <data name="User already in role '{0}'." xml:space="preserve"><value>Korisnik već ima ulogu '{0}'.</value></data>
+  <data name="User is not in role '{0}'." xml:space="preserve"><value>Korisnik nema ulogu '{0}'.</value></data>
+  <data name="Username" xml:space="preserve"><value>Korisničko ime</value></data>
+  <data name="Username '{0}' is already taken." xml:space="preserve"><value>Korisničko ime '{0}' je već zauzeto.</value></data>
+  <data name="Username '{0}' is invalid, can only contain letters or digits." xml:space="preserve"><value>Korisničko ime '{0}' nije ispravno, može sadržati samo slova i cifre.</value></data>
+  <data name="Users" xml:space="preserve"><value>Korisnici</value></data>
+  <data name="Users, roles and security events" xml:space="preserve"><value>Korisnici, uloge i bezbednosni događaji</value></data>
+  <data name="Verification code" xml:space="preserve"><value>Verifikacioni kod</value></data>
+  <data name="Verification code is invalid." xml:space="preserve"><value>Verifikacioni kod nije ispravan.</value></data>
+  <data name="Verification email sent. Please check your email." xml:space="preserve"><value>Email za potvrdu je poslat. Proverite poštu.</value></data>
+  <data name="Verified" xml:space="preserve"><value>Potvrđen</value></data>
+  <data name="Verify" xml:space="preserve"><value>Potvrdi</value></data>
+  <data name="Verify and enable" xml:space="preserve"><value>Potvrdi i uključi</value></data>
+  <data name="We received a request to reset your password. If you didn't ask for this, you can ignore this email." xml:space="preserve"><value>Primili smo zahtev za postavljanje nove lozinke. Ako ga niste poslali, slobodno zanemarite ovaj email.</value></data>
+  <data name="We sent an email to {0}. Open it to activate your account, then log in." xml:space="preserve"><value>Poslali smo email na {0}. Otvorite ga da aktivirate nalog, pa se prijavite.</value></data>
+  <data name="Weak" xml:space="preserve"><value>Slaba</value></data>
+  <data name="Welcome back" xml:space="preserve"><value>Dobro došli nazad</value></data>
+  <data name="What we store" xml:space="preserve"><value>Šta čuvamo</value></data>
+  <data name="When" xml:space="preserve"><value>Kada</value></data>
+  <data name="Yes" xml:space="preserve"><value>Da</value></data>
+  <data name="You already have an account" xml:space="preserve"><value>Već imate nalog</value></data>
+  <data name="You asked to change the email address on your account. Confirm the new address to finish the change." xml:space="preserve"><value>Zatražili ste promenu email adrese naloga. Potvrdite novu adresu da završite promenu.</value></data>
+  <data name="You can download or permanently delete your personal data at any time from" xml:space="preserve"><value>Lične podatke možete u svakom trenutku da preuzmete ili trajno obrišete u odeljku</value></data>
+  <data name="You can register at most {0} passkeys." xml:space="preserve"><value>Možete registrovati najviše {0} passkey-ova.</value></data>
+  <data name="You can't delete your own account here. Use Manage account &gt; Personal data." xml:space="preserve"><value>Ovde ne možete obrisati sopstveni nalog. Koristite Upravljanje nalogom &gt; Lični podaci.</value></data>
+  <data name="You can't do this to your own account." xml:space="preserve"><value>Ovo ne možete uraditi sopstvenom nalogu.</value></data>
+  <data name="You can't lock, sign out or delete your own account here." xml:space="preserve"><value>Ovde ne možete zaključati, odjaviti ili obrisati sopstveni nalog.</value></data>
+  <data name="You can't remove the Admin role from yourself." xml:space="preserve"><value>Ne možete sebi ukloniti ulogu Admin.</value></data>
+  <data name="You can't remove your only login. Set a password first." xml:space="preserve"><value>Ne možete ukloniti jedini način prijave. Prvo postavite lozinku.</value></data>
+  <data name="You can't remove your only way to log in. Set a password first." xml:space="preserve"><value>Ne možete ukloniti jedini način prijave. Prvo postavite lozinku.</value></data>
+  <data name="You do not have access to this resource." xml:space="preserve"><value>Nemate pristup ovom resursu.</value></data>
+  <data name="You don't have a local password yet. Add one so you can also log in without an external provider." xml:space="preserve"><value>Još nemate lozinku. Dodajte je da biste mogli da se prijavite i bez spoljnog servisa.</value></data>
+  <data name="You don't have any passkeys yet." xml:space="preserve"><value>Još nemate nijedan passkey.</value></data>
+  <data name="You don't have permission to view this page." xml:space="preserve"><value>Nemate dozvolu da vidite ovu stranicu.</value></data>
+  <data name="You have generated new recovery codes." xml:space="preserve"><value>Generisali ste nove rezervne kodove.</value></data>
+  <data name="You have no recovery codes left." xml:space="preserve"><value>Nemate više rezervnih kodova.</value></data>
+  <data name="You have reached the maximum of {0} passkeys." xml:space="preserve"><value>Dostigli ste maksimum od {0} passkey-ova.</value></data>
+  <data name="You have {0} recovery codes left." xml:space="preserve"><value>Preostalo vam je rezervnih kodova: {0}.</value></data>
+  <data name="You must accept the policy before you can enable two factor authentication." xml:space="preserve"><value>Morate prihvatiti politiku pre nego što uključite dvofaktorsku autentifikaciju.</value></data>
+  <data name="You need to confirm your email before you can log in." xml:space="preserve"><value>Morate potvrditi email pre prijave.</value></data>
+  <data name="You won't be asked for a code on this browser." xml:space="preserve"><value>Na ovom browseru nećete morati da unosite kod.</value></data>
+  <data name="You're about to change a sensitive setting. Please enter your password to continue - you won't be asked again for the next {0} minutes." xml:space="preserve"><value>Menjate osetljivo podešavanje. Unesite lozinku da nastavite - narednih {0} minuta nećete biti ponovo pitani.</value></data>
+  <data name="You've made too many attempts in a short time. Please wait a few minutes and try again." xml:space="preserve"><value>Napravili ste previše pokušaja za kratko vreme. Sačekajte nekoliko minuta i pokušajte ponovo.</value></data>
+  <data name="You've successfully authenticated with {0}. Your account will use the email address your provider has verified." xml:space="preserve"><value>Uspešno ste se prijavili preko servisa {0}. Nalog će koristiti email adresu koju je taj servis potvrdio.</value></data>
+  <data name="Your account and its personal data were permanently deleted." xml:space="preserve"><value>Vaš nalog i lični podaci su trajno obrisani.</value></data>
+  <data name="Your account contains personal data that you have given us. You can download or delete it here." xml:space="preserve"><value>Vaš nalog sadrži lične podatke koje ste nam dali. Ovde ih možete preuzeti ili obrisati.</value></data>
+  <data name="Your account has no email address." xml:space="preserve"><value>Vaš nalog nema email adresu.</value></data>
+  <data name="Your account is unlocked. You can log in now." xml:space="preserve"><value>Vaš nalog je otključan. Sada možete da se prijavite.</value></data>
+  <data name="Your account was deleted" xml:space="preserve"><value>Vaš nalog je obrisan</value></data>
+  <data name="Your account was deleted by an administrator" xml:space="preserve"><value>Administrator je obrisao vaš nalog</value></data>
+  <data name="Your account was just used to sign in from a device we haven't seen before." xml:space="preserve"><value>Vaš nalog je upravo korišćen za prijavu sa uređaja koji ranije nismo videli.</value></data>
+  <data name="Your account was locked" xml:space="preserve"><value>Vaš nalog je zaključan</value></data>
+  <data name="Your account was locked after several failed login attempts. If that was you, you can unlock it right away. If it wasn't, someone may be guessing your password - consider changing it." xml:space="preserve"><value>Vaš nalog je zaključan posle više neuspešnih pokušaja prijave. Ako ste to bili vi, možete ga odmah otključati. Ako niste, neko možda pogađa vašu lozinku - razmislite o njenoj promeni.</value></data>
+  <data name="Your account was locked by an administrator" xml:space="preserve"><value>Administrator je zaključao vaš nalog</value></data>
+  <data name="Your account was temporarily locked after several failed login attempts." xml:space="preserve"><value>Vaš nalog je privremeno zaključan posle više neuspešnih pokušaja prijave.</value></data>
+  <data name="Your account was unlocked by an administrator" xml:space="preserve"><value>Administrator je otključao vaš nalog</value></data>
+  <data name="Your account will only be protected by your password." xml:space="preserve"><value>Nalog će biti zaštićen samo lozinkom.</value></data>
+  <data name="Your app will show a 6-digit code. Enter it below to finish." xml:space="preserve"><value>Aplikacija će prikazati šestocifreni kod. Unesite ga ispod da završite.</value></data>
+  <data name="Your authenticator app has been verified." xml:space="preserve"><value>Aplikacija za autentifikaciju je potvrđena.</value></data>
+  <data name="Your authenticator app key has been reset, you will need to configure your authenticator app using the new key." xml:space="preserve"><value>Ključ za aplikaciju za autentifikaciju je resetovan. Podesite aplikaciju ponovo sa novim ključem.</value></data>
+  <data name="Your authenticator app will stop working until you reconfigure it." xml:space="preserve"><value>Aplikacija za autentifikaciju neće raditi dok je ponovo ne podesite.</value></data>
+  <data name="Your basic account information." xml:space="preserve"><value>Osnovni podaci o vašem nalogu.</value></data>
+  <data name="Your email address was changed" xml:space="preserve"><value>Vaša email adresa je promenjena</value></data>
+  <data name="Your email address, a hashed password, an optional phone number and the security settings you choose (such as two-factor authentication and linked external logins)." xml:space="preserve"><value>Vašu email adresu, heširanu lozinku, opcioni broj telefona i bezbednosna podešavanja koja izaberete (npr. dvofaktorsku autentifikaciju i povezane spoljne prijave).</value></data>
+  <data name="Your email is unchanged." xml:space="preserve"><value>Email nije promenjen.</value></data>
+  <data name="Your old codes will stop working as soon as new ones are generated." xml:space="preserve"><value>Stari kodovi prestaju da važe čim se generišu novi.</value></data>
+  <data name="Your password has been changed. Your other sessions will be signed out." xml:space="preserve"><value>Lozinka je promenjena. Ostale sesije će biti odjavljene.</value></data>
+  <data name="Your password has been reset. You can now log in with your new password." xml:space="preserve"><value>Lozinka je promenjena. Sada možete da se prijavite novom lozinkom.</value></data>
+  <data name="Your password has been set." xml:space="preserve"><value>Lozinka je postavljena.</value></data>
+  <data name="Your password must not contain your email address or user name." xml:space="preserve"><value>Lozinka ne sme sadržati vašu email adresu ili korisničko ime.</value></data>
+  <data name="Your password was changed" xml:space="preserve"><value>Vaša lozinka je promenjena</value></data>
+  <data name="Your password was reset" xml:space="preserve"><value>Vaša lozinka je resetovana</value></data>
+  <data name="Your profile has been updated" xml:space="preserve"><value>Profil je ažuriran</value></data>
+  <data name="Your provider didn't share an email address. Sign up with your email first, then connect the provider under Manage account." xml:space="preserve"><value>Servis nije podelio email adresu. Prvo se registrujte email adresom, a zatim povežite servis u odeljku Upravljanje nalogom.</value></data>
+  <data name="Your recovery codes" xml:space="preserve"><value>Vaši rezervni kodovi</value></data>
+  <data name="Your rights" xml:space="preserve"><value>Vaša prava</value></data>
+  <data name="Your roles were changed" xml:space="preserve"><value>Vaše uloge su promenjene</value></data>
+  <data name="Your username is your email address. Change it on the Email page." xml:space="preserve"><value>Korisničko ime je vaša email adresa. Menja se na stranici Email.</value></data>
+  <data name="{0} accounts" xml:space="preserve"><value>Naloga: {0}</value></data>
+  <data name="{0} codes left. Use one if you lose access to your device." xml:space="preserve"><value>Preostalo kodova: {0}. Upotrebite jedan ako izgubite pristup uređaju.</value></data>
+  <data name="{0} users" xml:space="preserve"><value>Korisnika: {0}</value></data>
+  <data name="{0}% confirmed their email" xml:space="preserve"><value>{0}% je potvrdilo email</value></data>
+</root>

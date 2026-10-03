@@ -1,86 +1,84 @@
 ﻿@model IdentityToMvc.Web.Areas.User.ViewModels.Account.LoginViewModel
-
+@inject Microsoft.Extensions.Options.IOptionsMonitor<SecurityOptions> SecurityOptions
 @{
-    ViewData["Title"] = "Log in";
+    ViewData["Title"] = L["Log in"].Value;
+    var passkeysEnabled = false;
+#if (Passkeys)
+    passkeysEnabled = SecurityOptions.CurrentValue.EnablePasskeys;
+#endif
 }
 
-<h1>@ViewData["Title"]</h1>
-<div class="row">
-    <div class="col-md-4">
-        <section>
-            <form id="account" asp-area="User" asp-controller="Account" asp-action="Login" method="post">
-                @Html.AntiForgeryToken()
-                <h2>Use a local account to log in.</h2>
-                <hr />
-                <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
-                <div class="form-floating mb-3">
-                    <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
-                    <label asp-for="Input.Email" class="form-label">Email</label>
-                    <span asp-validation-for="Input.Email" class="text-danger"></span>
+<div class="auth-wrapper">
+    <div class="card auth-card">
+        <div class="auth-header">
+            <span class="icon-badge"><i class="bi bi-box-arrow-in-right"></i></span>
+            <h1>@L["Welcome back"]</h1>
+            <p>@L["Log in to your account to continue."]</p>
+        </div>
+
+        <partial name="_StatusMessage" model="@TempData["StatusMessage"] as string" />
+
+        <form id="account" asp-area="User" asp-controller="Account" asp-action="Login" method="post" novalidate>
+            <input asp-for="ReturnUrl" type="hidden" />
+            <div asp-validation-summary="ModelOnly" role="alert"></div>
+            <div class="form-floating mb-3">
+                <input asp-for="Input.Email" class="form-control" autocomplete="@(passkeysEnabled ? "username webauthn" : "username")" aria-required="true" placeholder="name@example.com" autofocus />
+                <label asp-for="Input.Email"></label>
+                <span asp-validation-for="Input.Email" class="text-danger"></span>
+            </div>
+            <div class="form-floating mb-3">
+                <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="password" />
+                <label asp-for="Input.Password"></label>
+                <span asp-validation-for="Input.Password" class="text-danger"></span>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="form-check">
+                    <input class="form-check-input" asp-for="Input.RememberMe" />
+                    <label class="form-check-label" asp-for="Input.RememberMe"></label>
                 </div>
-                <div class="form-floating mb-3">
-                    <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="password" />
-                    <label asp-for="Input.Password" class="form-label">Password</label>
-                    <span asp-validation-for="Input.Password" class="text-danger"></span>
-                </div>
-                <div class="checkbox mb-3">
-                    <label asp-for="Input.RememberMe" class="form-label">
-                        <input class="form-check-input" asp-for="Input.RememberMe" />
-                        @Html.DisplayNameFor(m => m.Input.RememberMe)
-                    </label>
-                </div>
-                <div>
-                    <button id="login-submit" type="submit" class="w-100 btn btn-lg btn-primary">Log in</button>
-                </div>
-                <div>
-                    <p>
-                        <a id="forgot-password" asp-area="User" asp-controller="Account" asp-action="ForgotPassword">Forgot your password?</a>
-                    </p>
-                    <p>
-                        <a asp-area="User" asp-controller="Account" asp-action="Register" asp-route-returnUrl="@Model.ReturnUrl">Register as a new user</a>
-                    </p>
-                    <p>
-                        <a id="resend-confirmation" asp-area="User" asp-controller="Account" asp-action="ResendEmailConfirmation">Resend email confirmation</a>
-                    </p>
-                </div>
+                <a id="forgot-password" class="small" asp-area="User" asp-controller="Account" asp-action="ForgotPassword">@L["Forgot password?"]</a>
+            </div>
+            <button id="login-submit" type="submit" class="w-100 btn btn-lg btn-primary">@L["Log in"]</button>
+        </form>
+
+        @*#if (Passkeys)*@
+        @if (passkeysEnabled)
+        {
+            <form id="passkey-login-form" asp-area="User" asp-controller="Account" asp-action="LoginWithPasskey" method="post"
+                  data-options-url="@Url.Action("PasskeyRequestOptions", "Account", new { area = "User" })" data-passkey-supported>
+                <input type="hidden" name="credentialJson" />
+                <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
+                <button id="passkey-login-button" type="button" class="w-100 btn btn-lg btn-soft mt-2">
+                    <i class="bi bi-fingerprint me-1"></i> @L["Log in with a passkey"]
+                </button>
+                <div id="passkey-login-error" class="text-danger small mt-2" role="alert" hidden></div>
             </form>
-        </section>
+        }
+        @*#endif*@
+
+        @*#if (ExternalLogins)*@
+        <partial name="_ExternalLoginButtons" model="(Model.ExternalLogins, Model.ReturnUrl, false)" />
+        @*#endif*@
     </div>
-    <div class="col-md-6 col-md-offset-2">
-        <section>
-            <h3>Use another service to log in.</h3>
-            <hr />
-            @{
-                if ((Model.ExternalLogins?.Count ?? 0) == 0)
-                {
-                    <div>
-                        <p>
-                            There are no external authentication services configured. See this <a href="https://go.microsoft.com/fwlink/?LinkID=532715">
-                                article
-                                about setting up this ASP.NET application to support logging in via external services
-                            </a>.
-                        </p>
-                    </div>
-                }
-                else
-                {
-                    <form id="external-account" asp-area="User" asp-controller="Account" asp-action="ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="form-horizontal">
-                        @Html.AntiForgeryToken()
-                        <div>
-                            <p>
-                                @foreach (var provider in Model.ExternalLogins!)
-                                {
-                                    <button type="submit" class="btn btn-primary" name="provider" value="@provider.Name" title="Log in using your @provider.DisplayName account">@provider.DisplayName</button>
-                                }
-                            </p>
-                        </div>
-                    </form>
-                }
-            }
-        </section>
+
+    <div class="auth-footer">
+        <p class="mb-1">
+            @L["Don't have an account?"]
+            <a asp-area="User" asp-controller="Account" asp-action="Register" asp-route-returnUrl="@Model.ReturnUrl">@L["Sign up"]</a>
+        </p>
+        <p class="small mb-0">
+            @L["Didn't get the confirmation email?"]
+            <a id="resend-confirmation" asp-area="User" asp-controller="Account" asp-action="ResendEmailConfirmation">@L["Resend it"]</a>
+        </p>
     </div>
 </div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    @*#if (Passkeys)*@
+    @if (passkeysEnabled)
+    {
+        <script src="~/js/passkeys.js" asp-append-version="true"></script>
+    }
+    @*#endif*@
 }

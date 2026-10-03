@@ -1,25 +1,29 @@
 ﻿@{
-    ViewData["Title"] = "Personal Data";
+    ViewData["Title"] = L["Personal data"].Value;
 }
 
-<h3>@ViewData["Title"]</h3>
+<h2 class="page-title">@L["Personal data"]</h2>
+<p class="page-subtitle">@L["Your account contains personal data that you have given us. You can download or delete it here."]</p>
 
-<div class="row">
-    <div class="col-md-6">
-        <p>Your account contains personal data that you have given us. This page allows you to download or delete that data.</p>
-        <p>
-            <strong>Deleting this data will permanently remove your account, and this cannot be recovered.</strong>
-        </p>
-        <form id="download-data" asp-area="User" asp-controller="Manage" asp-action="DownloadPersonalData" method="post">
-            @Html.AntiForgeryToken()
-            <button class="btn btn-primary" type="submit">Download</button>
-        </form>
-        <p>
-            <a id="delete" asp-area="User" asp-controller="Manage" asp-action="DeletePersonalData" class="btn btn-danger">Delete</a>
-        </p>
+<div class="setting-row">
+    <div class="d-flex gap-3 align-items-center">
+        <span class="icon-badge"><i class="bi bi-download"></i></span>
+        <div>
+            <h3>@L["Download your data"]</h3>
+            <p>@L["Get a JSON file with everything stored about your account."]</p>
+        </div>
     </div>
+    <form id="download-data" asp-area="User" asp-controller="Manage" asp-action="DownloadPersonalData" method="post">
+        <button class="btn btn-soft" type="submit"><i class="bi bi-filetype-json me-1"></i> @L["Download"]</button>
+    </form>
 </div>
 
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-}
+<div class="danger-zone mt-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+            <h3 class="h6 text-danger mb-1">@L["Delete account"]</h3>
+            <p class="small text-muted mb-0">@L["Permanently removes your account and all of its data. This cannot be undone."]</p>
+        </div>
+        <a id="delete" asp-area="User" asp-controller="Manage" asp-action="DeletePersonalData" class="btn btn-danger">@L["Delete account"]</a>
+    </div>
+</div>

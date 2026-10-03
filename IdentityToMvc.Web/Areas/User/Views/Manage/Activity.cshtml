@@ -1,0 +1,36 @@
+﻿@model IdentityToMvc.Web.Areas.User.ViewModels.Manage.ActivityViewModel
+@inject Microsoft.Extensions.Localization.IStringLocalizer<IdentityToMvc.Web.SharedResource> T
+@{
+    ViewData["Title"] = L["Security activity"].Value;
+}
+
+<h2 class="page-title">@L["Security activity"]</h2>
+<p class="page-subtitle">@L["Recent sign-ins and changes to your account. If you don't recognise something, change your password."]</p>
+
+@if (Model.Events.Count == 0)
+{
+    <p class="text-muted">@L["No activity yet."]</p>
+}
+else
+{
+    <ol class="timeline">
+        @foreach (var item in Model.Events)
+        {
+            var known = Enum.TryParse<SecurityEvent>(item.Event, out var securityEvent);
+            var (icon, tone) = known ? SecurityEventText.Style(securityEvent) : ("bi-shield", "neutral");
+            <li class="timeline-item tone-@tone">
+                <span class="timeline-icon"><i class="bi @icon"></i></span>
+                <div class="min-w-0">
+                    <div class="fw-semibold">@(known ? SecurityEventText.Title(securityEvent, T) : item.Event)</div>
+                    <div class="small text-muted">
+                        @item.CreatedAt.ToLocalTime().ToString("g") &middot; @item.Device &middot; @item.IpAddress
+                        @if (!string.IsNullOrEmpty(item.ActorEmail))
+                        {
+                            <text>&middot; @L["by administrator {0}", item.ActorEmail]</text>
+                        }
+                    </div>
+                </div>
+            </li>
+        }
+    </ol>
+}

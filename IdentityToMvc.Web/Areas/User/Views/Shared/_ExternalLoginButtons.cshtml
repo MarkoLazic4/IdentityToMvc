@@ -1,0 +1,27 @@
+﻿@model (IList<Microsoft.AspNetCore.Authentication.AuthenticationScheme> Providers, string? ReturnUrl, bool IsSignUp)
+
+@if (Model.Providers.Count > 0)
+{
+    <div class="divider">@L["or continue with"]</div>
+    <form id="external-account" asp-area="User" asp-controller="Account" asp-action="ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post">
+        <div class="d-grid gap-2">
+            @foreach (var provider in Model.Providers)
+            {
+                var icon = provider.Name.ToLowerInvariant() switch
+                {
+                    "google" => "bi-google",
+                    "facebook" => "bi-facebook",
+                    "microsoft" => "bi-microsoft",
+                    "twitter" => "bi-twitter-x",
+                    "github" => "bi-github",
+                    _ => "bi-box-arrow-in-right"
+                };
+                var name = provider.DisplayName ?? provider.Name;
+                var label = Model.IsSignUp ? L["Sign up with {0}", name] : L["Log in with {0}", name];
+                <button type="submit" class="btn btn-provider" name="provider" value="@provider.Name" title="@label">
+                    <i class="bi @icon"></i> @label
+                </button>
+            }
+        </div>
+    </form>
+}

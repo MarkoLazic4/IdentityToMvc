@@ -12,9 +12,9 @@ namespace IdentityToMvc.Web.Areas.User.ViewModels.Account
         public class InputModel
         {
             [BindProperty]
-            [Required]
+            [Required(ErrorMessage = "The {0} field is required.")]
             [DataType(DataType.Text)]
-            [Display(Name = "Recovery Code")]
+            [Display(Name = "Recovery code")]
             public string RecoveryCode { get; set; } = string.Empty;
         }
     }

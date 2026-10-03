@@ -1,0 +1,28 @@
+﻿@model IdentityToMvc.Web.Data.SecurityEventRecord
+@inject Microsoft.Extensions.Localization.IStringLocalizer<IdentityToMvc.Web.SharedResource> T
+@{
+    var known = Enum.TryParse<SecurityEvent>(Model.Event, out var securityEvent);
+    var (icon, tone) = known ? SecurityEventText.Style(securityEvent) : ("bi-shield", "neutral");
+}
+<li class="timeline-item tone-@tone">
+    <span class="timeline-icon"><i class="bi @icon"></i></span>
+    <div class="min-w-0">
+        <div class="fw-semibold">@(known ? SecurityEventText.Title(securityEvent, T) : Model.Event)</div>
+        <div class="small text-muted text-break">
+            @Model.CreatedAt.ToLocalTime().ToString("g")
+            @if (!string.IsNullOrEmpty(Model.UserEmail))
+            {
+                <text>&middot; </text><a asp-area="Admin" asp-controller="Users" asp-action="Details" asp-route-id="@Model.UserId">@Model.UserEmail</a>
+            }
+            &middot; @Model.IpAddress &middot; @Model.Device
+            @if (!string.IsNullOrEmpty(Model.ActorEmail))
+            {
+                <text>&middot; @L["by administrator {0}", Model.ActorEmail]</text>
+            }
+            @if (!string.IsNullOrEmpty(Model.Details))
+            {
+                <text>&middot; @Model.Details</text>
+            }
+        </div>
+    </div>
+</li>

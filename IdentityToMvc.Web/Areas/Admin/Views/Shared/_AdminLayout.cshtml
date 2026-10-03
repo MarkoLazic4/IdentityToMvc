@@ -1,0 +1,51 @@
+﻿@{
+    Layout = "/Views/Shared/_Layout.cshtml";
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    string Active(string name) => string.Equals(name, controller, StringComparison.OrdinalIgnoreCase) ? "active" : "";
+}
+
+<div class="manage-header">
+    <span class="icon-badge"><i class="bi bi-speedometer2"></i></span>
+    <div class="min-w-0">
+        <h1>@L["Admin panel"]</h1>
+        <div class="text-muted">@L["Users, roles and security events"]</div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-3">
+        <nav class="card manage-nav" aria-label="@L["Admin panel"]">
+            <ul class="nav nav-pills flex-column gap-1">
+                <li class="nav-item">
+                    <a class="nav-link @Active("Dashboard")" asp-area="Admin" asp-controller="Dashboard" asp-action="Index" id="admin-dashboard">
+                        <i class="bi bi-grid-1x2"></i> @L["Overview"]
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @Active("Users")" asp-area="Admin" asp-controller="Users" asp-action="Index" id="admin-users">
+                        <i class="bi bi-people"></i> @L["Users"]
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @Active("Roles")" asp-area="Admin" asp-controller="Roles" asp-action="Index" id="admin-roles">
+                        <i class="bi bi-person-badge"></i> @L["Roles"]
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @Active("Audit")" asp-area="Admin" asp-controller="Audit" asp-action="Index" id="admin-audit">
+                        <i class="bi bi-journal-text"></i> @L["Audit log"]
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+    <div class="col-lg-9 min-w-0">
+        <div class="card manage-content">
+            @RenderBody()
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @RenderSection("Scripts", required: false)
+}

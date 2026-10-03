@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace IdentityToMvc.Web.Areas.User.ViewModels.Manage
 {
@@ -7,19 +6,16 @@ namespace IdentityToMvc.Web.Areas.User.ViewModels.Manage
     {
         public InputModel Input { get; set; } = new();
 
-        [TempData]
-        public string? StatusMessage { get; set; }
-
 
         public class InputModel
         {
-            [Required]
+            [Required(ErrorMessage = "The {0} field is required.")]
             [DataType(DataType.Password)]
             [Display(Name = "Current password")]
             public string OldPassword { get; set; } = string.Empty;
 
-            [Required]
-            [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
+            [Required(ErrorMessage = "The {0} field is required.")]
+            [StringLength(128, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 8)]
             [DataType(DataType.Password)]
             [Display(Name = "New password")]
             public string NewPassword { get; set; } = string.Empty;

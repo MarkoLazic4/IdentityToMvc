@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
-
-namespace IdentityToMvc.Web.Areas.User.ViewModels.Manage
+﻿namespace IdentityToMvc.Web.Areas.User.ViewModels.Manage
 {
     public class TwoFactorAuthenticationViewModel
     {
@@ -10,8 +8,5 @@ namespace IdentityToMvc.Web.Areas.User.ViewModels.Manage
         public bool Is2faEnabled { get; set; }
 
         public bool IsMachineRemembered { get; set; }
-
-        [TempData]
-        public string? StatusMessage { get; set; }
     }
 }
